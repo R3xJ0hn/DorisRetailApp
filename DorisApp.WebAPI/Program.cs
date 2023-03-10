@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 
 //App Services
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
+builder.Services.AddTransient<IUserData, UserData>();
 builder.Services.AddTransient<IRoleData, RoleData>();
 
 //Add Logger Services

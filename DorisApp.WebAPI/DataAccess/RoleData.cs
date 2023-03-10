@@ -50,6 +50,11 @@ namespace DorisApp.WebAPI.DataAccess
             return output;
         }
 
+        public int GetNewUserId()
+        {
+            return 1;
+        }
+
         public void Dispose()
         {
             _sql.Dispose();
