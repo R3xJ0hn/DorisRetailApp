@@ -33,7 +33,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var key = builder.Configuration["Jwt:Key"];
+        var key = builder.Configuration["JwtConfig:Key"];
 
         options.TokenValidationParameters = new TokenValidationParameters()
         {
