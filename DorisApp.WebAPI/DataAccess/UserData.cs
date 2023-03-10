@@ -54,7 +54,7 @@ namespace DorisApp.WebAPI.DataAccess
             user.LastPasswordCanged = DateTime.UtcNow;
             user.CreatedAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
-            SetUserRefreshToken(ref user);
+            SetGenerateRefreshToken(ref user);
 
             try
             {
@@ -92,7 +92,7 @@ namespace DorisApp.WebAPI.DataAccess
             return user;
         }
 
-        public void SetUserRefreshToken(ref UserModel user)
+        public void SetGenerateRefreshToken(ref UserModel user)
         {
             var generateToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var tokenExpires = DateTime.UtcNow.AddDays(double.Parse(_config["AppSettings:TokenExpire"]));
@@ -102,6 +102,7 @@ namespace DorisApp.WebAPI.DataAccess
             user.Token = generateToken;
             user.TokenCreated = DateTime.UtcNow;
             user.TokenExpires = tokenExpires;
+            //TODO 2: Update User In the Database
         }
 
         private bool ValidateEmail(string email)
