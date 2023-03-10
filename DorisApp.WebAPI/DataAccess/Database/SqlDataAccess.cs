@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 
 namespace DorisApp.WebAPI.DataAccess.Database
 {
-    public class SqlDataAccess : IDisposable
+    public class SqlDataAccess : IDisposable, ISqlDataAccess
     {
         private IDbConnection? _dbconnection;
         public IDbTransaction? _dbTransaction;

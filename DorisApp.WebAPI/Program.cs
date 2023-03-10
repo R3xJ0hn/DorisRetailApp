@@ -1,3 +1,5 @@
+using DorisApp.WebAPI.DataAccess;
+using DorisApp.WebAPI.DataAccess.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -5,12 +7,28 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//App Services
+builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
+builder.Services.AddTransient<IRoleData, RoleData>();
+
+//Add Logger Services
+builder.Services.AddLogging(builder =>
+{
+    builder.AddConsole();
+});
+
+// Add Logger Instance
+builder.Services.AddScoped<ILogger>(serviceProvider =>
+{
+    var factory = serviceProvider.GetRequiredService<ILoggerFactory>();
+    return factory.CreateLogger("AppLogger");
+});
+
+//JWT Authentication
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
