@@ -1,4 +1,5 @@
 ﻿using DorisApp.WebAPI.DataAccess;
+using DorisApp.WebAPI.Helpers;
 using DorisApp.WebAPI.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +46,7 @@ namespace DorisApp.WebAPI.Controllers
             };
 
             var createdUser = await _userData.RegisterUserAsync(user);
-            return Ok($"Welcome {GetFullName(createdUser)}");
+            return Ok($"Welcome {StringHelpers.GetFullName(createdUser)}");
         }
 
         [HttpPost("login")]
@@ -111,7 +112,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.Name, GetFullName(user)),
+                new Claim(ClaimTypes.Name, StringHelpers.GetFullName(user)),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Role, roleName),
             }),
@@ -127,7 +128,7 @@ namespace DorisApp.WebAPI.Controllers
         private void SetRefreshToken(UserModel user)
         {
             //Update Token in UserModel
-            _userData.SetGenerateRefreshToken(ref user);
+            _userData.SetGenerateRefreshToken(user);
 
             var cookieOptions = new CookieOptions
             {
@@ -142,32 +143,5 @@ namespace DorisApp.WebAPI.Controllers
         {
             return (await _roleData.GetRoleByIdAsync(user.RoleId))?.RoleName;
         }
-
-        private static string GetFullName(UserModel user)
-        {
-            var firstName = char.ToUpper(user.FirstName[0]) + user.FirstName[1..];
-            var lastName = char.ToUpper(user.LastName[0]) + user.LastName[1..];
-            return $"{CapitalizeWords(firstName)} {CapitalizeWords(lastName)}";
-        }
-
-        private static string CapitalizeWords(string value)
-        {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-            if (value.Length == 0)
-                return value;
-
-            StringBuilder result = new(value);
-            result[0] = char.ToUpper(result[0]);
-
-            for (int i = 1; i < result.Length; ++i)
-            {
-                if (char.IsWhiteSpace(result[i - 1]))
-                    result[i] = char.ToUpper(result[i]);
-            }
-
-            return result.ToString();
-        }
-
     }
 }

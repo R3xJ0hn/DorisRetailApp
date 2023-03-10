@@ -8,6 +8,6 @@ namespace DorisApp.WebAPI.DataAccess
         Task<UserModel?> FindByEmailAsync(string email);
         Task<UserModel?> FindByIdAsync(string id);
         Task<UserModel> RegisterUserAsync(UserModel user);
-        void SetGenerateRefreshToken(ref UserModel user);
+        Task SetGenerateRefreshToken(UserModel user);
     }
 }

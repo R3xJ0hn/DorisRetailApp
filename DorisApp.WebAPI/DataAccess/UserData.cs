@@ -1,4 +1,5 @@
 ﻿using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.Helpers;
 using DorisApp.WebAPI.Model;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -54,7 +55,7 @@ namespace DorisApp.WebAPI.DataAccess
             user.LastPasswordCanged = DateTime.UtcNow;
             user.CreatedAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
-            SetGenerateRefreshToken(ref user);
+            await SetGenerateRefreshToken(user);
 
             try
             {
@@ -92,7 +93,7 @@ namespace DorisApp.WebAPI.DataAccess
             return user;
         }
 
-        public void SetGenerateRefreshToken(ref UserModel user)
+        public async Task SetGenerateRefreshToken(UserModel user)
         {
             var generateToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var tokenExpires = DateTime.UtcNow.AddDays(double.Parse(_config["AppSettings:TokenExpire"]));
@@ -102,7 +103,18 @@ namespace DorisApp.WebAPI.DataAccess
             user.Token = generateToken;
             user.TokenCreated = DateTime.UtcNow;
             user.TokenExpires = tokenExpires;
-            //TODO 2: Update User In the Database
+
+            try
+            {
+                await _sql.UpdateDataAsync<UserModel>("dbo.spUserUpdateToken", user);
+                _logger.LogInformation("Update User Token: {@User}", user);
+            }
+            catch (Exception)
+            {
+                var errorMsg = $"Unable to Update {StringHelpers.GetFullName(user)}";
+                _logger.LogInformation(errorMsg, user);
+                throw new ArgumentException(errorMsg);
+            }
         }
 
         private bool ValidateEmail(string email)

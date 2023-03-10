@@ -70,6 +70,7 @@
     <Build Include="dbo\StoredProcedures\spUserGetByEmail.sql" />
     <Build Include="dbo\StoredProcedures\spUserGetById.sql" />
     <Build Include="dbo\StoredProcedures\spUserInsert.sql" />
+    <Build Include="dbo\StoredProcedures\spUserUpdateToken.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishLocations\DorisApp.Data.publish.xml" />

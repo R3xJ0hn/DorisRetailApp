@@ -46,6 +46,13 @@ namespace DorisApp.WebAPI.DataAccess.Database
                  commandType: CommandType.StoredProcedure);
         }
 
+        public async Task UpdateDataAsync<T>(string storeProcedure, T parameters)
+        {
+            using IDbConnection connection = new SqlConnection(_connectionString);
+            await connection.ExecuteAsync(storeProcedure, parameters,
+                 commandType: CommandType.StoredProcedure);
+        }
+
         public void StartTransaction()
         {
             _dbconnection = new SqlConnection(_connectionString);
