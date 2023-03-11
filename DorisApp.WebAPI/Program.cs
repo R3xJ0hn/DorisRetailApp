@@ -22,6 +22,16 @@ builder.Services.AddLogging(builder =>
     builder.AddConsole();
 });
 
+builder.Services.AddCors(policy =>
+{
+    policy.AddPolicy(name: "OpenCorsPolicy", opt =>
+    {
+        opt.AllowAnyOrigin();
+        opt.AllowAnyHeader();
+        opt.AllowAnyMethod();
+    });
+});
+
 // Add Logger Instance
 builder.Services.AddScoped<ILogger>(serviceProvider =>
 {
@@ -61,6 +71,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(policyName: "OpenCorsPolicy");
 
 app.UseAuthentication();
 
