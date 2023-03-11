@@ -4,6 +4,7 @@ using DorisApp.WebAPI.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -50,7 +51,7 @@ namespace DorisApp.WebAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login([FromForm] string email, [FromForm] string password)
         {
             var user = await _userData.FindByEmailAsync(email);
             if (user == null)
@@ -66,7 +67,13 @@ namespace DorisApp.WebAPI.Controllers
             SetRefreshToken(user);
 
             var token = CreateToken(user, await GetUserRoleName(user));
-            return Ok(token);
+
+            return Ok(new
+            {
+                Access_Token = token,
+                Name = StringHelpers.GetFullName(user),
+                Email = user.EmailAddress
+            }); ;
         }
 
         [HttpPost("refresh-token")]

@@ -4,6 +4,15 @@
 
 <h1>Counter</h1>
 
+<AuthorizeView>
+    <Authorized>
+        <p> The user @context.User.FindFirst(ClaimTypes.Name).Value is authorized.</p>
+    </Authorized>
+    <NotAuthorized>
+        <h4>The user is not Authorized</h4>
+    </NotAuthorized>
+</AuthorizeView>
+
 <p role="status">Current count: @currentCount</p>
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
