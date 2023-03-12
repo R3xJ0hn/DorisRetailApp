@@ -1,57 +1,79 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">DorisApp.WebPortal</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+﻿<div class="sidebar-backdrop"></div>
+<div class="sidebar-top">
+    <div class="logo">
+        <img src="/logo.png" alt="Company Logo">
     </div>
+    <div class="info">
+        <h1 class="company-name">Doris</h1>
+        <p class="tagline">Consumer Good Trading</p>
+    </div>
+    <i class="fa-solid fa-x"></i>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
+<ul class="nav">
+
+    @*   
+    <div class="nav-item px-3">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <span class="oi oi-home" aria-hidden="true"></span> Home
+        </NavLink>
+    </div>
+    *@
+
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/product.html">
+            <i class="menu-icon fa-light fa-wheat"></i>
+            <span class="menu-title">Products</span>
+        </NavLink>
+    </li>
+
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/brand.html">
+            <i class="menu-icon fa-light fa-box-open-full"></i>
+            <span class="menu-title">Brands</span>
+        </NavLink>
+    </li>
+
+    <li class="nav-item">
+        <div class="nav-link" data-bs-toggle="collapse" href="#categories" aria-expanded="false"
+           aria-controls="categories">
+            <i class="menu-icon fa-light fa-chart-simple-horizontal"></i>
+            <span class="menu-title">Categories</span>
+            <i class="menu-arrow fa-solid fa-chevron-down"></i>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Login
-            </NavLink>
+        <div class="collapse" id="categories">
+            <ul class="nav sub-menu">
+                <li class="nav-sub-item">
+                    <i class="fa-regular fa-arrow-right"></i>
+                    <NavLink class="nav-link" href="/categories.html">Category</NavLink>
+                </li>
+                <li class="nav-sub-item">
+                    <i class="fa-regular fa-arrow-right"></i>
+                    <NavLink class="nav-link" href="/subcategories.html">Subcategory</NavLink>
+                </li>
+            </ul>
         </div>
+    </li>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="logout">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Logout
-            </NavLink>
-        </div>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="login">
+            <i class="menu-icon fa-light fa-right-to-bracket"></i>
+            <span class="menu-title">Login</span>
+        </NavLink>
+    </li>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="verify-auth">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Verify Auth
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="logout">
+            <i class="menu-icon fa-light fa-arrow-right-from-bracket"></i>
+            <span class="menu-title">Login</span>
+        </NavLink>
+    </li>
+
+
+</ul>
 
 @code {
-    private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
 }
