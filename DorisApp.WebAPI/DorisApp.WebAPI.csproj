@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DorisApp.Model.Library\DorisApp.Model.Library.csproj" />
+    <ProjectReference Include="..\DorisApp.Data.Library\DorisApp.Data.Library.csproj" />
   </ItemGroup>
 
 </Project>

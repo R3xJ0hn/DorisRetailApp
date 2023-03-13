@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DorisApp.Model.Library
+namespace DorisApp.Data.Library.Model
 {
     public class UserModel
     {

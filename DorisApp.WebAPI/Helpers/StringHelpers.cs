@@ -1,4 +1,4 @@
-﻿using DorisApp.Model.Library;
+﻿using DorisApp.Data.Library.Model;
 using System.Text;
 
 namespace DorisApp.WebAPI.Helpers

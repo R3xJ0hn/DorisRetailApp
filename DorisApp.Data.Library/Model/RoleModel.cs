@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DorisApp.Model.Library
+namespace DorisApp.Data.Library.Model
 {
     public class RoleModel
     {
