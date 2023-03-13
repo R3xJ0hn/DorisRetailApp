@@ -1,4 +1,8 @@
-﻿namespace DorisApp.WebAPI.Model
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace DorisApp.Model.Library
 {
     public class UserModel
     {

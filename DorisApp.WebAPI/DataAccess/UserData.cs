@@ -1,6 +1,6 @@
-﻿using DorisApp.WebAPI.DataAccess.Database;
+﻿using DorisApp.Model.Library;
+using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.Helpers;
-using DorisApp.WebAPI.Model;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 

@@ -1,4 +1,6 @@
-﻿namespace DorisApp.WebAPI.Model
+﻿using System;
+
+namespace DorisApp.Model.Library
 {
     public class RoleModel
     {
@@ -10,6 +12,4 @@
         public DateTime UpdatedAt { get; set; }
 
     }
-
-
 }

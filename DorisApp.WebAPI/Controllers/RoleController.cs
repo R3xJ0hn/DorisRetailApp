@@ -1,5 +1,5 @@
-﻿using DorisApp.WebAPI.DataAccess;
-using DorisApp.WebAPI.Model;
+﻿using DorisApp.Model.Library;
+using DorisApp.WebAPI.DataAccess;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
