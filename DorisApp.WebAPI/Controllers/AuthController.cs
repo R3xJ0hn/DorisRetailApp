@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -109,28 +110,32 @@ namespace DorisApp.WebAPI.Controllers
             return Ok(token);
         }
 
+
         private string CreateToken(UserModel user, string? roleName)
         {
-            var tkey = _config["JWTConfig:Key"];
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(tkey);
+            var key = Encoding.UTF8.GetBytes(_config["JwtConfig:Key"]);
+            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
+            var claims = new List<Claim>
                 {
-                new Claim(ClaimTypes.Name, StringHelpers.GetFullName(user)),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, roleName),
-            }),
-                Expires = DateTime.UtcNow.AddDays(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-                                         SecurityAlgorithms.HmacSha256Signature)
-            };
+                    new Claim(ClaimTypes.Name, StringHelpers.GetFullName(user)),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddDays(1)).ToUnixTimeSeconds().ToString())
+                };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            if (!string.IsNullOrEmpty(roleName))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, roleName));
+            }
+
+            var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
+                new JwtHeader(credentials),
+                new JwtPayload(claims)));
+
+            return token;
         }
+
 
         private void SetRefreshToken(UserModel user)
         {

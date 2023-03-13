@@ -7,7 +7,61 @@
     </div>
 
     <main class="main-content">
+        <header class="row header">
+
+            <div class="col header-left">
+                <i class="menu-bar fa-regular fa-bars" id="sidebar-toggle-btn"></i>
+                <h1 class="page-title">Page Name</h1>
+            </div>
+
+            <div class="col">
+                <div class="header-account">
+
+                    <AuthorizeView>
+                        <Authorized>
+
+                            <div class="accout-info">
+                                <p>Hi, 
+                                    <b>@context.User.FindFirst(ClaimTypes.Name)?.Value</b>
+                                </p>
+                                <p class="account-role">
+                                    @context.User.FindFirst(ClaimTypes.Role)?.Value
+                                </p>
+                            </div>
+
+                            <div class="account-profile" data-bs-toggle="collapse" data-bs-target="#accountMenu">
+                                <img src="/img/am1.jpg" alt="profile">
+                                <div class="account-menu collapse" id="accountMenu">
+                                    <NavLink class="nav-link" href="logout">
+                                        <p>
+                                            Logout <i class="fa-light fa-arrow-right-from-bracket"></i>
+                                        </p>
+                                    </NavLink>
+                                </div>
+                            </div>
+
+                        </Authorized>
+                        <NotAuthorized>
+                            <h6 class="text-danger">You are not authorized to view this content.</h6>
+                        </NotAuthorized>
+                    </AuthorizeView>
+
+                </div>
+            </div>
+
+        </header>
+
+
         @Body
     </main>
 
 </div>
+
+@code {
+    public event EventHandler SidebarToggled;
+
+    private void ToggleSidebar()
+    {
+        SidebarToggled?.Invoke(this, EventArgs.Empty);
+    }
+}

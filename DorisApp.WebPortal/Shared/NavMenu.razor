@@ -1,13 +1,16 @@
-﻿<div class="sidebar-backdrop"></div>
+﻿@inject IJSRuntime JSRuntime
+
+<div class="sidebar-backdrop"></div>
 <div class="sidebar-top">
     <div class="logo">
-        <img src="/logo.png" alt="Company Logo">
+        <img src="/img/logo.png" alt="Company Logo">
     </div>
     <div class="info">
         <h1 class="company-name">Doris</h1>
         <p class="tagline">Consumer Good Trading</p>
     </div>
-    <i class="fa-solid fa-x"></i>
+
+    <i class="fa-solid fa-x" id="sidebar-toggle-x-btn"></i>
 </div>
 
 <ul class="nav">
@@ -34,7 +37,7 @@
         </NavLink>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item active">
         <div class="nav-link" data-bs-toggle="collapse" href="#categories" aria-expanded="false"
            aria-controls="categories">
             <i class="menu-icon fa-light fa-chart-simple-horizontal"></i>
@@ -44,7 +47,7 @@
 
         <div class="collapse" id="categories">
             <ul class="nav sub-menu">
-                <li class="nav-sub-item">
+                <li class="nav-sub-item active">
                     <i class="fa-regular fa-arrow-right"></i>
                     <NavLink class="nav-link" href="/categories.html">Category</NavLink>
                 </li>
@@ -63,17 +66,14 @@
         </NavLink>
     </li>
 
-    <li class="nav-item">
-        <NavLink class="nav-link" href="logout">
-            <i class="menu-icon fa-light fa-arrow-right-from-bracket"></i>
-            <span class="menu-title">Login</span>
-        </NavLink>
-    </li>
-
-
 </ul>
 
 @code {
-
-
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("registerSidebarToggleHandler");
+        }
+    }
 }
