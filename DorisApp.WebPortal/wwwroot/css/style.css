@@ -12653,12 +12653,12 @@ textarea.form-control-lg {
   background: #fff;
   font-family: poppins, system-ui, -apple-system, Arial, sans-serif, "Segoe UI", "Helvetica Neue";
   padding: 0;
-  width: 250px;
+  width: 260px;
   z-index: 999;
   transition: all 0.25s ease;
 }
 .sidebar.collapsed {
-  transition: width 0.25s ease;
+  transition: all 0.25s ease;
 }
 .sidebar-backdrop {
   position: absolute;
@@ -12734,6 +12734,7 @@ textarea.form-control-lg {
 .sidebar .nav .nav-item .nav-link,
 .sidebar .nav .nav-sub-item .nav-link {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   white-space: nowrap;
   font-size: 18px;
@@ -12766,27 +12767,27 @@ textarea.form-control-lg {
 .sidebar .nav .nav-item:first-child {
   margin-top: 1rem;
 }
-.sidebar .nav .nav-item:not(.active):hover .menu-title,
-.sidebar .nav .nav-item:not(.active):hover .menu-icon,
-.sidebar .nav .nav-item:not(.active):hover .menu-arrow,
+.sidebar .nav .nav-item .nav-link:not(.active):hover .menu-title,
+.sidebar .nav .nav-item .nav-link:not(.active):hover .menu-icon,
+.sidebar .nav .nav-item .nav-link:not(.active):hover .menu-arrow,
 .sidebar .nav .nav-item .nav-link[aria-expanded=true] .menu-title,
 .sidebar .nav .nav-item .nav-link[aria-expanded=true] .menu-icon,
 .sidebar .nav .nav-item .nav-link[aria-expanded=true] .menu-arrow {
   color: rgba(213, 130, 252, 0.8);
 }
-.sidebar .nav .nav-item:not(.active):hover .menu-icon,
+.sidebar .nav .nav-item .nav-link:not(.active):hover .menu-icon,
 .sidebar .nav .nav-item .nav-link[aria-expanded=true] .menu-icon {
   transform: scale(1.2);
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
 }
-.sidebar .nav .nav-item.active {
+.sidebar .nav .nav-item .nav-link.active {
   background: #f8f9fa;
   color: #d582fc;
 }
-.sidebar .nav .nav-item.active .sub-menu {
+.sidebar .nav .nav-item .nav-link.active .sub-menu {
   background: #f8f9fa;
 }
-.sidebar .nav .nav-item.active > .nav-link:before {
+.sidebar .nav .nav-item .nav-link.active:before {
   position: absolute;
   top: 0;
   left: 0;
@@ -12797,64 +12798,51 @@ textarea.form-control-lg {
   height: 100%;
   background: #d582fc;
 }
-.sidebar .nav .nav-item.active .nav-link[aria-expanded=true] .menu-icon {
+.sidebar .nav .nav-item .nav-link.active[aria-expanded=true] .menu-icon {
   box-shadow: none;
 }
-.sidebar .nav .nav-item.active .menu-title,
-.sidebar .nav .nav-item.active i.menu-icon,
-.sidebar .nav .nav-item.active .menu-arrow {
+.sidebar .nav .nav-item .nav-link.active .menu-title,
+.sidebar .nav .nav-item .nav-link.active i.menu-icon,
+.sidebar .nav .nav-item .nav-link.active .menu-arrow {
   color: #d582fc;
 }
-.sidebar .nav .nav-item.active i.menu-icon {
+.sidebar .nav .nav-item .nav-link.active i.menu-icon {
   transform: scale(1.1);
   margin-left: 1rem;
 }
 .sidebar .sub-menu {
-  margin: 0.5rem 0 0 2rem;
+  padding: 0.5rem 0 0 4rem;
   list-style: none;
 }
-.sidebar .sub-menu .nav-sub-item {
-  display: flex;
-  align-items: center;
-  padding: 0;
+.sidebar .sub-menu .nav-sub-item .sub-nav-link {
+  text-decoration: none;
+  color: #484e53;
   transition: margin 0.25s ease;
-  background: transparent;
 }
-.sidebar .sub-menu .nav-sub-item i {
+.sidebar .sub-menu .nav-sub-item .sub-nav-link i {
   display: none;
   margin-right: 5px;
   color: #343a40;
 }
-.sidebar .sub-menu .nav-sub-item .nav-link {
-  color: #484e53;
-  position: relative;
-  font-size: 18px;
-  height: auto;
-  border-top: 0;
+.sidebar .sub-menu .nav-sub-item .sub-nav-link:not(.active):hover {
+  display: flex;
+  align-items: center;
+  color: #d582fc;
+  margin-left: 0.2rem;
+}
+.sidebar .sub-menu .nav-sub-item .sub-nav-link:not(.active):hover i {
+  font-size: 12px;
+  display: block;
+  color: #d582fc;
+}
+.sidebar .sub-menu .nav-sub-item .sub-nav-link.active {
+  color: #d582fc;
+}
+.sidebar .sub-menu .nav-sub-item .nav-link.active::before {
+  display: none;
 }
 .sidebar .sub-menu .nav-sub-item:last-child {
   margin-bottom: 0;
-}
-.sidebar .sub-menu .nav-sub-item:not(.active):hover {
-  margin-left: 1rem;
-}
-.sidebar .sub-menu .nav-sub-item:not(.active):hover i {
-  display: block;
-  color: #d582fc;
-}
-.sidebar .sub-menu .nav-sub-item:not(.active):hover .nav-link {
-  color: #d582fc;
-}
-.sidebar .sub-menu .nav-sub-item.active {
-  background: #f8f9fa;
-}
-.sidebar .sub-menu .nav-sub-item.active .nav-link,
-.sidebar .sub-menu .nav-sub-item.active i {
-  color: #d582fc;
-}
-.sidebar .sub-menu .nav-sub-item.active i {
-  display: block;
-  margin-left: 0.5rem;
 }
 
 @media screen and (max-width: 600px) {
