@@ -25,30 +25,39 @@
 
 
     <li class="nav-item">
-        <a class="nav-link" href="#category" Match=@NavLinkMatch.Prefix 
-        data-bs-toggle="collapse" aria-expanded="false" aria-controls="category">
+
+        <NavLink class="nav-link" data-bs-target="#category" href="category" Match=@NavLinkMatch.Prefix
+            data-bs-toggle="collapse" aria-expanded="false" aria-controls="category">
             <i class="menu-icon fa-light fa-chart-simple-horizontal"></i>
             <span class="menu-title">Categories</span>
             <i class="menu-arrow fa-solid fa-chevron-down"></i>
+        </NavLink>
 
-            <ul class="sub-menu collapse" id="category">
-                <li class="nav-sub-item">
-                    <NavLink class="sub-nav-link" href="categories" Match=@NavLinkMatch.All>
-                        <i class="fa-regular fa-arrow-right"></i>
-                        Category
-                    </NavLink>
-                </li>
-                <li class="nav-sub-item">
-                    <NavLink class="sub-nav-link" href="subcategories" Match=@NavLinkMatch.All>
-                        <i class="fa-regular fa-arrow-right"></i>
-                        SubCategory
-                    </NavLink>
-                </li>
-            </ul>
-        </a>
+        <ul class="sub-menu collapse" id="category">
+            <li class="nav-sub-item" Match=@NavLinkMatch.All>
+                <NavLink class="sub-nav-link" href="category/categories">
+                    <i class="fa-regular fa-arrow-right"></i>
+                    <span>Category</span>
+                </NavLink>
+            </li>
+            <li class="nav-sub-item" Match=@NavLinkMatch.All>
+                <NavLink class="sub-nav-link" href="category/subcategories">
+                    <i class="fa-regular fa-arrow-right"></i>
+                    <span>SubCategory</span>
+                </NavLink>
+            </li>
+        </ul>
+
     </li>
 
 
+
+    <li class="nav-item" Match=@NavLinkMatch.All>
+        <NavLink class="nav-link" href="verify-auth">
+            <i class="menu-icon fa-light fa-right-to-bracket"></i>
+            <span class="menu-title">Verify Auth</span>
+        </NavLink>
+    </li>
 
     <li class="nav-item" Match=@NavLinkMatch.All>
         <NavLink class="nav-link" href="login">

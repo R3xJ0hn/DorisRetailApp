@@ -752,6 +752,8 @@ progress {
 
 .container,
 .container-fluid,
+.category-page-content,
+.brand-page-content,
 .container-xxl,
 .container-xl,
 .container-lg,
@@ -4036,6 +4038,8 @@ textarea.form-control-lg {
 }
 .navbar > .container,
 .navbar > .container-fluid,
+.navbar > .category-page-content,
+.navbar > .brand-page-content,
 .navbar > .main-content,
 .navbar > .container-sm,
 .navbar > .container-md,
@@ -13086,11 +13090,6 @@ textarea.form-control-lg {
 }
 .brand-page-content {
   position: relative;
-  padding: 1rem;
-}
-
-.col-md-3 {
-  padding: 0;
 }
 
 .category-page-content {
