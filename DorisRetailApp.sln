@@ -9,7 +9,7 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "DorisApp.Data", "DorisApp.D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DorisApp.WebPortal", "DorisApp.WebPortal\DorisApp.WebPortal.csproj", "{AF8C3E20-B65B-44B9-B25B-25BCA4435C14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DorisApp.Data.Library", "DorisApp.Data.Library\DorisApp.Data.Library.csproj", "{98219728-AA37-4AE6-AAFF-289768A9FF90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DorisApp.Data.Library", "DorisApp.Data.Library\DorisApp.Data.Library.csproj", "{98219728-AA37-4AE6-AAFF-289768A9FF90}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

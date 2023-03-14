@@ -5,7 +5,7 @@ namespace DorisApp.WebAPI.DataAccess
     public interface IRoleData
     {
         void AddRole(RoleModel role, int userId);
-        Task<int> CountRolesAsync();
+        Task<int> CountPageRolesAsync();
         void Dispose();
         int GetNewUserId();
         Task<RoleModel?> GetRoleByIdAsync(int id);

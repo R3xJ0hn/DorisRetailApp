@@ -1,7 +1,5 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Data;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -47,11 +45,11 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task<List<RoleModel>> GetRoleByPageNumAsync(int page)
         {
-            var getPageCount = await CountRolesAsync();
+            var getPageCount = await CountPageRolesAsync();
 
             if (page > getPageCount || page <= 0)
             {
-                string msg = $"Error: Page {page} is out of range. The database have only {getPageCount} pages.";
+                string msg = $"Error: Page {page} is out of range, the database have only {getPageCount} pages.";
                 _logger.LogInformation(msg);
                 throw new ArgumentException(msg);
             }
@@ -63,7 +61,7 @@ namespace DorisApp.WebAPI.DataAccess
             return output;
         }
 
-        public async Task<int> CountRolesAsync()
+        public async Task<int> CountPageRolesAsync()
         {
             return await _sql.CountPageAsync("Roles");
         }

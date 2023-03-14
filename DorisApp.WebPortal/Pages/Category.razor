@@ -1,266 +1,285 @@
 ﻿@page "/category/categories"
+@using DorisApp.WebPortal.Components
 
-         <div class="category-page-content">
-            
-                <div class="row">
+<div class="category-page-content">
 
-                    <div class="col-lg-9">
+    <div class="row">
 
-                        <div class="row align-items-end">
-                            <div class="col ">
-                                <h3 class="table-title">List of Categories</h3>
-                            </div>
+        <div class="col-lg-9">
 
-                            <div class="col ">
-                                <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
-                                    data-bs-target="#categoryModal">
-                                    <i class="fa-regular fa-circle-plus"></i>
-                                    Add
-                                </button>
-                            </div>
+            <div class="row align-items-end">
+                <div class="col ">
+                    <h3 class="table-title">List of Categories</h3>
+                </div>
+
+                <div class="col ">
+                    <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
+                            data-bs-target="#categoryModal">
+                        <i class="fa-regular fa-circle-plus"></i>
+                        Add
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-card">
+
+                <div class="row ">
+                    <div class="col-md  d-flex">
+                        <div class="search-bar">
+                            <input type="search" class="form-control" placeholder="Search...">
                         </div>
 
-                        <div class="table-card">
-
-                            <div class="row ">
-                                <div class="col-md  d-flex">
-                                    <div class="search-bar">
-                                        <input type="search" class="form-control" placeholder="Search...">
-                                    </div>
-
-                                    <div class="sort-select">
-                                        <label for="sort-table">Sort by:</label>
-                                        <select class="form-select form-select-sm" id="sort-table"
-                                            aria-label=".form-select-sm example">
-                                            <option selected>Open this select menu</option>
-                                            <option value="1">One</option>
-                                            <option value="2">Two</option>
-                                            <option value="3">Three</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <div class="table-wrapper">
-                                <table class="table">
-
-                                    <thead>
-                                        <tr>
-                                            <th scope="col"></th>
-                                            <th scope="col">Category Name</th>
-                                            <th scope="col">No. of Sub Categories</th>
-                                            <th scope="col">No. of Product</th>
-                                            <th scope="col">Action</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        <tr>
-                                            <td scope="row">
-                                                <span></span>
-                                            </td>
-                                            <td>Beauty and Care</td>
-                                            <td>130</td>
-                                            <td>110</td>
-                                            <td>
-                                                <div class="table-icons">
-                                                    <i class="fa-solid fa-pencil"></i>
-                                                    <i class="fa-solid fa-xmark"></i>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-
-                                </table>
-
-                            </div>
-
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination justify-content-end">
-                                    <li class="page-item disabled">
-                                        <a class="page-link">Previous</a>
-                                    </li>
-                                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">Next</a>
-                                    </li>
-                                </ul>
-                            </nav>
+                        <div class="sort-select">
+                            <label for="sort-table">Sort by:</label>
+                            <select class="form-select form-select-sm" id="sort-table"
+                                    aria-label=".form-select-sm example">
+                                <option selected>Open this select menu</option>
+                                <option value="1">One</option>
+                                <option value="2">Two</option>
+                                <option value="3">Three</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="col-lg-3">
+                </div>
 
-                        <div class="product-list-view">
+                <div class="table-wrapper">
+                    <table class="table">
 
-                            <div class="product-list-view-body">
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">Category Name</th>
+                                <th scope="col">No. of Sub Categories</th>
+                                <th scope="col">No. of Product</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
 
-                                <div class="product-list-view-header">
-                                    <h5>Beauty and Care</h5>
-                                    <p>1 item</p>
+                        <tbody>
+                            <tr>
+                                <td scope="row">
+                                    <span></span>
+                                </td>
+                                <td>Beauty and Care</td>
+                                <td>130</td>
+                                <td>110</td>
+                                <td>
+                                    <div class="table-icons">
+                                        <i class="fa-solid fa-pencil"></i>
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item disabled">
+                            <a class="page-link">Previous</a>
+                        </li>
+                        <li class="page-item"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="product-list-view">
+
+                <div class="product-list-view-body">
+
+                    <div class="product-list-view-header">
+                        <h5>Beauty and Care</h5>
+                        <p>1 item</p>
+                    </div>
+
+                    <div class="product-list-view-content">
+
+                        <ul>
+                            <li class="product-list-view-item" data-bs-target="#viewProductModal"
+                                data-bs-toggle="modal">
+
+                                <div class="product-image">
+                                    <img src="/icon-192.png" alt="">
                                 </div>
 
-                                <div class="product-list-view-content">
+                                <div class=" row product-info">
+                                    <div class="col-md product-name">
+                                        <h5>Dove Antibacterial</h5>
+                                    </div>
 
-                                    <ul>
-                                        <li class="product-list-view-item" data-bs-target="#viewProductModal"
-                                            data-bs-toggle="modal">
+                                    <div class="col-md-4 product-detail">
+                                        <p>Sold:</p>
+                                        <b>583</b>
+                                    </div>
 
-                                            <div class="product-image">
-                                                <img src="/icon-192.png" alt="">
-                                            </div>
-
-                                            <div class=" row product-info">
-                                                <div class="col-md product-name">
-                                                    <h5>Dove Antibacterial</h5>
-                                                </div>
-
-                                                <div class="col-md-4 product-detail">
-                                                    <p>Sold:</p>
-                                                    <b>583</b>
-                                                </div>
-
-                                                <div class="col-md-4 product-detail">
-                                                    <p>Revenue:</p>
-                                                    <b>₱ 10,000</b>
-                                                </div>
-                                            </div>
-
-                                        </li>
-                                    </ul>
-
-
+                                    <div class="col-md-4 product-detail">
+                                        <p>Revenue:</p>
+                                        <b>₱ 10,000</b>
+                                    </div>
                                 </div>
 
-                                <div class="product-list-view-footer">
-                                    <nav>
-                                        <ul class="pagination pagination-sm justify-content-end">
-                                            <li class="page-item">
-                                                <a class="page-link" href="#" aria-label="Previous">
-                                                    <span aria-hidden="true">&laquo;</span>
-                                                </a>
-                                            </li>
-                                            <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#" aria-label="Next">
-                                                    <span aria-hidden="true">&raquo;</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="recent-activity">
-                            <h5 class="recent-activity-title">Recent Activity</h5>
-
-                            <div class="recent-activity-body">
-                                <ul>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6 class="text-primary">Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6 class="text-warning">Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6 class="text-danger">Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6>Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6>Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6>Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                    <li class="recent-activity-item">
-
-                                        <div class="recent-activity-item-header">
-                                            <h6>Added new Categories</h6>
-                                            <small class="text-primary">3 days ago</small>
-                                        </div>
-                                        <p class="recent-activity-item-details">
-                                            Rex added 20 categories
-                                        </p>
-
-                                    </li>
-
-                                </ul>
-                            </div>
-
-                        </div>
+                            </li>
+                        </ul>
 
 
                     </div>
 
+                    <div class="product-list-view-footer">
+                        <nav>
+                            <ul class="pagination pagination-sm justify-content-end">
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="recent-activity">
+                <h5 class="recent-activity-title">Recent Activity</h5>
+
+                <div class="recent-activity-body">
+                    <ul>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6 class="text-primary">Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6 class="text-warning">Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6 class="text-danger">Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6>Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6>Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6>Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                        <li class="recent-activity-item">
+
+                            <div class="recent-activity-item-header">
+                                <h6>Added new Categories</h6>
+                                <small class="text-primary">3 days ago</small>
+                            </div>
+                            <p class="recent-activity-item-details">
+                                Rex added 20 categories
+                            </p>
+
+                        </li>
+
+                    </ul>
                 </div>
 
             </div>
 
 
+        </div>
+
+    </div>
+
+</div>
+
+
+<Modal modalId="categoryModal"
+       Title="Modal Title"
+       SaveButtonText="Save"
+       OnSave="SaveHandler"
+       OnClose="CloseHandler">
+    <p>Modal body text goes here.</p>
+</Modal>
+
+
 @code {
 
+    private async Task SaveHandler()
+    {
+        // Do some save operation
+    }
+
+    private async Task CloseHandler()
+    {
+        // Do some save operation
+    }
 }

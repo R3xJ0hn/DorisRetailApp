@@ -27,8 +27,8 @@ namespace DorisApp.WebAPI.Controllers
 
             try
             {
+                var countRoles = await _data.CountPageRolesAsync();
                 var getRoles = await _data.GetRoleByPageNumAsync(pages);
-                var countRoles = await _data.CountRolesAsync();
 
                 return Ok(new
                 {
@@ -39,7 +39,7 @@ namespace DorisApp.WebAPI.Controllers
             }
             catch(Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex.Message);
             }
 
         }
