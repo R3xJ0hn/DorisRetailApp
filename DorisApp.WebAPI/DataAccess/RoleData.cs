@@ -1,5 +1,6 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Data;
 
 namespace DorisApp.WebAPI.DataAccess
@@ -31,7 +32,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             catch (Exception ex)
             {
-                _logger.LogInformation($"Success: Insert {role} Category by {userId} at {role.CreatedAt} {ex.Message}");
+                _logger.LogInformation($"Error: Insert {role} Category by {userId} at {role.CreatedAt} {ex.Message}");
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -44,12 +45,27 @@ namespace DorisApp.WebAPI.DataAccess
             return output.FirstOrDefault();
         }
 
-        public async Task<List<RoleModel>> GetRolesAsync()
+        public async Task<List<RoleModel>> GetRoleByPageNumAsync(int page)
         {
-            var output = await _sql.LoadDataAsync<RoleModel>("dbo.spRoleGetAll");
+            var getPageCount = await CountRolesAsync();
+
+            if (page > getPageCount || page <= 0)
+            {
+                string msg = $"Error: Page {page} is out of range. The database have only {getPageCount} pages.";
+                _logger.LogInformation(msg);
+                throw new ArgumentException(msg);
+            }
+
+            var p = new { PageNo = page };
+            var output = await _sql.LoadDataAsync<RoleModel, dynamic>("dbo.spRoleGetByPage", p);
             _logger.LogInformation($"Success: Get Role with RoleId count:{output.Count} at {DateTime.UtcNow}");
 
             return output;
+        }
+
+        public async Task<int> CountRolesAsync()
+        {
+            return await _sql.CountPageAsync("Roles");
         }
 
         public int GetNewUserId()

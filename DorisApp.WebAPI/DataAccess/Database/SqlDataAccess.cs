@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 
 namespace DorisApp.WebAPI.DataAccess.Database
 {
+
     public class SqlDataAccess : IDisposable, ISqlDataAccess
     {
         private IDbConnection? _dbconnection;
@@ -23,14 +24,6 @@ namespace DorisApp.WebAPI.DataAccess.Database
             return _connectionString;
         }
 
-        public async Task<List<T>> LoadDataAsync<T>(string storeProcedure)
-        {
-            using IDbConnection connection = new SqlConnection(_connectionString);
-            List<T> rows = (await connection.QueryAsync<T>(storeProcedure,
-                commandType: CommandType.StoredProcedure)).ToList();
-            return rows;
-        }
-
         public async Task<List<T>> LoadDataAsync<T, U>(string storeProcedure, U parameters)
         {
             using IDbConnection connection = new SqlConnection(_connectionString);
@@ -38,6 +31,26 @@ namespace DorisApp.WebAPI.DataAccess.Database
                 commandType: CommandType.StoredProcedure)).ToList();
             return rows;
         }
+
+        public async Task<int> CountPageAsync(string tableName)
+        {
+            string sql = $"SELECT COUNT(*) FROM {tableName}";
+
+            using IDbConnection connection = new SqlConnection(_connectionString);
+            var result = (await connection.QueryAsync<int>(sql)).FirstOrDefault();
+
+            int totalItems = result;
+            int itemsPerPage = 50;
+            int numPages = totalItems / itemsPerPage;
+
+            if (totalItems % itemsPerPage != 0)
+            {
+                numPages++;
+            }
+
+            return numPages;
+        }
+
 
         public async Task SaveDataAsync<T>(string storeProcedure, T parameters)
         {

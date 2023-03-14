@@ -1,5 +1,6 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
+using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,9 +21,27 @@ namespace DorisApp.WebAPI.Controllers
 
         [HttpGet]
         [Route("get-roles")]
-        public async Task<List<RoleModel>> GetRoles()
+        public async Task<IActionResult> GetRoles(int page)
         {
-            return await _data.GetRolesAsync();
+            var pages = page == 0 ? 1 : page;
+
+            try
+            {
+                var getRoles = await _data.GetRoleByPageNumAsync(pages);
+                var countRoles = await _data.CountRolesAsync();
+
+                return Ok(new
+                {
+                    Roles = getRoles,
+                    PageCount = countRoles,
+                });
+
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex);
+            }
+
         }
 
         [HttpGet]

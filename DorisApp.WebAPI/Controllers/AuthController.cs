@@ -74,7 +74,7 @@ namespace DorisApp.WebAPI.Controllers
                 Access_Token = token,
                 Name = StringHelpers.GetFullName(user),
                 Email = user.EmailAddress
-            }); ;
+            });
         }
 
         [HttpPost("refresh-token")]
