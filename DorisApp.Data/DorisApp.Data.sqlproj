@@ -77,4 +77,7 @@
   <ItemGroup>
     <None Include="PublishLocations\DorisApp.Data.publish.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Script.PostDeployment.sql" />
+  </ItemGroup>
 </Project>
