@@ -71,6 +71,8 @@
     <Build Include="dbo\StoredProcedures\spUserGetById.sql" />
     <Build Include="dbo\StoredProcedures\spUserInsert.sql" />
     <Build Include="dbo\StoredProcedures\spUserUpdateToken.sql" />
+    <Build Include="dbo\Tables\Categories.sql" />
+    <Build Include="dbo\StoredProcedures\spCategoryInsert.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishLocations\DorisApp.Data.publish.xml" />

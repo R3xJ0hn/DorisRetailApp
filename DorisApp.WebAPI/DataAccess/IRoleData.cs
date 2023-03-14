@@ -1,5 +1,4 @@
-﻿
-using DorisApp.Data.Library.Model;
+﻿using DorisApp.Data.Library.Model;
 
 namespace DorisApp.WebAPI.DataAccess
 {

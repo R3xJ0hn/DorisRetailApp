@@ -15,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddTransient<IUserData, UserData>();
 builder.Services.AddTransient<IRoleData, RoleData>();
+builder.Services.AddTransient<ICategoryData, CategoryData>();
 
 //Add Logger Services
 builder.Services.AddLogging(builder =>

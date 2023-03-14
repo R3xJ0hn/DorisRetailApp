@@ -1,5 +1,6 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
+using System.Data;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -25,12 +26,12 @@ namespace DorisApp.WebAPI.DataAccess
                 role.UpdatedAt = role.CreatedAt;
 
                 _sql.SaveDataAsync("dbo.spRoleInsert", role);
-                _logger.LogInformation("AppDB: Insert Role", role);
+                _logger.LogInformation($"Success: Insert {role} Category by {userId} at {role.CreatedAt}");
             }
 
             catch (Exception ex)
             {
-                _logger.LogInformation($"AppError: Insert Role {ex.Message}");
+                _logger.LogInformation($"Success: Insert {role} Category by {userId} at {role.CreatedAt} {ex.Message}");
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -39,14 +40,15 @@ namespace DorisApp.WebAPI.DataAccess
         {
             var p = new { Id = id };
             var output = await _sql.LoadDataAsync<RoleModel, dynamic>("dbo.spRoleGetById", p);
-            _logger.LogInformation("AppDB: Get Role by Id", output);
+            _logger.LogInformation($"Success: Get Role with RoleId count:{output.Count} at {DateTime.UtcNow}");
             return output.FirstOrDefault();
         }
 
         public async Task<List<RoleModel>> GetRolesAsync()
         {
             var output = await _sql.LoadDataAsync<RoleModel>("dbo.spRoleGetAll");
-            _logger.LogInformation("AppDB: Get User by Id", output);
+            _logger.LogInformation($"Success: Get Role with RoleId count:{output.Count} at {DateTime.UtcNow}");
+
             return output;
         }
 
