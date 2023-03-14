@@ -1,7 +1,9 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace DorisApp.WebAPI.Controllers
 {
@@ -16,7 +18,7 @@ namespace DorisApp.WebAPI.Controllers
             _data = data;
         }
 
-        [HttpPost("add-category")]
+        [HttpPost("add-category"), Authorize(Roles = "Admin")]
         public IActionResult AddRole(string categoryName)
         {
             try
@@ -26,7 +28,7 @@ namespace DorisApp.WebAPI.Controllers
                     CategoryName = categoryName,
                 }, 1); //TODO 1: replace the login User
 
-                return Ok($"successfully added {categoryName} category");
+                return Ok($"Successfully added {categoryName} category");
             }
             catch
             {

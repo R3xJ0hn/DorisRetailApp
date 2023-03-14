@@ -1,4 +1,5 @@
 using Blazored.LocalStorage;
+using DorisApp.Data.Library.API;
 using DorisApp.WebPortal;
 using DorisApp.WebPortal.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -13,6 +14,9 @@ builder.Services.AddScoped<IAuthenticationServices, AuthenticationServices>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
+
+builder.Services.AddSingleton<IAPIHelper, APIHelper>();
+//builder.Services.AddTransient<Icategory>
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

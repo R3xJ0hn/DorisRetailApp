@@ -33,7 +33,6 @@ namespace DorisApp.WebPortal.Authentication
                     foreach (var parsedRole in parsedRoles)
                     {
                         claims.Add(item: new Claim(ClaimTypes.Role, parsedRole.Trim(trimChar: '"')));
-
                     }
                 }
 

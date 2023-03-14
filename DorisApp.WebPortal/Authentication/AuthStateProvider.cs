@@ -1,6 +1,6 @@
 ﻿using Blazored.LocalStorage;
+using DorisApp.Data.Library.API;
 using Microsoft.AspNetCore.Components.Authorization;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 
@@ -11,16 +11,19 @@ namespace DorisApp.WebPortal.Authentication
         private readonly HttpClient _httpClient;
         private readonly ILocalStorageService _localStorage;
         private readonly IConfiguration _config;
+        private readonly IAPIHelper _apiHelpder;
         private readonly AuthenticationState _anonymous;
 
         public AuthStateProvider(
                 HttpClient httpClient,
                 ILocalStorageService localStorage,
-                IConfiguration config)
+                IConfiguration config,
+                IAPIHelper apiHelpder)
         {
             _httpClient = httpClient;
             _localStorage = localStorage;
             _config = config;
+            _apiHelpder = apiHelpder;
             _anonymous = new AuthenticationState(user: new ClaimsPrincipal(identity: new ClaimsIdentity()));
         }
 
@@ -40,18 +43,33 @@ namespace DorisApp.WebPortal.Authentication
                     authenticationType: "jwtAuthType")));
         }
 
-        public void NotifyUserAuthentication(string token)
+        public async Task NotifyUserAuthentication(string token)
         {
-            var authenticatedUser = new ClaimsPrincipal(
-                    identity: new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(token),
-                    authenticationType: "jwtAuthType"));
-            var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
+            Task<AuthenticationState> authState;
+
+            try
+            {
+                _apiHelpder.LogInUser(token); 
+                var authenticatedUser = new ClaimsPrincipal(
+                        identity: new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(token),
+                        authenticationType: "jwtAuthType"));
+                authState = Task.FromResult(new AuthenticationState(authenticatedUser));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                string key = _config[key: "authTokenStorageKey"];
+                await _localStorage.RemoveItemAsync(key);
+                authState = Task.FromResult(_anonymous);
+            }
+
             NotifyAuthenticationStateChanged(authState);
         }
 
         public void NotifyUserLogout()
         {
             var authState = Task.FromResult(_anonymous);
+            _apiHelpder.LogOffUser();
             NotifyAuthenticationStateChanged(authState);
         }
 

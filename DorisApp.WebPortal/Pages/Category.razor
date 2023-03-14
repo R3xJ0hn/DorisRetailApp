@@ -14,7 +14,7 @@
 
                 <div class="col ">
                     <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
-                            data-bs-target="#categoryModal">
+                            data-bs-target="#categoryModal" @onclick="OpenAddProductModal">
                         <i class="fa-regular fa-circle-plus"></i>
                         Add
                     </button>
@@ -263,15 +263,31 @@
 
 
 <Modal modalId="categoryModal"
-       Title="Modal Title"
+       Title= "@modalTitle"
        SaveButtonText="Save"
        OnSave="SaveHandler"
        OnClose="CloseHandler">
-    <p>Modal body text goes here.</p>
+
+    <p class="card-description text-justify">
+        This is where you can add new product category to your website.
+        Just fill out the form with the category name.
+    </p>
+
+    <div class="mb-3">
+        <label for="productName" class="form-label">Category Name</label>
+        <input type="text" class="form-control" id="productName" placeholder="Product Name">
+    </div>
+
 </Modal>
 
 
 @code {
+    private string modalTitle = string.Empty;
+
+    private void OpenAddProductModal()
+    {
+        modalTitle = "Add New Modal";
+    }
 
     private async Task SaveHandler()
     {
