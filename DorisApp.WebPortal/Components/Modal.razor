@@ -1,6 +1,5 @@
 ﻿@inject IJSRuntime JSRuntime
 
-
 <div class="modal fade" id="@modalId" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
      aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-md">
@@ -18,7 +17,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="OnClose">Cancel</button>
                 <button id="saveButton" type="button" class="btn btn-primary proceed-btn" @onclick="OnSaveClicked">
                     <span class="spinner-border spinner-border-sm d-none" role="status"
-                        aria-hidden="true"></span>
+                          aria-hidden="true"></span>
                     @SaveButtonText
                 </button>
             </div>
@@ -59,6 +58,5 @@
         await JSRuntime.InvokeVoidAsync("modalProcessing");
         await OnSave.InvokeAsync(null);
     }
-
 
 }

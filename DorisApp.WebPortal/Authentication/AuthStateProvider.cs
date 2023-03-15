@@ -36,6 +36,7 @@ namespace DorisApp.WebPortal.Authentication
                 return _anonymous;
             }
 
+            _apiHelpder.LogInUser(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme: "bearer", token);
             return new AuthenticationState(
                 user: new ClaimsPrincipal(
@@ -60,6 +61,7 @@ namespace DorisApp.WebPortal.Authentication
                 Console.WriteLine(ex.Message);
                 string key = _config[key: "authTokenStorageKey"];
                 await _localStorage.RemoveItemAsync(key);
+                _apiHelpder.LogOffUser();
                 authState = Task.FromResult(_anonymous);
             }
 

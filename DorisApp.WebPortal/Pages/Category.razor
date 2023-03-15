@@ -34,10 +34,9 @@
                             <label for="sort-table">Sort by:</label>
                             <select class="form-select form-select-sm" id="sort-table"
                                     aria-label=".form-select-sm example">
-                                <option selected>Open this select menu</option>
-                                <option value="1">One</option>
-                                <option value="2">Two</option>
-                                <option value="3">Three</option>
+                                <option selected>Select Order</option>
+                                <option value="1">Name</option>
+                                <option value="2">No. Product</option>
                             </select>
                         </div>
                     </div>
@@ -58,6 +57,7 @@
                         </thead>
 
                         <tbody>
+
                             <tr>
                                 <td scope="row">
                                     <span></span>
@@ -72,6 +72,7 @@
                                     </div>
                                 </td>
                             </tr>
+
                         </tbody>
 
                     </table>
@@ -262,7 +263,6 @@
 
 </div>
 
-
 <Modal modalId="categoryModal"
        Title= "@modalTitle"
        SaveButtonText="Save"
@@ -287,11 +287,16 @@
 </Modal>
 
 
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <Toast ToastId="categoryToast" Message="@toastMessage" />
+</div>
+
+
 @code {
 
     CategoryModel model = new ();
     string? errorMessage;
-
+    string? toastMessage;
 
     private string modalTitle = string.Empty;
 
@@ -311,17 +316,24 @@
             if (name is not null)
             {
                 await CategoryEndpint.AddCategoryAsync(name);
-                await JSRuntime.InvokeVoidAsync("modalProcessDone");
+                toastMessage = "Successfully added new category.";
+
+                await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
+                await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
             }
 
         }
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+            toastMessage = "An error occured";
             Console.WriteLine(errorMessage);
             await JSRuntime.InvokeVoidAsync("modalProcessDone");
         }
 
     }
+
+
+
 
 }
