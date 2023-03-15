@@ -1,7 +1,7 @@
 ﻿CREATE PROCEDURE [dbo].[spCategoryGetByPage]
 	@PageNo				INT,
 	@ItemPerPage		INT,
-	@OrderBy			NVARCHAR(120)
+	@OrderBy			INT
 AS
 
 BEGIN
@@ -13,11 +13,11 @@ BEGIN
 	FROM [Categories]
 	ORDER BY
 		CASE 
-			WHEN @OrderBy = 'name-asc' THEN [CategoryName]
+			WHEN @OrderBy = 1 THEN [CategoryName]
 			ELSE NULL
 		END ASC,
 		CASE 
-			WHEN @OrderBy = 'name-desc' THEN [CategoryName]
+			WHEN @OrderBy = 2 THEN [CategoryName]
 			ELSE NULL
 		END DESC
 	OFFSET @Offset ROWS

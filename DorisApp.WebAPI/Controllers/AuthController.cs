@@ -129,10 +129,10 @@ namespace DorisApp.WebAPI.Controllers
         }
 
 
-        private void SetRefreshToken(UserModel user)
+        private async Task SetRefreshToken(UserModel user)
         {
             //Update Token in UserModel
-            _userData.SetGenerateRefreshToken(user);
+            await _userData.SetGenerateRefreshToken(user);
 
             var cookieOptions = new CookieOptions
             {

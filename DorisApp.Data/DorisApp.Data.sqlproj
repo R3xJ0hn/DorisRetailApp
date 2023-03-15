@@ -75,6 +75,9 @@
     <Build Include="dbo\StoredProcedures\spRoleGetByPage.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryInsert.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryGetByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryGetTableDataByPage.sql" />
+    <Build Include="dbo\Tables\SubCategories.sql" />
+    <Build Include="dbo\Tables\Products.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishLocations\DorisApp.Data.publish.xml" />

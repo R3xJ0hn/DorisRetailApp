@@ -1,78 +1,53 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
-using DorisApp.WebAPI.Helpers;
 
 namespace DorisApp.WebAPI.DataAccess
 {
     public class CategoryData : BaseDataProcessor
     {
-        public override string TableName => "Category";
+        public override string TableName => "Categories";
 
-        public CategoryData(ISqlDataAccess sql, ILogger logger) 
+        public CategoryData(ISqlDataAccess sql, ILogger logger)
             : base(sql, logger)
         {
         }
 
-
         public async Task AddAsync(CategoryModel category, int userId)
         {
+            if (category == null)
+            {
+                throw new ArgumentNullException(nameof(category));
+            }
+
+            if (userId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(userId));
+            }
+
+            category.CategoryName = category.CategoryName.ToLower();
+            category.CreatedByUserId = userId;
+            category.UpdatedByUserId = category.CreatedByUserId;
+            category.CreatedAt = DateTime.UtcNow;
+            category.UpdatedAt = category.CreatedAt;
+
             try
             {
-                category.CategoryName = category.CategoryName.ToLower();
-                category.CreatedByUserId = userId;
-                category.UpdatedByUserId = category.CreatedByUserId;
-                category.CreatedAt = DateTime.UtcNow;
-                category.UpdatedAt = category.CreatedAt;
-
                 await _sql.SaveDataAsync("dbo.spCategoryInsert", category);
                 _logger.LogInformation($"Success: Insert {category.CategoryName} Category by {userId} at {category.CreatedAt}");
             }
-
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error: Insert {category.CategoryName} Category by {userId} at {category.CreatedAt} {ex.Message}");
-                throw new ArgumentException(ex.Message);
+                _logger.LogError(ex, $"Error: Insert {category.CategoryName} Category by {userId} at {category.CreatedAt}");
+                throw;
             }
         }
 
-        public async Task<RequestModel<CategoryModel>?> GetByPageAsync(RequestPageDTO request)
+        public async Task<RequestModel<CategoryTableDTO>?> GetTableDataByPageAsync(RequestPageDTO request)
         {
-            try
-            {
-                var count = await CountAsync();
-                var countPages = AppHelpers.CountPages(count, request.ItemPerPage);
-
-                if (ValidateRequestPageDTO(request, countPages))
-                {
-                    var output = await _sql.LoadDataAsync<CategoryModel, RequestPageDTO>("dbo.CategoryGetByPage", request);
-                    _logger.LogInformation($"Success: Get Category count:{output.Count} at {DateTime.UtcNow}");
-
-                    RequestModel<CategoryModel> reqResult = new()
-                    {
-                        Models = output,
-                        IsInPage = request.PageNo,
-                        ItemPerPage = request.ItemPerPage,
-                        TotalPages = countPages,
-                        TotalItems = count
-                    };
-
-                    return reqResult;
-                }
-
-                ErrorPage(request);
-                return null;
-            }
-
-            catch (Exception ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
-
+            return await GetByPageAsync<CategoryTableDTO>("dbo.spCategoryGetByPage", request);
         }
-
-
-
 
     }
+
 }

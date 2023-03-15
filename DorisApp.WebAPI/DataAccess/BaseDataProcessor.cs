@@ -1,5 +1,7 @@
 ﻿using DorisApp.Data.Library.DTO;
+using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.Helpers;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -7,13 +9,53 @@ namespace DorisApp.WebAPI.DataAccess
     {
         protected readonly ISqlDataAccess _sql;
         protected readonly ILogger _logger;
-
         public abstract string TableName { get; }
 
         public BaseDataProcessor(ISqlDataAccess sql, ILogger logger)
         {
             _sql = sql;
             _logger = logger;
+        }
+        protected async Task<RequestModel<T>?> GetByPageAsync<T>(string storeProcedureName, RequestPageDTO request) where T : class
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (storeProcedureName == null)
+            {
+                throw new ArgumentNullException(nameof(storeProcedureName));
+            }
+
+            var count = await CountAsync();
+            var countPages = AppHelpers.CountPages(count, request.ItemPerPage);
+
+            if (!ValidateRequestPageDTO(request, countPages))
+            {
+                ErrorPage(request);
+                return null;
+            }
+
+            try
+            {
+                var output = await _sql.LoadDataAsync<T, RequestPageDTO>(storeProcedureName, request);
+                _logger.LogInformation($"Success: Get {typeof(T).Name} count:{output.Count} at {DateTime.UtcNow}");
+
+                return new RequestModel<T>
+                {
+                    Models = output,
+                    IsInPage = request.PageNo,
+                    ItemPerPage = request.ItemPerPage,
+                    TotalPages = countPages,
+                    TotalItems = count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error: Get {typeof(T).Name} at {DateTime.UtcNow}");
+                throw;
+            }
         }
 
         public bool ValidateRequestPageDTO(RequestPageDTO request, int totalPage)
@@ -30,7 +72,15 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task<int> CountAsync()
         {
-            return await _sql.CountAsync(TableName);
+            try
+            {
+                return await _sql.CountAsync(TableName);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
         }
 
         public void Dispose()
