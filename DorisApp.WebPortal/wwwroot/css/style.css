@@ -11958,7 +11958,7 @@ textarea.form-control-lg {
 }
 
 .table-wrapper {
-  height: 40vh;
+  height: 38vh;
   background: #fff;
   overflow-y: scroll;
   position: relative;
@@ -11975,12 +11975,9 @@ textarea.form-control-lg {
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background-color: #d582fc;
 }
-.table-wrapper .table {
-  background: transparent;
-}
-.table-wrapper .table thead th {
+.table-wrapper .table thead tr > th {
   font-weight: 500;
-  background: transparent;
+  background-color: #fff;
   text-align: center;
   position: sticky;
   top: 0;
@@ -12417,7 +12414,7 @@ textarea.form-control-lg {
   color: #d582fc;
 }
 .product-list-view .product-list-view-body .product-list-view-content {
-  height: 35vh;
+  height: 33vh;
 }
 .product-list-view .product-list-view-body .product-list-view-content ul {
   overflow-x: hidden;

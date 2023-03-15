@@ -1,6 +1,7 @@
 ﻿@page "/category/categories"
-@inject CategoryEndpoint CategoryEndpint
+@inject CategoryEndpoint CategoryEndpoint
 @inject IJSRuntime JSRuntime
+@inject IConfiguration Config
 
 <div class="category-page-content">
 
@@ -58,25 +59,34 @@
 
                         <tbody>
 
-
-                            @for (int i = 0; i < 10; i++)
+                            @if(requestTableResult != null)
                             {
-                                <tr>
-                                    <td scope="row">
-                                        <span></span>
-                                    </td>
-                                    <td>Beauty and Care</td>
-                                    <td>130</td>
-                                    <td>110</td>
-                                    <td>
-                                        <div class="table-icons">
-                                            <i class="fa-solid fa-pencil"></i>
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </div>
-                                    </td>
-                                </tr>
+                                @foreach (var item in requestTableResult.Models)
+                                {
+                                    <tr>
+                                        <td scope="row">
+                                            <span></span>
+                                        </td>
+                                        <td>@item.CategoryName</td>
+                                        <td>@item.SubcategoryCount</td>
+                                        <td>@item.ProductCount</td>
+                                        <td>
+                                            <div class="table-icons">
+                                                <i class="fa-solid fa-pencil" data-bs-toggle="modal"
+                                                     data-bs-target="#categoryModal"
+                                                     @onclick="@(() => OpenEditProductModal(item.Id))"></i>
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             }
-
+                            else
+                            {
+                                <div class="row justify-content-center align-items-lg-center">
+                                    <h6>No Category has been loaded.</h6>
+                                </div>
+                            }
 
                         </tbody>
 
@@ -84,30 +94,28 @@
 
                 </div>
 
-
-                @if(requestItems.TotalPages > 1)
+                @if(requestTableResult != null)
                 {
-                    <nav aria-label="Page navigation example">
-                        <ul class="pagination justify-content-end">
-                            <li class="page-item disabled">
-                                <a class="page-link">Previous</a>
-                            </li>
+                    @if (requestTableResult.TotalPages > 1)
+                    {
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination justify-content-end">
+                                <li class="page-item disabled">
+                                    <a class="page-link">Previous</a>
+                                </li>
 
-                            @*@for (int i = 1; i < requestItems.TotalPages; i++)
-                            {
-                              <li class="page-item"><a class="page-link" @onclick="RequestPage(i)"> @i </a></li>
-                            }*@
+                                @*@for (int i = 1; i < requestItems.TotalPages; i++)
+                        {
+                        <li class="page-item"><a class="page-link" @onclick="RequestPage(i)"> @i </a></li>
+                        }*@
 
-                            <li class="page-item">
-                                <a class="page-link" href="#">Next</a>
-                            </li>
-                        </ul>
-                    </nav>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
                 }
-
- 
-
-
 
             </div>
         </div>
@@ -295,8 +303,8 @@
 
         <div class="mb-3">
             <label for="productName" class="form-label">Category Name</label>
-            <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="model.CategoryName" />
-            <ValidationMessage For="@(()=> model.CategoryName)"/>
+            <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="modalModel.CategoryName" />
+            <ValidationMessage For="@(()=> modalModel.CategoryName)"/>
         </div>
 
     </EditForm>
@@ -309,20 +317,35 @@
 
 
 @code {
-    RequestModel<dynamic> requestItems;
+    RequestPageDTO request = new();
+    RequestModel<CategoryTableDTO> requestTableResult;
+
     CategoryModel modalModel = new ();
     string? errorMessage;
     string? toastMessage;
     private string modalTitle = string.Empty;
 
+    protected override async Task OnInitializedAsync()
+    {
+        request.PageNo =1;
+        request.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
+        request.OrderBy = GetOrderBy.NameAcs;
+        requestTableResult = await CategoryEndpoint.GetTableCategories(request);
+    }
+
     private void RequestPage(int page)
     {
-        
+
     }
 
     private void OpenAddProductModal()
     {
         modalTitle = "Add New Modal";
+    }
+
+    private void OpenEditProductModal(int id)
+    {
+        modalTitle = "Add New Modal" + id.ToString();
     }
 
     private async Task SaveHandler()
@@ -335,7 +358,7 @@
 
             if (name is not null)
             {
-                await CategoryEndpint.AddCategoryAsync(name);
+                await CategoryEndpoint.AddCategoryAsync(name);
                 toastMessage = "Successfully added new category.";
 
                 await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");

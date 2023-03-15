@@ -40,7 +40,7 @@ namespace DorisApp.WebAPI.Controllers
             }
         }
 
-        [HttpGet("get-category/table")]
+        [HttpPost("get-category/table")]
         public async Task<IActionResult> GetCategories(RequestPageDTO request)
         {
             try

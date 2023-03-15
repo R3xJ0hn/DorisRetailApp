@@ -1,5 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using DorisApp.Data.Library.DTO;
+using DorisApp.Data.Library.Model;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +28,26 @@ namespace DorisApp.Data.Library.API
             {
                 throw new Exception(response.ReasonPhrase);
             }
+        }
+
+        public async Task<RequestModel<CategoryTableDTO>?> GetTableCategories(RequestPageDTO request)
+        {
+            var json = JsonConvert.SerializeObject(request);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using (HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:get-category/table"],data))
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<RequestModel<CategoryTableDTO>>(result);
+                }
+                else
+                {
+                    throw new Exception(response.ReasonPhrase);
+                }
+            }
+
         }
 
     }
