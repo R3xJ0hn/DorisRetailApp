@@ -14,10 +14,10 @@ namespace DorisApp.WebAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _config;
-        private readonly IUserData _userData;
-        private readonly IRoleData _roleData;
+        private readonly UserData _userData;
+        private readonly RoleData _roleData;
 
-        public AuthController(IConfiguration config, IUserData userData, IRoleData roleData)
+        public AuthController(IConfiguration config, UserData userData, RoleData roleData)
         {
             _config = config;
             _userData = userData;
@@ -44,7 +44,7 @@ namespace DorisApp.WebAPI.Controllers
             };
 
             var createdUser = await _userData.RegisterUserAsync(user);
-            return Ok($"Welcome {StringHelpers.GetFullName(createdUser)}");
+            return Ok($"Welcome {AppHelpers.GetFullName(createdUser)}");
         }
 
         [HttpPost("login")]
@@ -68,7 +68,7 @@ namespace DorisApp.WebAPI.Controllers
             return Ok(new
             {
                 Access_Token = token,
-                Name = StringHelpers.GetFullName(user),
+                Name = AppHelpers.GetFullName(user),
                 Email = user.EmailAddress
             });
         }
@@ -114,7 +114,7 @@ namespace DorisApp.WebAPI.Controllers
 
             var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, StringHelpers.GetFullName(user)),
+                    new Claim(ClaimTypes.Name, AppHelpers.GetFullName(user)),
                     new Claim(ClaimTypes.Role, roleName),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
@@ -145,7 +145,7 @@ namespace DorisApp.WebAPI.Controllers
 
         private async Task<string?> GetUserRoleName(UserModel user)
         {
-            return (await _roleData.GetRoleByIdAsync(user.RoleId))?.RoleName;
+            return (await _roleData.GetByIdAsync(user.RoleId))?.RoleName;
         }
     }
 }

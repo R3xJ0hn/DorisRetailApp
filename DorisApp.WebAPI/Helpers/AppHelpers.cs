@@ -3,7 +3,7 @@ using System.Text;
 
 namespace DorisApp.WebAPI.Helpers
 {
-    public static class StringHelpers
+    public static class AppHelpers
     {
         public static string GetFullName(UserModel user)
         {
@@ -30,6 +30,18 @@ namespace DorisApp.WebAPI.Helpers
 
             return result.ToString();
         }
+
+        public static int CountPages(int totalItems, int itemsPerPage)
+        {
+            int numPages = totalItems / itemsPerPage;
+
+            if (totalItems % itemsPerPage != 0)
+            {
+                numPages++;
+            }
+            return numPages;
+        }
+
 
     }
 }

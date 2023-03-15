@@ -1,20 +1,19 @@
-﻿using DorisApp.Data.Library.Model;
+﻿using DorisApp.Data.Library.DTO;
+using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.Helpers;
 
 namespace DorisApp.WebAPI.DataAccess
 {
-    public class RoleData : IDisposable, IRoleData
+    public class RoleData: BaseDataProcessor
     {
-        private readonly ISqlDataAccess _sql;
-        private readonly ILogger _logger;
+        public override string TableName => "Roles";
 
-        public RoleData(ISqlDataAccess sql, ILogger logger)
+        public RoleData(ISqlDataAccess sql, ILogger logger) 
+            : base(sql, logger)
         {
-            _sql = sql;
-            _logger = logger;
         }
-
-        public void AddRole(RoleModel role, int userId)
+        public async Task AddAsync(RoleModel role, int userId)
         {
             try
             {
@@ -24,18 +23,51 @@ namespace DorisApp.WebAPI.DataAccess
                 role.CreatedAt = DateTime.UtcNow;
                 role.UpdatedAt = role.CreatedAt;
 
-                _sql.SaveDataAsync("dbo.spRoleInsert", role);
-                _logger.LogInformation($"Success: Insert {role} Category by {userId} at {role.CreatedAt}");
+               await _sql.SaveDataAsync("dbo.spRoleInsert", role);
+                _logger.LogInformation($"Success: Insert {role.RoleName} Category by {userId} at {role.CreatedAt}");
             }
 
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error: Insert {role} Category by {userId} at {role.CreatedAt} {ex.Message}");
+                _logger.LogInformation($"Error: Insert {role.RoleName} Category by {userId} at {role.CreatedAt} {ex.Message}");
                 throw new ArgumentException(ex.Message);
             }
         }
 
-        public async Task<RoleModel?> GetRoleByIdAsync(int id)
+        public async Task<RequestModel<RoleModel>?> GetByPageAsync(RequestPageDTO request)
+        {
+            try
+            {
+                var count = await CountAsync();
+                var countPages = AppHelpers.CountPages(count, request.ItemPerPage);
+
+                if (ValidateRequestPageDTO(request, countPages))
+                {
+                    var output = await _sql.LoadDataAsync<RoleModel, RequestPageDTO>("dbo.spRoleGetByPage", request);
+                    _logger.LogInformation($"Success: Get Role count:{output.Count} at {DateTime.UtcNow}");
+
+                    RequestModel<RoleModel> reqResult = new()
+                    {
+                        Models = output,
+                        IsInPage = request.PageNo,
+                        ItemPerPage = request.ItemPerPage,
+                        TotalPages = countPages,
+                        TotalItems = count
+                    };
+
+                    return reqResult;
+                }
+
+                ErrorPage(request);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        public async Task<RoleModel?> GetByIdAsync(int id)
         {
             var p = new { Id = id };
             var output = await _sql.LoadDataAsync<RoleModel, dynamic>("dbo.spRoleGetById", p);
@@ -43,37 +75,11 @@ namespace DorisApp.WebAPI.DataAccess
             return output.FirstOrDefault();
         }
 
-        public async Task<List<RoleModel>> GetRoleByPageNumAsync(int page)
-        {
-            var getPageCount = await CountPageRolesAsync();
-
-            if (page > getPageCount || page <= 0)
-            {
-                string msg = $"Error: Page {page} is out of range, the database have only {getPageCount} pages.";
-                _logger.LogInformation(msg);
-                throw new ArgumentException(msg);
-            }
-
-            var p = new { PageNo = page };
-            var output = await _sql.LoadDataAsync<RoleModel, dynamic>("dbo.spRoleGetByPage", p);
-            _logger.LogInformation($"Success: Get Role with RoleId count:{output.Count} at {DateTime.UtcNow}");
-
-            return output;
-        }
-
-        public async Task<int> CountPageRolesAsync()
-        {
-            return await _sql.CountPageAsync("Roles");
-        }
-
         public int GetNewUserId()
         {
             return 1;
         }
 
-        public void Dispose()
-        {
-            _sql.Dispose();
-        }
+
     }
 }

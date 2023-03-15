@@ -6,14 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace DorisApp.WebAPI.DataAccess
 {
-    public class UserData : IDisposable, IUserData
+    public class UserData : IDisposable
     {
         private readonly IConfiguration _config;
         private readonly ISqlDataAccess _sql;
         private readonly ILogger<UserData> _logger;
-        private readonly IRoleData _roleData;
+        private readonly RoleData _roleData;
 
-        public UserData(IConfiguration config, ISqlDataAccess sql, ILogger<UserData> logger, IRoleData roleData)
+        public UserData(IConfiguration config, ISqlDataAccess sql, ILogger<UserData> logger, RoleData roleData)
         {
             _config = config;
             _sql = sql;
@@ -24,7 +24,7 @@ namespace DorisApp.WebAPI.DataAccess
         public async Task<UserModel> RegisterUserAsync(UserModel user)
         {
             user.RoleId = _roleData.GetNewUserId();
-            var getRole = await _roleData.GetRoleByIdAsync(user.RoleId);
+            var getRole = await _roleData.GetByIdAsync(user.RoleId);
             var passwordHash = user.PasswordHash;
 
             if (!ValidateEmail(user.EmailAddress))
@@ -111,7 +111,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception)
             {
-                var errorMsg = $"Unable to Update {StringHelpers.GetFullName(user)}";
+                var errorMsg = $"Unable to Update {AppHelpers.GetFullName(user)}";
                 _logger.LogInformation(errorMsg, user);
                 throw new ArgumentException(errorMsg);
             }

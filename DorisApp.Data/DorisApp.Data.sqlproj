@@ -60,6 +60,7 @@
     <Folder Include="dbo\Tables" />
     <Folder Include="dbo\StoredProcedures" />
     <Folder Include="PublishLocations" />
+    <Folder Include="dbo\StoredProcedures\Category" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Roles.sql" />
@@ -71,8 +72,9 @@
     <Build Include="dbo\StoredProcedures\spUserInsert.sql" />
     <Build Include="dbo\StoredProcedures\spUserUpdateToken.sql" />
     <Build Include="dbo\Tables\Categories.sql" />
-    <Build Include="dbo\StoredProcedures\spCategoryInsert.sql" />
     <Build Include="dbo\StoredProcedures\spRoleGetByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryInsert.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryGetByPage.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishLocations\DorisApp.Data.publish.xml" />

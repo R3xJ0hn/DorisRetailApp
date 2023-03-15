@@ -1,7 +1,6 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Security.Claims;
@@ -12,26 +11,26 @@ namespace DorisApp.WebAPI.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategoryData _data;
+        private readonly CategoryData _data;
 
-        public CategoryController(ICategoryData data)
+        public CategoryController(CategoryData data)
         {
             _data = data;
         }
 
         //TODO:(Roles = "admin")
         [HttpPost("add-category"), Authorize(Roles = "admin")]
-        public IActionResult AddCategory([FromBody] CategoryModel model)
+        public async Task<IActionResult> AddCategory([FromBody] CategoryModel model)
         {
             var identity = (ClaimsIdentity)User.Identity;
             var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
                    .Select(c => c.Value).SingleOrDefault();
             try
             {
-                _data.AddNewCategory(new CategoryModel
+                await _data.AddAsync(new CategoryModel
                 {
                     CategoryName = model.CategoryName 
-                }, int.Parse(userId) ); //TODO 1: replace the login User
+                }, int.Parse(userId) );
 
                 return Ok($"Successfully added {model.CategoryName} category");
             }
@@ -41,5 +40,8 @@ namespace DorisApp.WebAPI.Controllers
                 return BadRequest("Unable to Add new role.");
             }
         }
+
+
+
     }
 }

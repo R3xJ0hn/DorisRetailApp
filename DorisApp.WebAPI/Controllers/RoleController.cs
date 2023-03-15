@@ -1,10 +1,8 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
-using DorisApp.WebAPI.Helpers;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Security.Claims;
 
 namespace DorisApp.WebAPI.Controllers
 {
@@ -12,43 +10,19 @@ namespace DorisApp.WebAPI.Controllers
     [ApiController]
     public class RoleController : ControllerBase
     {
-        private readonly IRoleData _data;
+        private readonly RoleData _data;
 
-        public RoleController(IRoleData data)
+        public RoleController(RoleData data)
         {
             _data = data;
         }
 
-        [HttpGet]
-        [Route("get-roles")]
-        public async Task<IActionResult> GetRoles(int page)
-        {
-            var pages = page == 0 ? 1 : page;
-
-            try
-            {
-                var countRoles = await _data.CountPageRolesAsync();
-                var getRoles = await _data.GetRoleByPageNumAsync(pages);
-
-                return Ok(new
-                {
-                    Roles = getRoles,
-                    PageCount = countRoles,
-                });
-
-            }
-            catch(Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-        }
 
         [HttpGet]
         [Route("get-role/id")]
         public async Task<IActionResult> GetRoleId(int id)
         {
-            var role = await _data.GetRoleByIdAsync(id);
+            var role = await _data.GetByIdAsync(id);
 
             if (role != null)
             {
@@ -59,14 +33,17 @@ namespace DorisApp.WebAPI.Controllers
         }
 
         [HttpPost("add-role")]
-        public IActionResult AddRole(string roleName)
+        public async Task<IActionResult> AddRole(string roleName)
         {
+            var identity = (ClaimsIdentity)User.Identity;
+            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+                   .Select(c => c.Value).SingleOrDefault();
             try
             {
-                _data.AddRole(new RoleModel
+               await _data.AddAsync(new RoleModel
                 {
                     RoleName = roleName,
-                }, 1); //TODO 1: replace the login User
+                }, int.Parse(userId));
 
                 return Ok($"successfully added {roleName} role");
             }

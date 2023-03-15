@@ -3,7 +3,7 @@
     public interface ISqlDataAccess
     {
         void CommitTransaction();
-        Task<int> CountPageAsync(string tableName);
+        Task<int> CountAsync(string tableName);
         void Dispose();
         string GetConnectionString();
         Task<List<T>> LoadDataAsync<T, U>(string storeProcedure, U parameters);

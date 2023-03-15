@@ -32,23 +32,14 @@ namespace DorisApp.WebAPI.DataAccess.Database
             return rows;
         }
 
-        public async Task<int> CountPageAsync(string tableName)
+        public async Task<int> CountAsync(string tableName)
         {
             string sql = $"SELECT COUNT(*) FROM {tableName}";
 
             using IDbConnection connection = new SqlConnection(_connectionString);
             var result = (await connection.QueryAsync<int>(sql)).FirstOrDefault();
 
-            int totalItems = result;
-            int itemsPerPage = 50;
-            int numPages = totalItems / itemsPerPage;
-
-            if (totalItems % itemsPerPage != 0)
-            {
-                numPages++;
-            }
-
-            return numPages;
+            return result;
         }
 
 
