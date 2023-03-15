@@ -58,10 +58,5 @@
 </div>
 
 @code {
-    public event EventHandler SidebarToggled;
 
-    private void ToggleSidebar()
-    {
-        SidebarToggled?.Invoke(this, EventArgs.Empty);
-    }
 }

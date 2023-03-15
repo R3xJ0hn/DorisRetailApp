@@ -14,5 +14,23 @@
     function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
     }
-
 };
+
+
+function modalProcessing() {
+    var proceedBtn = document.getElementById('saveButton');
+    var buttons = document.querySelectorAll(".btn");
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.add("disabled");
+    }
+    proceedBtn.querySelector(".spinner-border").classList.remove("d-none");
+}
+
+function modalProcessDone() {
+    var proceedBtn = document.getElementById('saveButton');
+    var buttons = document.querySelectorAll(".btn");
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("disabled");
+    }
+    proceedBtn.querySelector(".spinner-border").classList.add("d-none");
+}

@@ -1,5 +1,6 @@
 ﻿@page "/category/categories"
-@using DorisApp.WebPortal.Components
+@inject CategoryEndpoint CategoryEndpint
+@inject IJSRuntime JSRuntime
 
 <div class="category-page-content">
 
@@ -265,23 +266,33 @@
 <Modal modalId="categoryModal"
        Title= "@modalTitle"
        SaveButtonText="Save"
-       OnSave="SaveHandler"
-       OnClose="CloseHandler">
+       OnSave="SaveHandler">
 
     <p class="card-description text-justify">
         This is where you can add new product category to your website.
         Just fill out the form with the category name.
     </p>
 
-    <div class="mb-3">
-        <label for="productName" class="form-label">Category Name</label>
-        <input type="text" class="form-control" id="productName" placeholder="Product Name">
-    </div>
+    <EditForm Model="@model" OnInvalidSubmit="@SaveHandler">
+        <DataAnnotationsValidator/>
+
+        <div class="mb-3">
+            <label for="productName" class="form-label">Category Name</label>
+            <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="model.CategoryName" />
+            <ValidationMessage For="@(()=> model.CategoryName)"/>
+        </div>
+
+    </EditForm>
 
 </Modal>
 
 
 @code {
+
+    CategoryModel model = new ();
+    string? errorMessage;
+
+
     private string modalTitle = string.Empty;
 
     private void OpenAddProductModal()
@@ -291,11 +302,26 @@
 
     private async Task SaveHandler()
     {
-        // Do some save operation
+        errorMessage = "";
+
+        try
+        {
+            var name = model.CategoryName;
+
+            if (name is not null)
+            {
+                await CategoryEndpint.AddCategoryAsync(name);
+                await JSRuntime.InvokeVoidAsync("modalProcessDone");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            Console.WriteLine(errorMessage);
+            await JSRuntime.InvokeVoidAsync("modalProcessDone");
+        }
+
     }
 
-    private async Task CloseHandler()
-    {
-        // Do some save operation
-    }
 }

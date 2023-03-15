@@ -57,8 +57,7 @@ builder.Services
             //ValidAudience = "apiWithAuthBackend",
             ClockSkew = TimeSpan.FromMinutes(5),
             IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(key)
-                ),
+                    Encoding.UTF8.GetBytes(key))
         };
     });
 

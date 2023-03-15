@@ -1,14 +1,10 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.Helpers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace DorisApp.WebAPI.Controllers
@@ -114,20 +110,16 @@ namespace DorisApp.WebAPI.Controllers
         private string CreateToken(UserModel user, string? roleName)
         {
             var key = Encoding.UTF8.GetBytes(_config["JwtConfig:Key"]);
-            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, StringHelpers.GetFullName(user)),
+                    new Claim(ClaimTypes.Role, roleName),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
                     new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddDays(1)).ToUnixTimeSeconds().ToString())
                 };
-
-            if (!string.IsNullOrEmpty(roleName))
-            {
-                claims.Add(new Claim(ClaimTypes.Role, roleName));
-            }
 
             var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
                 new JwtHeader(credentials),

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Security.Claims;
 
 namespace DorisApp.WebAPI.Controllers
 {
@@ -18,20 +19,25 @@ namespace DorisApp.WebAPI.Controllers
             _data = data;
         }
 
-        [HttpPost("add-category"), Authorize(Roles = "Admin")]
-        public IActionResult AddRole(string categoryName)
+        //TODO:(Roles = "admin")
+        [HttpPost("add-category"), Authorize(Roles = "admin")]
+        public IActionResult AddCategory([FromBody] CategoryModel model)
         {
+            var identity = (ClaimsIdentity)User.Identity;
+            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+                   .Select(c => c.Value).SingleOrDefault();
             try
             {
                 _data.AddNewCategory(new CategoryModel
                 {
-                    CategoryName = categoryName,
-                }, 1); //TODO 1: replace the login User
+                    CategoryName = model.CategoryName 
+                }, int.Parse(userId) ); //TODO 1: replace the login User
 
-                return Ok($"Successfully added {categoryName} category");
+                return Ok($"Successfully added {model.CategoryName} category");
             }
             catch
             {
+               
                 return BadRequest("Unable to Add new role.");
             }
         }
