@@ -13,6 +13,7 @@ namespace DorisApp.WebPortal.Authentication
         private readonly IConfiguration _config;
         private readonly IAPIHelper _apiHelpder;
         private readonly AuthenticationState _anonymous;
+        private readonly string _autLocalKey;
 
         public AuthStateProvider(
                 HttpClient httpClient,
@@ -25,11 +26,13 @@ namespace DorisApp.WebPortal.Authentication
             _config = config;
             _apiHelpder = apiHelpder;
             _anonymous = new AuthenticationState(user: new ClaimsPrincipal(identity: new ClaimsIdentity()));
+            _autLocalKey = _config[key: "authTokenStorageKey"];
+
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var token = await _localStorage.GetItemAsync<string>(key: _config[key: "authTokenStorageKey"]);
+            var token = await _localStorage.GetItemAsync<string>(key: _autLocalKey);
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -38,6 +41,7 @@ namespace DorisApp.WebPortal.Authentication
 
             _apiHelpder.LogInUser(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme: "bearer", token);
+
             return new AuthenticationState(
                 user: new ClaimsPrincipal(
                     identity: new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(token),
@@ -50,17 +54,17 @@ namespace DorisApp.WebPortal.Authentication
 
             try
             {
-                _apiHelpder.LogInUser(token); 
+                _apiHelpder.LogInUser(token);
                 var authenticatedUser = new ClaimsPrincipal(
                         identity: new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(token),
                         authenticationType: "jwtAuthType"));
                 authState = Task.FromResult(new AuthenticationState(authenticatedUser));
+                await _localStorage.SetItemAsync(key: _autLocalKey, token);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                string key = _config[key: "authTokenStorageKey"];
-                await _localStorage.RemoveItemAsync(key);
+                await _localStorage.RemoveItemAsync(_autLocalKey);
                 _apiHelpder.LogOffUser();
                 authState = Task.FromResult(_anonymous);
             }
@@ -68,11 +72,14 @@ namespace DorisApp.WebPortal.Authentication
             NotifyAuthenticationStateChanged(authState);
         }
 
-        public void NotifyUserLogout()
+        public async Task NotifyUserLogout()
         {
             var authState = Task.FromResult(_anonymous);
             _apiHelpder.LogOffUser();
             NotifyAuthenticationStateChanged(authState);
+
+            await _localStorage.RemoveItemAsync(key: _autLocalKey);
+            _httpClient.DefaultRequestHeaders.Authorization = null;
         }
 
     }

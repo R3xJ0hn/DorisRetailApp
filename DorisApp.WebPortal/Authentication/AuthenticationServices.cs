@@ -10,9 +10,7 @@ namespace DorisApp.WebPortal.Authentication
     {
         private readonly HttpClient _client;
         private readonly AuthenticationStateProvider _authStateProvider;
-        private readonly ILocalStorageService _localStorage;
         private readonly IConfiguration _config;
-        private readonly string _authTokenStorageKey = string.Empty;
 
         public AuthenticationServices(HttpClient client,
             AuthenticationStateProvider authStateProvider,
@@ -21,9 +19,7 @@ namespace DorisApp.WebPortal.Authentication
         {
             _client = client;
             _authStateProvider = authStateProvider;
-            _localStorage = localStorage;
             _config = config;
-            _authTokenStorageKey = _config[key: "authTokenStorageKey"];
         }
 
         public async Task<AuthenticatedUserModel> Login(AuthenticationUserModel userAuth)
@@ -34,8 +30,8 @@ namespace DorisApp.WebPortal.Authentication
                 new KeyValuePair<string, string>("password", userAuth.Password)
             });
 
-            var api = _config[key: "URL:apiUrl"] + _config[key: "URL:login"];
-            var authResult = await _client.PostAsync(requestUri: api, data);
+            var apiURL = _config[key: "URL:apiUrl"] + _config[key: "URL:login"];
+            var authResult = await _client.PostAsync(requestUri: apiURL, data);
             var authContent = await authResult.Content.ReadAsStringAsync();
 
             if (authResult.IsSuccessStatusCode == false)
@@ -46,19 +42,14 @@ namespace DorisApp.WebPortal.Authentication
             var result = JsonSerializer.Deserialize<AuthenticatedUserModel>(
                 authContent, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            await _localStorage.SetItemAsync(key: _authTokenStorageKey, result.Access_Token);
             await ((AuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.Access_Token);
-
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme: "bearer", result.Access_Token);
 
             return result;
         }
 
         public async Task Logout()
         {
-            await _localStorage.RemoveItemAsync(key: _authTokenStorageKey);
-            ((AuthStateProvider)_authStateProvider).NotifyUserLogout();
-            _client.DefaultRequestHeaders.Authorization = null;
+            await ((AuthStateProvider)_authStateProvider).NotifyUserLogout();
         }
 
     }
