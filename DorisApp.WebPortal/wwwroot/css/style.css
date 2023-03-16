@@ -30,6 +30,7 @@ body::-webkit-scrollbar {
 
 .page-link {
   cursor: pointer;
+  user-select: none;
 }
 
 .pagination p {
@@ -11994,11 +11995,16 @@ textarea.form-control-lg {
 }
 .table-wrapper .table tbody tr {
   color: #343a40;
+  transition: background 0.25s ease-in-out;
+}
+.table-wrapper .table tbody tr:hover {
+  background: rgba(213, 130, 252, 0.1);
 }
 .table-wrapper .table tbody tr td {
   text-align: center;
   font-size: 1rem;
   font-weight: 400;
+  background: transparent;
 }
 .table-wrapper .table tbody tr td > img {
   width: calc(1rem *2);
@@ -12048,9 +12054,6 @@ textarea.form-control-lg {
 .table-wrapper .table tbody tr td .table-icons i:active {
   transform: scale(0.8);
   box-shadow: none;
-}
-.table-wrapper .table tbody tr:hover {
-  background-color: rgba(233, 236, 239, 0.8);
 }
 .table-wrapper .no-item {
   display: flex;

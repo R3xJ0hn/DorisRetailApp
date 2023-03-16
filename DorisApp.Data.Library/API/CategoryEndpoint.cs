@@ -2,7 +2,6 @@
 using DorisApp.Data.Library.Model;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,7 +29,7 @@ namespace DorisApp.Data.Library.API
             }
         }
 
-        public async Task<RequestModel<CategoryTableDTO>?> GetTableCategories(RequestPageDTO request)
+        public async Task<RequestModel<CategorySummaryDTO>?> GetTableCategories(RequestPageDTO request)
         {
             var json = JsonConvert.SerializeObject(request);
             var data = new StringContent(json, Encoding.UTF8, "application/json");
@@ -39,7 +38,7 @@ namespace DorisApp.Data.Library.API
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<RequestModel<CategoryTableDTO>>(result);
+                return JsonConvert.DeserializeObject<RequestModel<CategorySummaryDTO>>(result);
             }
             else
             {

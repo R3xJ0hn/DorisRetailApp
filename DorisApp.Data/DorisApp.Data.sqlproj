@@ -74,8 +74,7 @@
     <Build Include="dbo\Tables\Categories.sql" />
     <Build Include="dbo\StoredProcedures\spRoleGetByPage.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryInsert.sql" />
-    <Build Include="dbo\StoredProcedures\Category\spCategoryGetByPage.sql" />
-    <Build Include="dbo\StoredProcedures\Category\spCategoryGetTableDataByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryGetSummaryByPage.sql" />
     <Build Include="dbo\Tables\SubCategories.sql" />
     <Build Include="dbo\Tables\Products.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryUpdate.sql" />

@@ -1,7 +1,6 @@
-﻿
-namespace DorisApp.Data.Library.DTO
+﻿namespace DorisApp.Data.Library.DTO
 {
-    public class CategoryTableDTO
+    public class CategorySummaryDTO
     {
         public int Id { get; set; }
         public string CategoryName { get; set; }

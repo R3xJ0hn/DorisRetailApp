@@ -1,7 +1,6 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
-using DorisApp.WebAPI.Helpers;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -44,9 +43,9 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task<RequestModel<CategoryTableDTO>?> GetTableDataByPageAsync(RequestPageDTO request)
+        public async Task<RequestModel<CategorySummaryDTO>?> GetTableDataByPageAsync(RequestPageDTO request)
         {
-            return await GetByPageAsync<CategoryTableDTO>("dbo.spCategoryGetByPage", request);
+            return await GetByPageAsync<CategorySummaryDTO>("dbo.spCategoryGetSummaryByPage", request);
         }
 
         public async Task UpdateCategoryAsync(CategoryModel model, int userId)
@@ -54,7 +53,7 @@ namespace DorisApp.WebAPI.DataAccess
             model.UpdatedByUserId = userId;
             model.UpdatedAt = DateTime.UtcNow;
 
-            //This is ignore by the stored procedure.
+            //This will ignore by the stored procedure.
             //This is required to pass the required param.
             model.CreatedAt = DateTime.UtcNow;
 

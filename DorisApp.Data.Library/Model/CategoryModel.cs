@@ -12,7 +12,6 @@ namespace DorisApp.Data.Library.Model
         [Required]
         [DisplayName("Category Name")]
         public string? CategoryName { get; set; }
-
         public int CreatedByUserId { get; set; }
         public int UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
