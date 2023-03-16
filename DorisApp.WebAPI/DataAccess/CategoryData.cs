@@ -15,16 +15,6 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task AddAsync(CategoryModel category, int userId)
         {
-            if (category == null)
-            {
-                throw new ArgumentNullException(nameof(category));
-            }
-
-            if (userId <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(userId));
-            }
-
             category.CategoryName = category.CategoryName.ToLower();
             category.CreatedByUserId = userId;
             category.UpdatedByUserId = category.CreatedByUserId;
@@ -38,12 +28,13 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error: Insert {category.CategoryName} Category by {userId} at {category.CreatedAt}", ex.Message);
+                ThrowError($"Error: Insert {category.CategoryName} Category by {userId} at {category.CreatedAt}" + 
+                    Environment.NewLine + ex.Message);
                 throw;
             }
         }
 
-        public async Task<RequestModel<CategorySummaryDTO>?> GetTableDataByPageAsync(RequestPageDTO request, int userId)
+        public async Task<RequestModel<CategorySummaryDTO>?> GetSummaryDataByPageAsync(RequestPageDTO request, int userId)
         {
             return await GetByPageAsync<CategorySummaryDTO>("dbo.spCategoryGetSummaryByPage", request, userId);
         }
@@ -64,11 +55,35 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                var errorMsg = $"Error: Update Category {model.CategoryName} by {userId} at {model.UpdatedAt}";
-                _logger.LogError(errorMsg, ex.Message);
-                throw new ArgumentException(errorMsg);
+                ThrowError($"Error: Update Category {model.CategoryName} by {userId} at {model.UpdatedAt}" +
+                    Environment.NewLine + ex.Message);
             }
         }
+
+        public async Task DeleteCategoryAsync(CategoryModel model, int userId)
+        {
+            model.UpdatedByUserId = userId;
+
+            //This will ignore by the stored procedure.
+            //This is required to pass the required param.
+            model.CreatedAt = DateTime.UtcNow;
+            model.UpdatedAt = DateTime.UtcNow;
+
+            try
+            {
+                await _sql.UpdateDataAsync("dbo.spCategoryDelete", model);
+                _logger.LogInformation($"Success: Delete Category {model.CategoryName} by {userId} at {model.UpdatedAt}");
+            }
+            catch (Exception ex)
+            {
+                ThrowError($"Error: Delete Category {model.CategoryName} by {userId} at {model.UpdatedAt}" +
+                    Environment.NewLine + ex.Message);
+            }
+
+        }
+
+
+
 
     }
 

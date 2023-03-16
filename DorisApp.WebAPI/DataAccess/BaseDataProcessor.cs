@@ -33,7 +33,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!ValidateRequestPageDTO(request, countPages))
             {
-                ErrorPage(request);
+                ThrowError($"Error: Page {request.PageNo} is out of range request by {userId}");
                 return null;
             }
 
@@ -53,21 +53,9 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error: Get {typeof(T).Name} by {userId} at {DateTime.UtcNow}" + Environment.NewLine + ex.Message);
+                ThrowError($"Error: Get {typeof(T).Name} by {userId} at {DateTime.UtcNow}" + Environment.NewLine + ex.Message);
                 throw;
             }
-        }
-
-        public bool ValidateRequestPageDTO(RequestPageDTO request, int totalPage)
-        {
-            return request != null && request.PageNo > 0 && request.PageNo <= totalPage;
-        }
-
-        protected void ErrorPage(RequestPageDTO request)
-        {
-            string msg = $"Error: Page {request.PageNo} is out of range";
-            _logger.LogInformation(msg);
-            throw new ArgumentException(msg);
         }
 
         public async Task<int> CountAsync()
@@ -78,9 +66,20 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                ThrowError(ex.Message);
+                throw;
             }
+        }
 
+        public bool ValidateRequestPageDTO(RequestPageDTO request, int totalPage)
+        {
+            return request != null && request.PageNo > 0 && request.PageNo <= totalPage;
+        }
+
+        protected void ThrowError(string msg)
+        {
+            _logger.LogError(msg);
+            throw new ArgumentException(msg);
         }
 
         public void Dispose()

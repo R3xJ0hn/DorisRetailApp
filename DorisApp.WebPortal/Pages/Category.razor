@@ -74,13 +74,13 @@
                                             <div class="table-icons">
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                                    data-bs-target="#categoryModal"
-                                                    @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
-                                                    data-bs-target="#categoryModal"
-                                                    @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
-                                                
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
+
                                             </div>
                                         </td>
                                     </tr>
@@ -278,7 +278,7 @@
        modalMode="@modalMode"
        OnSave="SaveHandler">
 
-    @if(modalMode != "delete")
+    @if (modalMode != "delete")
     {
         <p class="card-description text-justify">
             This is where you can modify your category list for your website.
@@ -298,7 +298,8 @@
     }
     else
     {
-        <div> Are you sure you want to delete
+        <div>
+            Are you sure you want to delete
             <b class="text-primary">@(modalModel.CategoryName)</b>?
         </div>
     }
@@ -391,9 +392,10 @@
         else if (modalMode == "edit")
         {
             await EditCategory();
-        }else
+        }
+        else if (modalMode == "delete")
         {
-
+            await DeleteCategory();
         }
     }
 
@@ -440,6 +442,26 @@
         }
 
     }
+
+    private async Task DeleteCategory()
+    {
+        try
+        {
+            var categoryToUpdate = new CategoryModel
+            {
+                Id = modalModel.Id,
+                CategoryName = modalModel.CategoryName
+            };
+
+            await CategoryEndpoint.DeleteCategory(categoryToUpdate);
+            await CloseModal("Successfully remove category.");
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Failed to remove category: {ex.Message}";
+        }
+    }
+
 
     private async Task CloseModal(string toastmsg)
     {

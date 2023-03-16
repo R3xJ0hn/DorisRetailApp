@@ -22,15 +22,12 @@ namespace DorisApp.WebAPI.Controllers
         [HttpPost("add-category"), Authorize(Roles = "admin")]
         public async Task<IActionResult> AddCategory([FromBody] CategoryModel model)
         {
-            var identity = (ClaimsIdentity)User.Identity;
-            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
-                   .Select(c => c.Value).SingleOrDefault();
             try
             {
                 await _data.AddAsync(new CategoryModel
                 {
                     CategoryName = model.CategoryName 
-                }, int.Parse(userId ?? "0"));
+                }, GetUserId());
 
                 return Ok($"Successfully added {model.CategoryName} category");
             }
@@ -45,13 +42,9 @@ namespace DorisApp.WebAPI.Controllers
         [HttpPost("get-category/summary")]
         public async Task<IActionResult> GetCategorySummary(RequestPageDTO request)
         {
-            var identity = (ClaimsIdentity)User.Identity;
-            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
-                   .Select(c => c.Value).SingleOrDefault();
-
             try
             {
-                var categoryItems = await _data.GetTableDataByPageAsync(request, int.Parse(userId ?? "0"));
+                var categoryItems = await _data.GetSummaryDataByPageAsync(request, GetUserId());
                 return Ok(categoryItems);
             }
             catch (Exception ex)
@@ -63,19 +56,38 @@ namespace DorisApp.WebAPI.Controllers
         [HttpPost("update-category"), Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateCategories(CategoryModel model)
         {
-            var identity = (ClaimsIdentity)User.Identity;
-            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
-                   .Select(c => c.Value).SingleOrDefault();
-
             try
             {
-               await _data.UpdateCategoryAsync(model, int.Parse(userId ?? "0"));
+               await _data.UpdateCategoryAsync(model, GetUserId());
                 return Ok($"Successfully update {model.CategoryName}");
             }
             catch (Exception ex)
             {
-                return BadRequest("Unable to read categories." + Environment.NewLine + ex.Message);
+                return BadRequest("Unable to update categories." + Environment.NewLine + ex.Message);
             }
+        }
+
+        [HttpPost("delete-category"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteCategories(CategoryModel model)
+        {
+            try
+            {
+                await _data.DeleteCategoryAsync(model, GetUserId());
+                return Ok($"Successfully remove {model.CategoryName}");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Unable to delete categories." + Environment.NewLine + ex.Message);
+            }
+        }
+
+
+        private int GetUserId()
+        {
+            var identity = (ClaimsIdentity)User.Identity;
+            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+                   .Select(c => c.Value).SingleOrDefault();
+            return int.Parse(userId ?? "0");
         }
 
     }

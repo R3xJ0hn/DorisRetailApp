@@ -5,66 +5,40 @@ using DorisApp.WebAPI.Helpers;
 
 namespace DorisApp.WebAPI.DataAccess
 {
-    public class RoleData: BaseDataProcessor
+    public class RoleData : BaseDataProcessor
     {
         public override string TableName => "Roles";
 
-        public RoleData(ISqlDataAccess sql, ILogger logger) 
+        public RoleData(ISqlDataAccess sql, ILogger logger)
             : base(sql, logger)
         {
         }
         public async Task AddAsync(RoleModel role, int userId)
         {
+            role.RoleName = role.RoleName.ToLower();
+            role.CreatedByUserId = userId;
+            role.UpdatedByUserId = role.CreatedByUserId;
+            role.CreatedAt = DateTime.UtcNow;
+            role.UpdatedAt = role.CreatedAt;
+
             try
             {
-                role.RoleName = role.RoleName.ToLower();
-                role.CreatedByUserId = userId;
-                role.UpdatedByUserId = role.CreatedByUserId;
-                role.CreatedAt = DateTime.UtcNow;
-                role.UpdatedAt = role.CreatedAt;
-
-               await _sql.SaveDataAsync("dbo.spRoleInsert", role);
+                await _sql.SaveDataAsync("dbo.spRoleInsert", role);
                 _logger.LogInformation($"Success: Insert {role.RoleName} Category by {userId} at {role.CreatedAt}");
             }
 
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error: Insert {role.RoleName} Category by {userId} at {role.CreatedAt} {ex.Message}");
-                throw new ArgumentException(ex.Message);
+                ThrowError($"Error: Insert {role.RoleName} Category by {userId} at {role.CreatedAt} {ex.Message}" +
+                    Environment.NewLine + ex.Message);
+                throw;
             }
         }
 
-        public async Task<RequestModel<RoleModel>?> GetByPageAsync(RequestPageDTO request)
+
+        public async Task<RequestModel<RoleModel>?> GetSummaryDataByPageAsync(RequestPageDTO request, int userId)
         {
-            try
-            {
-                var count = await CountAsync();
-                var countPages = AppHelpers.CountPages(count, request.ItemPerPage);
-
-                if (ValidateRequestPageDTO(request, countPages))
-                {
-                    var output = await _sql.LoadDataAsync<RoleModel, RequestPageDTO>("dbo.spRoleGetByPage", request);
-                    _logger.LogInformation($"Success: Get Role count:{output.Count} at {DateTime.UtcNow}");
-
-                    RequestModel<RoleModel> reqResult = new()
-                    {
-                        Models = output,
-                        IsInPage = request.PageNo,
-                        ItemPerPage = request.ItemPerPage,
-                        TotalPages = countPages,
-                        TotalItems = count
-                    };
-
-                    return reqResult;
-                }
-
-                ErrorPage(request);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
+            return await GetByPageAsync<RoleModel>("dbo.spRoleGetByPage", request, userId);
         }
 
         public async Task<RoleModel?> GetByIdAsync(int id)

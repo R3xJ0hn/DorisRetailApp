@@ -35,15 +35,13 @@ namespace DorisApp.WebAPI.Controllers
         [HttpPost("add-role")]
         public async Task<IActionResult> AddRole(string roleName)
         {
-            var identity = (ClaimsIdentity)User.Identity;
-            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
-                   .Select(c => c.Value).SingleOrDefault();
+
             try
             {
                await _data.AddAsync(new RoleModel
                 {
                     RoleName = roleName,
-                }, int.Parse(userId));
+                }, GetUserId());
 
                 return Ok($"successfully added {roleName} role");
             }
@@ -51,6 +49,14 @@ namespace DorisApp.WebAPI.Controllers
             {
                 return BadRequest("Unable to Add new role.");
             }
+        }
+
+        private int GetUserId()
+        {
+            var identity = (ClaimsIdentity)User.Identity;
+            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+                   .Select(c => c.Value).SingleOrDefault();
+            return int.Parse(userId ?? "0");
         }
     }
 }
