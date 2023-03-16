@@ -30,7 +30,7 @@ namespace DorisApp.WebAPI.Controllers
                 await _data.AddAsync(new CategoryModel
                 {
                     CategoryName = model.CategoryName 
-                }, int.Parse(userId) );
+                }, int.Parse(userId ?? "0"));
 
                 return Ok($"Successfully added {model.CategoryName} category");
             }
@@ -40,12 +40,18 @@ namespace DorisApp.WebAPI.Controllers
             }
         }
 
-        [HttpPost("get-category/table")]
-        public async Task<IActionResult> GetCategories(RequestPageDTO request)
+        //TODO: Refactor
+
+        [HttpPost("get-category/summary")]
+        public async Task<IActionResult> GetCategorySummary(RequestPageDTO request)
         {
+            var identity = (ClaimsIdentity)User.Identity;
+            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+                   .Select(c => c.Value).SingleOrDefault();
+
             try
             {
-                var categoryItems = await _data.GetTableDataByPageAsync(request);
+                var categoryItems = await _data.GetTableDataByPageAsync(request, int.Parse(userId ?? "0"));
                 return Ok(categoryItems);
             }
             catch (Exception ex)
@@ -63,7 +69,7 @@ namespace DorisApp.WebAPI.Controllers
 
             try
             {
-               await _data.UpdateCategoryAsync(model, int.Parse(userId));
+               await _data.UpdateCategoryAsync(model, int.Parse(userId ?? "0"));
                 return Ok($"Successfully update {model.CategoryName}");
             }
             catch (Exception ex)
@@ -71,8 +77,6 @@ namespace DorisApp.WebAPI.Controllers
                 return BadRequest("Unable to read categories." + Environment.NewLine + ex.Message);
             }
         }
-
-
 
     }
 }

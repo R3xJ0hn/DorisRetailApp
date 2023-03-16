@@ -58,7 +58,6 @@
                             </tr>
                         </thead>
 
-
                         @if (categoryTableRequest != null)
                         {
                             @foreach (var item in categoryTableRequest.Models)
@@ -73,10 +72,15 @@
                                         <td>@item.ProductCount</td>
                                         <td>
                                             <div class="table-icons">
+
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                           data-bs-target="#categoryModal"
-                                           @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
-                                                <i class="fa-solid fa-xmark"></i>
+                                                    data-bs-target="#categoryModal"
+                                                    @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
+
+                                                <i class="fa-solid fa-xmark" data-bs-toggle="modal"
+                                                    data-bs-target="#categoryModal"
+                                                    @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
+                                                
                                             </div>
                                         </td>
                                     </tr>
@@ -271,23 +275,33 @@
 <Modal modalId="categoryModal"
        Title="@modalTitle"
        SaveButtonText="Save"
+       modalMode="@modalMode"
        OnSave="SaveHandler">
 
-    <p class="card-description text-justify">
-        This is where you can add new product category to your website.
-        Just fill out the form with the category name.
-    </p>
+    @if(modalMode != "delete")
+    {
+        <p class="card-description text-justify">
+            This is where you can modify your category list for your website.
+            Just fill out the form with the category name.
+        </p>
 
-    <EditForm Model="@modalModel" OnInvalidSubmit="@SaveHandler">
-        <DataAnnotationsValidator />
+        <EditForm Model="@modalModel" OnInvalidSubmit="@SaveHandler">
+            <DataAnnotationsValidator />
 
-        <div class="mb-3">
-            <label for="productName" class="form-label">Category Name</label>
-            <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="modalModel.CategoryName" />
-            <ValidationMessage For="@(()=> modalModel.CategoryName)" />
+            <div class="mb-3">
+                <label for="productName" class="form-label">Category Name</label>
+                <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="modalModel.CategoryName" />
+                <ValidationMessage For="@(()=> modalModel.CategoryName)" />
+            </div>
+
+        </EditForm>
+    }
+    else
+    {
+        <div> Are you sure you want to delete
+            <b class="text-primary">@(modalModel.CategoryName)</b>?
         </div>
-
-    </EditForm>
+    }
 
 </Modal>
 
@@ -320,14 +334,14 @@
     {
         categoryPageRequest.PageNo = page;
         categoryPageRequest.OrderBy = orderBy;
-        categoryTableRequest = await CategoryEndpoint.GetTableCategories(categoryPageRequest);
+        categoryTableRequest = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
         totalPages = categoryTableRequest.TotalPages;
         StateHasChanged();
     }
 
     private async Task OnSearchItem(ChangeEventArgs e)
     {
-        string searchFor = e.Value.ToString();
+        string? searchFor = e.Value.ToString();
         categoryPageRequest.LookFor = VerifySearchBar(searchFor);
         await RequestItems(isInPage, selectedSortValue);
     }
@@ -348,7 +362,7 @@
     private void OpenAddCategoryModal()
     {
         modalTitle = "Add New Category";
-        modalMode = "Add";
+        modalMode = "add";
         modalModel.CategoryName = string.Empty;
         modalModel.Id = 0;
     }
@@ -356,25 +370,30 @@
     private void OpenEditCategoryModal(int categoryId)
     {
         modalTitle = "Edit Category";
-        modalMode = "Edit";
-
-        var categoryToEdit = categoryTableRequest.Models.FirstOrDefault(x => x.Id == categoryId);
-        if (categoryToEdit != null)
-        {
-            modalModel.CategoryName = categoryToEdit.CategoryName;
-            modalModel.Id = categoryId;
-        }
+        modalMode = "edit";
+        SetModalModel(categoryId);
     }
+
+    private void OpenDeleteCategoryModal(int categoryId)
+    {
+        modalTitle = "Delete Category";
+        modalMode = "delete";
+        SetModalModel(categoryId);
+    }
+
 
     private async Task SaveHandler()
     {
-        if (modalMode == "Add")
+        if (modalMode == "add")
         {
             await AddCategory();
         }
-        else if (modalMode == "Edit")
+        else if (modalMode == "edit")
         {
             await EditCategory();
+        }else
+        {
+
         }
     }
 
@@ -387,12 +406,8 @@
                 errorMessage = "Category name is required.";
                 return;
             }
-
             await CategoryEndpoint.AddCategoryAsync(modalModel.CategoryName);
-            toastMessage = "Successfully added new category.";
-
-            await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
-            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+            await CloseModal("Successfully added new category.");
         }
         catch (HttpRequestException ex)
         {
@@ -415,21 +430,35 @@
                     Id = modalModel.Id,
                     CategoryName = modalModel.CategoryName
                 };
+
             await CategoryEndpoint.UpdateCategory(categoryToUpdate);
-
-            toastMessage = "Successfully updated category.";
-            await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
-            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
-
-            //Request for Update
-            await RequestItems(isInPage, selectedSortValue);
-
+            await CloseModal("Successfully updated category.");
         }
         catch (HttpRequestException ex)
         {
             errorMessage = $"Failed to update category: {ex.Message}";
         }
 
+    }
+
+    private async Task CloseModal(string toastmsg)
+    {
+        toastMessage = toastmsg;
+        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
+        await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+
+        //Request for Update
+        await RequestItems(isInPage, selectedSortValue);
+    }
+
+    private void SetModalModel(int categoryId)
+    {
+        var categoryToEdit = categoryTableRequest.Models.FirstOrDefault(x => x.Id == categoryId);
+        if (categoryToEdit != null)
+        {
+            modalModel.CategoryName = categoryToEdit.CategoryName;
+            modalModel.Id = categoryId;
+        }
     }
 
     private string? VerifySearchBar(string? str)
@@ -443,4 +472,5 @@
             return str;
         }
     }
+
 }

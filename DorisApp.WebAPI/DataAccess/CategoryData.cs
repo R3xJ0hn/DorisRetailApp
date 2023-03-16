@@ -43,9 +43,9 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task<RequestModel<CategorySummaryDTO>?> GetTableDataByPageAsync(RequestPageDTO request)
+        public async Task<RequestModel<CategorySummaryDTO>?> GetTableDataByPageAsync(RequestPageDTO request, int userId)
         {
-            return await GetByPageAsync<CategorySummaryDTO>("dbo.spCategoryGetSummaryByPage", request);
+            return await GetByPageAsync<CategorySummaryDTO>("dbo.spCategoryGetSummaryByPage", request, userId);
         }
 
         public async Task UpdateCategoryAsync(CategoryModel model, int userId)

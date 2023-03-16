@@ -2,10 +2,10 @@
 
 <div class="modal fade" id="@modalId" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
      aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md">
+    <div class="modal-dialog @dialogPosition">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fs-5 text-primary" id="staticBackdropLabel">@Title</h5>
+                <h5 class="modal-title fs-3 @headerColorClass" id="staticBackdropLabel">@Title</h5>
                 <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
@@ -15,7 +15,7 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="OnClose">Cancel</button>
-                <button id="saveButton" type="button" class="btn btn-primary proceed-btn" @onclick="OnSaveClicked">
+                <button id="saveButton" type="button" class="btn proceed-btn @proceedBtnColor" @onclick="OnSaveClicked">
                     <span class="spinner-border spinner-border-sm d-none" role="status"
                           aria-hidden="true"></span>
                     @SaveButtonText
@@ -25,7 +25,16 @@
     </div>
 </div>
 
+
 @code {
+
+    private string headerColorClass = "text-primary";
+
+    private string proceedBtnColor = "btn-primary";
+
+    private string dialogPosition = "modal-dialog-centered";
+
+
     [Parameter]
     public string Title { get; set; }
 
@@ -43,6 +52,26 @@
 
     [Parameter]
     public string modalId { get; set; }
+
+    [Parameter]
+    public string modalMode 
+    {
+        set
+        {
+            if (value == "delete")
+            {
+                proceedBtnColor = "btn-danger";
+                headerColorClass = "";
+                dialogPosition = "modal-md";
+                SaveButtonText = "Delete";
+            }else
+            {
+                headerColorClass = "text-primary";
+                proceedBtnColor = "btn-primary";
+                dialogPosition = "modal-dialog-centered";
+            }
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -16,7 +16,7 @@ namespace DorisApp.WebAPI.DataAccess
             _sql = sql;
             _logger = logger;
         }
-        protected async Task<RequestModel<T>?> GetByPageAsync<T>(string storeProcedureName, RequestPageDTO request) where T : class
+        protected async Task<RequestModel<T>?> GetByPageAsync<T>(string storeProcedureName, RequestPageDTO request, int userId) where T : class
         {
             if (request == null)
             {
@@ -40,7 +40,7 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 var output = await _sql.LoadDataAsync<T, RequestPageDTO>(storeProcedureName, request);
-                _logger.LogInformation($"Success: Get {typeof(T).Name} count:{output.Count} at {DateTime.UtcNow}");
+                _logger.LogInformation($"Success: Get {typeof(T).Name} count:{output.Count} by {userId} at {DateTime.UtcNow}");
 
                 return new RequestModel<T>
                 {
@@ -53,7 +53,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error: Get {typeof(T).Name} at {DateTime.UtcNow}");
+                _logger.LogError(ex, $"Error: Get {typeof(T).Name} by {userId} at {DateTime.UtcNow}" + Environment.NewLine + ex.Message);
                 throw;
             }
         }
