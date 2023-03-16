@@ -35,8 +35,8 @@
                             <label for="sort-table">Sort by:</label>
                             <select class="form-select form-select-sm" id="sort-table"
                                     aria-label=".form-select-sm example">
-                                <option selected>Select Order</option>
-                                <option value="1">Name</option>
+                                <option selected>Name <i>A-Z</i> </option>
+                                <option value="1">Name <i>Z-A</i> </option>
                                 <option value="2">No. Product</option>
                             </select>
                         </div>
@@ -57,12 +57,12 @@
                             </tr>
                         </thead>
 
-                        <tbody>
 
-                            @if (categoryTableRequest != null)
+                        @if (categoryTableRequest != null)
+                        {
+                            @foreach (var item in categoryTableRequest.Models)
                             {
-                                @foreach (var item in categoryTableRequest.Models)
-                                {
+                                <tbody>
                                     <tr>
                                         <td scope="row">
                                             <span></span>
@@ -79,43 +79,24 @@
                                             </div>
                                         </td>
                                     </tr>
-                                }
+                                </tbody>
                             }
-                            else
-                            {
-                                <div class="row justify-content-center align-items-lg-center">
-                                    <h6>No Category has been loaded.</h6>
-                                </div>
-                            }
-
-                        </tbody>
+                        }
 
                     </table>
 
+                    @if (categoryTableRequest == null)
+                    {
+                        <div class="no-item">
+                            <h6>No Category has been loaded.</h6>
+                        </div>
+                    }
                 </div>
 
-                @if (categoryTableRequest != null)
-                {
-                    @if (categoryTableRequest.TotalPages > 1)
-                    {
-                        <nav aria-label="Page navigation example">
-                            <ul class="pagination justify-content-end">
-                                <li class="page-item disabled">
-                                    <a class="page-link">Previous</a>
-                                </li>
 
-                                @*@for (int i = 1; i < requestItems.TotalPages; i++)
-                        {
-                        <li class="page-item"><a class="page-link" @onclick="RequestPage(i)"> @i </a></li>
-                        }*@
+                <Pagination TotalPages="@totalPages"
+                            OnPageChange="ChangePageHandler" />
 
-                                <li class="page-item">
-                                    <a class="page-link" href="#">Next</a>
-                                </li>
-                            </ul>
-                        </nav>
-                    }
-                }
 
             </div>
         </div>
@@ -318,6 +299,7 @@
 @code {
     private RequestPageDTO categoryPageRequest = new RequestPageDTO { PageNo = 1 };
     private RequestModel<CategoryTableDTO> categoryTableRequest;
+    private int totalPages = 1;
     private int isInPage = 1;
 
     private string modalTitle = string.Empty;
@@ -330,16 +312,33 @@
     protected override async Task OnInitializedAsync()
     {
         categoryPageRequest.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]); ;
-        RequestPage(isInPage, GetOrderBy.NameAcs);
+        RequestItems(isInPage, GetOrderBy.NameDesc);
     }
 
-    private async Task RequestPage(int page, GetOrderBy orderBy)
+    private async Task RequestItems(int page, GetOrderBy orderBy)
     {
         categoryPageRequest.PageNo = page;
         categoryPageRequest.OrderBy = orderBy;
         categoryTableRequest = await CategoryEndpoint.GetTableCategories(categoryPageRequest);
+        totalPages = categoryTableRequest.TotalPages;
         StateHasChanged();
     }
+
+    private async Task ChangePageHandler(int page)
+    {
+        isInPage = page;
+        await RequestItems(page, GetOrderBy.NameDesc);
+    }
+
+
+
+
+
+
+
+
+
+
 
     private void OpenAddCategoryModal()
     {
@@ -349,7 +348,7 @@
         modalModel.Id = 0;
     }
 
-    private async Task OpenEditCategoryModal(int categoryId)
+    private void OpenEditCategoryModal(int categoryId)
     {
         modalTitle = "Edit Category";
         modalMode = "Edit";
@@ -418,7 +417,7 @@
             await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
 
             //Request for Update
-           await RequestPage(isInPage, GetOrderBy.NameAcs);
+            await RequestItems(isInPage, GetOrderBy.NameDesc);
 
         }
         catch (HttpRequestException ex)

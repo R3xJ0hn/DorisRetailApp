@@ -1,0 +1,136 @@
+﻿@if (TotalPages > 1)
+{
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-end">
+
+            <p>page @InPage of @TotalPages</p>
+
+            @if (TotalPages > 3)
+            {
+                <li class=@PrevClass>
+                    <a class="page-link"
+               @onclick="OnPagePrev">
+                        Previous
+                    </a>
+                </li>
+            }
+
+            @for (int page = InPage; page < InPage + 3; page++)
+            {
+                int i = page;
+                string active = "";
+
+                @if (InPage == i)
+                {
+                    active = "page-link active";
+                }
+                else{
+                   active = "page-link";
+                }
+
+                @if (TotalPages >= i)
+                {
+                    <li class="page-item"><a class=@active @onclick="@(() => OnChangeClicked(i))">@(i)</a></li>
+                }
+            }
+
+            @if (TotalPages > 3)
+            {
+
+                <li class=@NextClass>
+                    <a class="page-link"
+                        @onclick="OnPageNext">
+                        Next
+                    </a>
+                </li>
+
+            }
+
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter]
+    public int TotalPages { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageChange { get; set; }
+
+    public int InPage { get; set; }
+    private string PrevClass;
+    private string NextClass;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        InPage = 1;
+        PrevClass = "page-item disabled";
+        NextClass = "page-item";
+    }
+
+    private void OnPagePrev()
+    {
+        if (InPage > 1)
+        {
+            InPage--;
+            OnChangeClicked(InPage);
+            if (NextClass != "page-item")
+            {
+                NextClass = "page-item";
+            }
+        }
+        else
+        {
+            PrevClass = "page-item disabled";
+        }
+    }
+
+    private void OnPageNext()
+    {
+        if (InPage < TotalPages)
+        {
+            InPage++;
+            OnChangeClicked(InPage);
+            if (PrevClass != "page-item")
+            {
+                PrevClass = "page-item";
+            }
+        }
+        else
+        {
+            NextClass = "page-item disabled";
+        }
+    }
+
+    private void OnChangeClicked(int page)
+    {
+        if (page < TotalPages)
+        {
+            PrevClass = "page-item";
+        }
+        else
+        {
+            NextClass = "page-item disabled";
+        }
+
+        switch (page)
+        {
+            case int p when p > 1:
+                InPage = p;
+                NextClass = "page-item";
+                break;
+            case 1:
+                InPage = 1;
+                PrevClass = "page-item disabled";
+                break;
+            default:
+                break;
+        }
+
+        OnPageChange.InvokeAsync(page);
+        StateHasChanged();
+    }
+
+
+}

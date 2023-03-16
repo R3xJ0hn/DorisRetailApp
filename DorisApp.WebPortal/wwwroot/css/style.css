@@ -28,6 +28,15 @@ body::-webkit-scrollbar {
   position: relative;
 }
 
+.page-link {
+  cursor: pointer;
+}
+
+.pagination p {
+  margin-top: 0.5rem;
+  margin-right: 1rem;
+}
+
 /*!
  * Bootstrap  v5.3.0-alpha1 (https://getbootstrap.com/)
  * Copyright 2011-2022 The Bootstrap Authors
@@ -11977,7 +11986,7 @@ textarea.form-control-lg {
 }
 .table-wrapper .table thead tr > th {
   font-weight: 500;
-  background-color: #fff;
+  background: #fff;
   text-align: center;
   position: sticky;
   top: 0;
@@ -12042,6 +12051,16 @@ textarea.form-control-lg {
 }
 .table-wrapper .table tbody tr:hover {
   background-color: rgba(233, 236, 239, 0.8);
+}
+.table-wrapper .no-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.table-wrapper .no-item h6 {
+  font-size: 22px;
+  color: #d582fc;
 }
 
 .btn, .btn-gradient-dark, .btn-gradient-light, .btn-gradient-danger, .btn-gradient-warning, .btn-gradient-info, .btn-gradient-success, .btn-gradient-secondary, .btn-gradient-primary {
