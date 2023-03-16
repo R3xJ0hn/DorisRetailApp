@@ -16,7 +16,7 @@
 
                 <div class="col ">
                     <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
-                            data-bs-target="#categoryModal" @onclick="OpenAddProductModal">
+                            data-bs-target="#categoryModal" @onclick="OpenAddCategoryModal">
                         <i class="fa-regular fa-circle-plus"></i>
                         Add
                     </button>
@@ -59,9 +59,9 @@
 
                         <tbody>
 
-                            @if(requestTableResult != null)
+                            @if (categoryTableRequest != null)
                             {
-                                @foreach (var item in requestTableResult.Models)
+                                @foreach (var item in categoryTableRequest.Models)
                                 {
                                     <tr>
                                         <td scope="row">
@@ -73,8 +73,8 @@
                                         <td>
                                             <div class="table-icons">
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                                     data-bs-target="#categoryModal"
-                                                     @onclick="@(() => OpenEditProductModal(item.Id))"></i>
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
                                                 <i class="fa-solid fa-xmark"></i>
                                             </div>
                                         </td>
@@ -94,9 +94,9 @@
 
                 </div>
 
-                @if(requestTableResult != null)
+                @if (categoryTableRequest != null)
                 {
-                    @if (requestTableResult.TotalPages > 1)
+                    @if (categoryTableRequest.TotalPages > 1)
                     {
                         <nav aria-label="Page navigation example">
                             <ul class="pagination justify-content-end">
@@ -289,7 +289,7 @@
 </div>
 
 <Modal modalId="categoryModal"
-       Title= "@modalTitle"
+       Title="@modalTitle"
        SaveButtonText="Save"
        OnSave="SaveHandler">
 
@@ -299,12 +299,12 @@
     </p>
 
     <EditForm Model="@modalModel" OnInvalidSubmit="@SaveHandler">
-        <DataAnnotationsValidator/>
+        <DataAnnotationsValidator />
 
         <div class="mb-3">
             <label for="productName" class="form-label">Category Name</label>
             <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="modalModel.CategoryName" />
-            <ValidationMessage For="@(()=> modalModel.CategoryName)"/>
+            <ValidationMessage For="@(()=> modalModel.CategoryName)" />
         </div>
 
     </EditForm>
@@ -315,65 +315,116 @@
     <Toast ToastId="categoryToast" Message="@toastMessage" />
 </div>
 
-
 @code {
-    RequestPageDTO request = new();
-    RequestModel<CategoryTableDTO> requestTableResult;
+    private RequestPageDTO categoryPageRequest = new RequestPageDTO { PageNo = 1 };
+    private RequestModel<CategoryTableDTO> categoryTableRequest;
+    private int isInPage = 1;
 
-    CategoryModel modalModel = new ();
-    string? errorMessage;
-    string? toastMessage;
     private string modalTitle = string.Empty;
+    private CategoryModel modalModel = new CategoryModel();
+    private string modalMode = string.Empty;
+
+    private string errorMessage = string.Empty;
+    private string toastMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        request.PageNo =1;
-        request.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
-        request.OrderBy = GetOrderBy.NameAcs;
-        requestTableResult = await CategoryEndpoint.GetTableCategories(request);
+        categoryPageRequest.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]); ;
+        RequestPage(isInPage, GetOrderBy.NameAcs);
     }
 
-    private void RequestPage(int page)
+    private async Task RequestPage(int page, GetOrderBy orderBy)
     {
-
+        categoryPageRequest.PageNo = page;
+        categoryPageRequest.OrderBy = orderBy;
+        categoryTableRequest = await CategoryEndpoint.GetTableCategories(categoryPageRequest);
+        StateHasChanged();
     }
 
-    private void OpenAddProductModal()
+    private void OpenAddCategoryModal()
     {
-        modalTitle = "Add New Modal";
+        modalTitle = "Add New Category";
+        modalMode = "Add";
+        modalModel.CategoryName = string.Empty;
+        modalModel.Id = 0;
     }
 
-    private void OpenEditProductModal(int id)
+    private async Task OpenEditCategoryModal(int categoryId)
     {
-        modalTitle = "Add New Modal" + id.ToString();
+        modalTitle = "Edit Category";
+        modalMode = "Edit";
+
+        var categoryToEdit = categoryTableRequest.Models.FirstOrDefault(x => x.Id == categoryId);
+        if (categoryToEdit != null)
+        {
+            modalModel.CategoryName = categoryToEdit.CategoryName;
+            modalModel.Id = categoryId;
+        }
     }
 
     private async Task SaveHandler()
     {
-        errorMessage = "";
+        if (modalMode == "Add")
+        {
+            await AddCategory();
+        }
+        else if (modalMode == "Edit")
+        {
+            await EditCategory();
+        }
+    }
 
+    private async Task AddCategory()
+    {
         try
         {
-            var name = modalModel.CategoryName;
-
-            if (name is not null)
+            if (string.IsNullOrEmpty(modalModel.CategoryName))
             {
-                await CategoryEndpoint.AddCategoryAsync(name);
-                toastMessage = "Successfully added new category.";
-
-                await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
-                await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+                errorMessage = "Category name is required.";
+                return;
             }
 
+            await CategoryEndpoint.AddCategoryAsync(modalModel.CategoryName);
+            toastMessage = "Successfully added new category.";
+
+            await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
+            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            errorMessage = ex.Message;
-            toastMessage = "An error occured";
-            Console.WriteLine(errorMessage);
-            await JSRuntime.InvokeVoidAsync("modalProcessDone");
+            errorMessage = $"Failed to add category: {ex.Message}";
+        }
+    }
+
+    private async Task EditCategory()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(modalModel.CategoryName))
+            {
+                errorMessage = "Category name is required.";
+                return;
+            }
+
+            var categoryToUpdate = new CategoryModel
+                {
+                    Id = modalModel.Id,
+                    CategoryName = modalModel.CategoryName
+                };
+            await CategoryEndpoint.UpdateCategory(categoryToUpdate);
+
+            toastMessage = "Successfully updated category.";
+            await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
+            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+
+            //Request for Update
+           await RequestPage(isInPage, GetOrderBy.NameAcs);
+
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Failed to update category: {ex.Message}";
         }
 
     }
-
 }

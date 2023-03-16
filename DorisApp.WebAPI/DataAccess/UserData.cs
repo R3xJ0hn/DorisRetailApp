@@ -107,11 +107,11 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync<UserModel>("dbo.spUserUpdateToken", user);
-                _logger.LogInformation("Update User Token: {@User}", user);
+                _logger.LogInformation("Success: Update User Token: {@User}", user);
             }
             catch (Exception)
             {
-                var errorMsg = $"Unable to Update {AppHelpers.GetFullName(user)}";
+                var errorMsg = $"Error: Unable to Update {AppHelpers.GetFullName(user)}";
                 _logger.LogInformation(errorMsg, user);
                 throw new ArgumentException(errorMsg);
             }

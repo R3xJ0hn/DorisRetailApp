@@ -20,7 +20,7 @@ namespace DorisApp.Data.Library.API
 
         public async Task AddCategoryAsync(string categoryName)
         {
-            var json = JsonConvert.SerializeObject(new {categoryName});
+            var json = JsonConvert.SerializeObject(new { categoryName });
             var data = new StringContent(json, Encoding.UTF8, "application/json");
 
             using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:add-category"], data);
@@ -35,20 +35,35 @@ namespace DorisApp.Data.Library.API
             var json = JsonConvert.SerializeObject(request);
             var data = new StringContent(json, Encoding.UTF8, "application/json");
 
-            using (HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:get-category/table"],data))
+            using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:get-category/table"], data);
+            if (response.IsSuccessStatusCode)
             {
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadAsStringAsync();
-                    return JsonConvert.DeserializeObject<RequestModel<CategoryTableDTO>>(result);
-                }
-                else
-                {
-                    throw new Exception(response.ReasonPhrase);
-                }
+                var result = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<RequestModel<CategoryTableDTO>>(result);
             }
-
+            else
+            {
+                throw new Exception(response.ReasonPhrase);
+            }
         }
+
+        public async Task<string> UpdateCategory(CategoryModel model)
+        {
+            var json = JsonConvert.SerializeObject(model);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:update-category"], data);
+            if (response.IsSuccessStatusCode)
+            {
+                return response.Content.ReadAsStringAsync().Result;
+            }
+            else
+            {
+                throw new Exception(response.ReasonPhrase);
+            }
+        }
+
+
 
     }
 

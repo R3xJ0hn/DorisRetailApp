@@ -54,5 +54,25 @@ namespace DorisApp.WebAPI.Controllers
             }
         }
 
+        [HttpPost("update-category"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateCategories(CategoryModel model)
+        {
+            var identity = (ClaimsIdentity)User.Identity;
+            var userId = identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+                   .Select(c => c.Value).SingleOrDefault();
+
+            try
+            {
+               await _data.UpdateCategoryAsync(model, int.Parse(userId));
+                return Ok($"Successfully update {model.CategoryName}");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Unable to read categories." + Environment.NewLine + ex.Message);
+            }
+        }
+
+
+
     }
 }
