@@ -1,0 +1,318 @@
+﻿@page "/category/subcategories"
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Config
+
+<div class="subcategory-page-content">
+
+    <div class="row">
+
+        <div class="col-lg-9">
+
+            <div class="row align-items-end">
+                <div class="col ">
+                    <h3 class="table-title">List of SubCategories</h3>
+                </div>
+
+                <div class="col ">
+                    <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
+                            data-bs-target="#subcategoryModal" @onclick="OpenAddModal">
+                        <i class="fa-regular fa-circle-plus"></i>
+                        Add
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-card">
+
+                <div class="row ">
+                    <div class="col-md  d-flex">
+                        <div class="search-bar">
+                            <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
+                        </div>
+
+                        <div class="sort-select">
+                            <label for="sort-table">Sort by:</label>
+
+                            <select class="form-select form-select-sm"
+                                    @onchange="OnSelectSortChange">
+                                <option value="@OrderSubCategorySummaryBy.NameAcs">Name A-Z</option>
+                                <option value="@OrderSubCategorySummaryBy.NameDesc">Name Z-A</option>
+
+                                <option value="@OrderSubCategorySummaryBy.ProductCountAcs">
+                                    Product &#x2191;&#xFE0E;
+                                </option>
+
+                                <option value="@OrderSubCategorySummaryBy.ProductCountDesc">
+                                    Product &#x2193;&#xFE0E;
+                                </option>
+
+                                <option value="@OrderSubCategorySummaryBy.CategoryCountAcs">
+                                    Category &#x2191;&#xFE0E;
+                                </option>
+
+                                <option value="@OrderSubCategorySummaryBy.CategoryCountDesc">
+                                    Category &#x2193;&#xFE0E;
+                                </option>
+
+                            </select>
+
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="table">
+
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">Sub Category Name</th>
+                                <th scope="col">Category</th>
+                                <th scope="col">No. of Product</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+
+                        @if (subCategorySummaryRequest != null)
+                        {
+                            @foreach (var item in subCategorySummaryRequest.Models)
+                            {
+                                <tbody>
+                                    <tr>
+                                        <td scope="row">
+                                            <span></span>
+                                        </td>
+                                        <td>@item.SubCategoryName</td>
+                                        <td>@item.CategoryName</td>
+                                        <td>@item.ProductCount</td>
+                                        <td>
+                                            <div class="table-icons">
+
+                                                <i class="fa-solid fa-pencil" data-bs-toggle="modal"
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenEditModal(item.Id))"></i>
+
+                                                <i class="fa-solid fa-xmark" data-bs-toggle="modal"
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenDeleteModal(item.Id))"></i>
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            }
+                        }
+
+                    </table>
+
+                    @if (subCategorySummaryRequest == null)
+                    {
+                        <div class="no-item">
+
+                            @if (isLoading)
+                            {
+                                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <h6>No Category has been loaded.</h6>
+                            }
+                        </div>
+                    }
+
+                </div>
+
+                <Pagination CurrentPage="@currentPage"
+                            PageCount="@totalPages"
+                            OnPageChanged="HandlePageChange" />
+
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+
+            NOTHING IN HERE?
+
+        </div>
+
+        <Modal modalId="subcategoryModal"
+               Title="@modalTitle"
+               SaveButtonText="Save"
+               modalMode="@modalMode"
+               OnSave="SaveModalHandler">
+
+            @if (modalMode != "delete")
+            {
+
+                @if (string.IsNullOrEmpty(errorMessage))
+                {
+                    <p class="card-description text-justify">
+                        You can change the subcategories on your website by filling out a form
+                        with the category name and selecting a category from a dropdown list.
+                        If the category you want isn't on the list, you can add a new one by
+                        going to the category page.
+                    </p>
+                }
+                else
+                {
+                    <p class="card-description text-justify text-danger">
+                        @errorMessage
+                    </p>
+                }
+
+
+                <EditForm Model="@modalModel" OnInvalidSubmit="@SaveModalHandler">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label for="subCategoryName" class="form-label">Sub Category Name</label>
+                        <InputText id="subCategoryName" class="form-control" placeholder="Sub Category Name" @bind-Value="modalModel.SubCategoryName" />
+                        <ValidationMessage For="@(()=> modalModel.SubCategoryName)" />
+                    </div>
+
+                </EditForm>
+            }
+            else
+            {
+                <div>
+                    Are you sure you want to delete
+                    <b class="text-primary">@(modalModel.SubCategoryName)</b>?
+                </div>
+            }
+
+        </Modal>
+
+
+    </div>
+
+</div>
+
+@code
+{
+    private RequestModel<SubCategorySummaryDTO>? subCategorySummaryRequest;
+
+    private int totalPages = 1;
+    private int currentPage = 1;
+    private bool isLoading = true;
+
+    private SubCategoryModel modalModel = new();
+    private string modalTitle = string.Empty;
+    private string modalMode = string.Empty;
+
+    private string errorMessage = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    private async Task OnSelectSortChange(ChangeEventArgs e)
+    {
+
+    }
+
+    private async Task OnSearchItem(ChangeEventArgs e)
+    {
+
+    }
+
+    private async Task HandlePageChange(int page)
+    {
+
+    }
+
+
+    private async Task AddSubCategory()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(modalModel.SubCategoryName))
+            {
+                errorMessage = "Category name is required.";
+                return;
+            }
+            //await CategoryEndpoint.AddCategoryAsync(modalModel.SubCategoryName);
+            await CloseModal("Successfully added new category.");
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Failed to add category: {ex.Message}";
+        }
+    }
+
+    private async Task EditSubCategory()
+    {
+
+    }
+
+    private async Task DeleteSubCategory()
+    {
+
+    }
+
+    private async Task SaveModalHandler()
+    {
+        if (modalMode == "add")
+        {
+            await AddSubCategory();
+        }
+        else if (modalMode == "edit")
+        {
+            await EditSubCategory();
+        }
+        else if (modalMode == "delete")
+        {
+            await DeleteSubCategory();
+        }
+    }
+
+    private void OpenAddModal()
+    {
+        modalTitle = "Add New Category";
+        modalMode = "add";
+        modalModel.SubCategoryName = string.Empty;
+        modalModel.Id = 0;
+    }
+
+    private void OpenEditModal(int id)
+    {
+        modalTitle = "Edit Category";
+        modalMode = "edit";
+        SetModalModel(id);
+    }
+
+    private void OpenDeleteModal(int id)
+    {
+        modalTitle = "Delete Category";
+        modalMode = "delete";
+        SetModalModel(id);
+    }
+
+    private async Task CloseModal(string toastmsg)
+    {
+        //toastMessage = toastmsg;
+        //await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
+        //await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+
+        ////Request for Update
+        //await RequestItems(currentPage, selectedSortValue);
+    }
+
+    private void SetModalModel(int categoryId)
+    {
+        var categoryToEdit = subCategorySummaryRequest.Models.FirstOrDefault(x => x.Id == categoryId);
+        if (categoryToEdit != null)
+        {
+            modalModel.SubCategoryName = categoryToEdit.CategoryName;
+            modalModel.Id = categoryId;
+        }
+    }
+
+
+
+}

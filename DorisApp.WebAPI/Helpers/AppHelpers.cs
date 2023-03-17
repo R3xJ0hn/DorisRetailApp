@@ -15,7 +15,7 @@ namespace DorisApp.WebAPI.Helpers
         public static string CapitalizeWords(string value)
         {
             if (value == null)
-                throw new ArgumentNullException(nameof(value));
+                throw new Exception(nameof(value));
             if (value.Length == 0)
                 return value;
 

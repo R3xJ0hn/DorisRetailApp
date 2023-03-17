@@ -2,10 +2,6 @@
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace DorisApp.WebAPI.Controllers
 {
@@ -13,38 +9,34 @@ namespace DorisApp.WebAPI.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _config;
         private readonly UserData _userData;
-        private readonly RoleData _roleData;
 
-        public AuthController(IConfiguration config, UserData userData, RoleData roleData)
+        public AuthController(UserData userData)
         {
-            _config = config;
             _userData = userData;
-            _roleData = roleData;
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<UserModel>> Register(string firstName, string lastName, string email, string password)
+        public async Task<ActionResult<UserModel>> Register(RegisterUserModel user)
         {
-            var existingUser = await _userData.FindByEmailAsync(email);
-            if (existingUser != null)
+            try
             {
-                return BadRequest("The email given already exists.");
+                var existingUser = await _userData.FindByEmailAsync(user.Email);
+                if (existingUser != null)
+                {
+                    return BadRequest("The email given already exists.");
+                }
+
+                var result =  await _userData.RegisterUserAsync(user);
+                return Ok($"Welcome {AppHelpers.GetFullName(result)}");
+
+            }
+            catch (Exception)
+            {
+
+                throw;
             }
 
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            var user = new UserModel
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                EmailAddress = email,
-                PasswordHash = passwordHash,
-                LastPasswordHash = passwordHash
-            };
-
-            var createdUser = await _userData.RegisterUserAsync(user);
-            return Ok($"Welcome {AppHelpers.GetFullName(createdUser)}");
         }
 
         [HttpPost("login")]
@@ -61,9 +53,8 @@ namespace DorisApp.WebAPI.Controllers
                 return BadRequest("Invalid Username or Password");
             }
 
-            SetRefreshToken(user);
-
-            var token = CreateToken(user, await GetUserRoleName(user));
+            await SetRefreshToken(user);
+            string token = await _userData.RequestToken(user);
 
             return Ok(new
             {
@@ -101,33 +92,10 @@ namespace DorisApp.WebAPI.Controllers
                 return Unauthorized("Token expired.");
             }
 
-            string token = CreateToken(user, await GetUserRoleName(user));
-            SetRefreshToken(user);
+            string token = await _userData.RequestToken(user);
+            await SetRefreshToken(user);
             return Ok(token);
         }
-
-
-        private string CreateToken(UserModel user, string? roleName)
-        {
-            var key = Encoding.UTF8.GetBytes(_config["JwtConfig:Key"]);
-            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
-
-            var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, AppHelpers.GetFullName(user)),
-                    new Claim(ClaimTypes.Role, roleName),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddDays(1)).ToUnixTimeSeconds().ToString())
-                };
-
-            var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
-                new JwtHeader(credentials),
-                new JwtPayload(claims)));
-
-            return token;
-        }
-
 
         private async Task SetRefreshToken(UserModel user)
         {
@@ -141,11 +109,6 @@ namespace DorisApp.WebAPI.Controllers
             };
 
             Response.Cookies.Append("refreshToken", user.Token, cookieOptions);
-        }
-
-        private async Task<string?> GetUserRoleName(UserModel user)
-        {
-            return (await _roleData.GetByIdAsync(user.RoleId))?.RoleName;
         }
     }
 }

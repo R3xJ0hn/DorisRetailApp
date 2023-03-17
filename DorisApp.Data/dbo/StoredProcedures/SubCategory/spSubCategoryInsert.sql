@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[spCategoryInsert]
+﻿CREATE PROCEDURE [dbo].[spSubCategoryInsert]
 	@Id					INT,
-    @CategoryName		NVARCHAR(100),
+    @SubCategoryName	NVARCHAR(100),
+    @CategoryId			INT,
 	@CreatedByUserId	INT,
 	@UpdatedByUserId	INT,
 	@CreatedAt			DATETIME2,
@@ -10,14 +11,16 @@ AS
 BEGIN
 	set nocount on;
 
-	INSERT INTO dbo.Categories(
-		[CategoryName],	
+	INSERT INTO dbo.SubCategories(
+		[SubCategoryName],	
+		[CategoryId],
 		[CreatedByUserId],	
 		[UpdatedByUserId],	
 		[CreatedAt],		
 		[UpdatedAt]) 
 	VALUES(
-		@CategoryName,				
+		@SubCategoryName,
+		@CategoryId,
 		@CreatedByUserId,		
 		@UpdatedByUserId,		
 		@CreatedAt,				

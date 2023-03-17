@@ -1,5 +1,6 @@
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.DataAccess.Logger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -13,6 +14,7 @@ builder.Services.AddSwaggerGen();
 
 //App Services
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
+builder.Services.AddTransient<ILoggerManager, LoggerManager>();
 builder.Services.AddTransient<UserData>();
 builder.Services.AddTransient<RoleData>();
 builder.Services.AddTransient<CategoryData>();

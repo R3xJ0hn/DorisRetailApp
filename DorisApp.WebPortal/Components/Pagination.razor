@@ -6,7 +6,7 @@
     <nav aria-label="Page navigation example">
         <ul class="pagination  pagination-sm  justify-content-end">
 
-            <p style="font-size: 12px">Showing @CurrentPage out of @PageCount</p>
+            <p>Showing @CurrentPage out of @PageCount</p>
 
             <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
                 <button class="page-link" disabled="@(CurrentPage == 1)" @onclick="() => OnPageChange(CurrentPage - 1)">Previous</button>

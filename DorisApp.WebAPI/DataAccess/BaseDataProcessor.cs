@@ -1,46 +1,68 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.DataAccess.Logger;
 using DorisApp.WebAPI.Helpers;
+using System.Security.Claims;
 
 namespace DorisApp.WebAPI.DataAccess
 {
+
     public abstract class BaseDataProcessor : IDisposable
     {
         protected readonly ISqlDataAccess _sql;
-        protected readonly ILogger _logger;
+        protected readonly ILoggerManager _logger;
         public abstract string TableName { get; }
 
-        public BaseDataProcessor(ISqlDataAccess sql, ILogger logger)
+        public BaseDataProcessor(ISqlDataAccess sql, ILoggerManager logger)
         {
             _sql = sql;
             _logger = logger;
         }
-        protected async Task<RequestModel<T>?> GetByPageAsync<T>(string storeProcedureName, RequestPageDTO request, int userId) where T : class
+
+        public async Task<T?> GetByIdAsync<T>(ClaimsIdentity identity, int modelId) where T : class 
+        {
+            try
+            {
+                var p = new { Id = modelId };
+                var output = await _sql.LoadDataAsync<T, dynamic>("dbo.spRoleGetById", p);
+                _logger.SuccessRead(identity, TableName, output.Count);
+                return output.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.FailRead(identity, TableName, 0,ex.Message);
+                throw;
+            }
+        }
+
+        protected async Task<RequestModel<T>?> GetByPageAsync<T>(ClaimsIdentity identity, string storeProcedureName, RequestPageDTO request) where T : class
         {
             if (request == null)
             {
+                _logger.FailRead(identity,TableName, 0, $"sent {typeof(T).Name} is null");
                 throw new ArgumentNullException(nameof(request));
             }
 
             if (storeProcedureName == null)
             {
+                _logger.FailRead(identity, TableName, 0, $"storeProcedureName is null");
                 throw new ArgumentNullException(nameof(storeProcedureName));
             }
 
-            var count = await CountAsync();
+            var count = await CountAsync(identity);
             var countPages = AppHelpers.CountPages(count, request.ItemPerPage);
 
             if (!ValidateRequestPageDTO(request, countPages))
             {
-                ThrowError($"Error: Page {request.PageNo} is out of range request by {userId}");
+                _logger.FailRead(identity, TableName, 0, $"Page {request.PageNo} is out of range: total pages {countPages}");
                 return null;
             }
 
             try
             {
                 var output = await _sql.LoadDataAsync<T, RequestPageDTO>(storeProcedureName, request);
-                _logger.LogInformation($"Success: Get {typeof(T).Name} count:{output.Count} by {userId} at {DateTime.UtcNow}");
+                _logger.SuccessRead(identity, TableName, output.Count);
 
                 return new RequestModel<T>
                 {
@@ -53,12 +75,12 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                ThrowError($"Error: Get {typeof(T).Name} by {userId} at {DateTime.UtcNow}" + Environment.NewLine + ex.Message);
+               _logger.FailRead(identity,TableName,0,ex.Message);
                 throw;
             }
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> CountAsync(ClaimsIdentity identity)
         {
             try
             {
@@ -66,7 +88,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                ThrowError(ex.Message);
+                _logger.FailRead(identity,TableName,0, ex.Message);
                 throw;
             }
         }
@@ -76,17 +98,10 @@ namespace DorisApp.WebAPI.DataAccess
             return request != null && request.PageNo > 0 && request.PageNo <= totalPage;
         }
 
-        protected void ThrowError(string msg)
-        {
-            _logger.LogError(msg);
-            throw new ArgumentException(msg);
-        }
-
         public void Dispose()
         {
             _sql.Dispose();
         }
     }
-
 
 }

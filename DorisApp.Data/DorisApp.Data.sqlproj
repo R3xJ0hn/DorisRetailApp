@@ -61,6 +61,7 @@
     <Folder Include="dbo\StoredProcedures" />
     <Folder Include="PublishLocations" />
     <Folder Include="dbo\StoredProcedures\Category" />
+    <Folder Include="dbo\StoredProcedures\SubCategory" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Roles.sql" />
@@ -79,11 +80,12 @@
     <Build Include="dbo\Tables\Products.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryUpdate.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryDelete.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="PublishLocations\DorisApp.Data.publish.xml" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryInsert.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PublishLocations\DorisApp.Data.publish.xml" />
   </ItemGroup>
 </Project>

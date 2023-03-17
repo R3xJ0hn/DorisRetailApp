@@ -85,3 +85,21 @@ BEGIN
 		GETUTCDATE(),				
 		GETUTCDATE())
 END
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].SubCategories)
+BEGIN
+	INSERT INTO dbo.SubCategories(
+		[SubCategoryName],
+		[CategoryId],
+		[CreatedByUserId],	
+		[UpdatedByUserId],	
+		[CreatedAt],		
+		[UpdatedAt]) 
+	VALUES(
+		'undefine',
+		@@IDENTITY,
+		1,		
+		1,		
+		GETUTCDATE(),				
+		GETUTCDATE())
+END

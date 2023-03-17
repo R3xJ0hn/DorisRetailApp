@@ -1,42 +1,53 @@
 ﻿using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.DataAccess.Logger;
 using DorisApp.WebAPI.Helpers;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DorisApp.WebAPI.DataAccess
 {
-    public class UserData : IDisposable
+    public class UserData : BaseDataProcessor
     {
-        private readonly IConfiguration _config;
-        private readonly ISqlDataAccess _sql;
-        private readonly ILogger<UserData> _logger;
         private readonly RoleData _roleData;
+        private readonly IConfiguration _config;
 
-        public UserData(IConfiguration config, ISqlDataAccess sql, ILogger<UserData> logger, RoleData roleData)
+        public override string TableName => "Users";
+
+        public UserData(ISqlDataAccess sql, ILoggerManager logger,
+            IConfiguration config, RoleData roleData) : base(sql, logger)
         {
-            _config = config;
-            _sql = sql;
-            _logger = logger;
             _roleData = roleData;
+            _config = config;
         }
 
-        public async Task<UserModel> RegisterUserAsync(UserModel user)
+        public async Task<UserModel> RegisterUserAsync(RegisterUserModel user)
         {
-            user.RoleId = _roleData.GetNewUserId();
-            var getRole = await _roleData.GetByIdAsync(user.RoleId);
-            var passwordHash = user.PasswordHash;
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            var getRole = _roleData.GetIdForNewUser();
 
-            if (!ValidateEmail(user.EmailAddress))
+            if (!ValidateEmail(user.Email))
             {
-                throw new ArgumentException($"Invalid email: {user.EmailAddress}");
+                _logger.LogError($"Invalid email: {user.Email}");
+                throw new Exception($"Invalid email: {user.Email}");
             }
 
-            if (getRole == null)
+            if (getRole <= 0)
             {
-                _logger.LogError($"Role id not found: {user.RoleId}");
-                throw new ArgumentException("Role id not found.");
+                _logger.LogError("Role id not found.");
+                throw new Exception("Role id not found.");
             }
+
+            var newUser = new UserModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                EmailAddress = user.Email,
+            };
 
             foreach (var prop in user.GetType().GetProperties())
             {
@@ -50,23 +61,24 @@ namespace DorisApp.WebAPI.DataAccess
                 }
             }
 
-            user.PasswordHash = passwordHash;
-            user.LastPasswordHash = passwordHash;
-            user.LastPasswordCanged = DateTime.UtcNow;
-            user.CreatedAt = DateTime.UtcNow;
-            user.UpdatedAt = DateTime.UtcNow;
-            await SetGenerateRefreshToken(user);
+            newUser.PasswordHash = passwordHash;
+            newUser.LastPasswordHash = passwordHash;
+            newUser.LastPasswordCanged = DateTime.UtcNow;
+            newUser.CreatedAt = DateTime.UtcNow;
+            newUser.UpdatedAt = DateTime.UtcNow;
+            newUser.RoleId = getRole;
+            await SetGenerateRefreshToken(newUser);
 
             try
             {
-                await _sql.SaveDataAsync("dbo.spUserInsert", user);
-                _logger.LogInformation("Insert User {@User}", user);
-                return user;
+                await _sql.SaveDataAsync("dbo.spUserInsert", newUser);
+                _logger.LogInfo($"Welcome {AppHelpers.GetFullName(newUser)}");
+                return newUser;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Insert User {@User}", user);
-                throw new ArgumentException(ex.Message);
+                _logger.LogError("Unable to register User:" + Environment.NewLine + ex.Message);
+                throw new Exception(ex.Message);
             }
         }
 
@@ -75,7 +87,6 @@ namespace DorisApp.WebAPI.DataAccess
             var parameters = new { Id = id };
             var users = await _sql.LoadDataAsync<UserModel, dynamic>("dbo.spUserGetById", parameters);
             var user = users.FirstOrDefault();
-            _logger.LogInformation("Found user {UserId}", user?.Id);
             return user;
         }
 
@@ -89,7 +100,6 @@ namespace DorisApp.WebAPI.DataAccess
             var parameters = new { Email = email };
             var users = await _sql.LoadDataAsync<UserModel, dynamic>("dbo.spUserGetByEmail", parameters);
             var user = users.FirstOrDefault();
-            _logger.LogInformation("Found user {UserEmail}", user?.EmailAddress);
             return user;
         }
 
@@ -107,27 +117,54 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync<UserModel>("dbo.spUserUpdateToken", user);
-                _logger.LogInformation("Success: Update User Token: {@User}", user);
+                _logger.LogInfo($"Seccessfully request {AppHelpers.GetFullName(user)} for new request token.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                var errorMsg = $"Error: Unable to Update {AppHelpers.GetFullName(user)}";
-                _logger.LogInformation(errorMsg, user);
-                throw new ArgumentException(errorMsg);
+                _logger.LogError($"Fail {AppHelpers.GetFullName(user)} " +
+                    $"to for new request token." +
+                    Environment.NewLine + ex.Message);
+                throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<string> RequestToken(UserModel user)
+        {
+            var identity = new ClaimsIdentity(new[] {
+                    new Claim(ClaimTypes.Name, AppHelpers.GetFullName(user)) }, "Request Token");
+
+            var a = identity;
+
+            var role = (await _roleData.GetByIdAsync<RoleModel>(identity, user.RoleId)).RoleName;
+
+            return CreateToken(user,role);
+        }
+
+        private string CreateToken(UserModel user, string? roleName)
+        {
+            var key = Encoding.UTF8.GetBytes(_config["JwtConfig:Key"]);
+            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
+
+            var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, AppHelpers.GetFullName(user)),
+                    new Claim(ClaimTypes.Role, roleName),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddDays(1)).ToUnixTimeSeconds().ToString())
+                };
+
+            var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
+                new JwtHeader(credentials),
+                new JwtPayload(claims)));
+
+            return token;
         }
 
         private bool ValidateEmail(string email)
         {
             var emailRegex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$", RegexOptions.IgnoreCase);
-
-            if (!emailRegex.IsMatch(email))
-            {
-                _logger.LogError("Invalid email format: {Email}", email);
-                return false;
-            }
-
-            return true;
+            return emailRegex.IsMatch(email);
         }
 
         public void Dispose()

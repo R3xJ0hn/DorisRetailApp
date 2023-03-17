@@ -1,7 +1,8 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
-using DorisApp.WebAPI.Helpers;
+using DorisApp.WebAPI.DataAccess.Logger;
+using System.Security.Claims;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -9,12 +10,18 @@ namespace DorisApp.WebAPI.DataAccess
     {
         public override string TableName => "Roles";
 
-        public RoleData(ISqlDataAccess sql, ILogger logger)
-            : base(sql, logger)
+        public RoleData(ISqlDataAccess sql, ILoggerManager logger) : base(sql, logger)
         {
         }
-        public async Task AddAsync(RoleModel role, int userId)
+
+        public async Task<RequestModel<RoleModel>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
         {
+            return await GetByPageAsync<RoleModel>(identity, "dbo.spRoleGetByPage", request);
+        }
+
+        public async Task AddAsync(ClaimsIdentity identity, RoleModel role)
+        {
+            var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
             role.RoleName = role.RoleName.ToLower();
             role.CreatedByUserId = userId;
             role.UpdatedByUserId = role.CreatedByUserId;
@@ -24,36 +31,21 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.SaveDataAsync("dbo.spRoleInsert", role);
-                _logger.LogInformation($"Success: Insert {role.RoleName} Category by {userId} at {role.CreatedAt}");
+                _logger.SuccessInsert(identity, role.RoleName, TableName);
             }
 
             catch (Exception ex)
             {
-                ThrowError($"Error: Insert {role.RoleName} Category by {userId} at {role.CreatedAt} {ex.Message}" +
-                    Environment.NewLine + ex.Message);
+                _logger.FailInsert(identity, role.RoleName, TableName,ex.Message);
                 throw;
             }
         }
 
-
-        public async Task<RequestModel<RoleModel>?> GetSummaryDataByPageAsync(RequestPageDTO request, int userId)
+        public int GetIdForNewUser()
         {
-            return await GetByPageAsync<RoleModel>("dbo.spRoleGetByPage", request, userId);
-        }
-
-        public async Task<RoleModel?> GetByIdAsync(int id)
-        {
-            var p = new { Id = id };
-            var output = await _sql.LoadDataAsync<RoleModel, dynamic>("dbo.spRoleGetById", p);
-            _logger.LogInformation($"Success: Get Role with RoleId count:{output.Count} at {DateTime.UtcNow}");
-            return output.FirstOrDefault();
-        }
-
-        public int GetNewUserId()
-        {
+            //TODO: Get the id for Anonymous user.
             return 1;
         }
-
 
     }
 }
