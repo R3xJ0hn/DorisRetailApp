@@ -15,7 +15,8 @@ namespace DorisApp.Data.Library.API
 
         public async Task AddCategoryAsync(string categoryName)
         {
-            await SendPostAysnc(categoryName, "URL:add-category");
+            var category = new CategoryModel() { CategoryName = categoryName };
+            await SendPostAysnc(category, "URL:add-category");
         }
 
         public async Task<RequestModel<CategorySummaryDTO>?> GetCategorySummary(RequestPageDTO request)

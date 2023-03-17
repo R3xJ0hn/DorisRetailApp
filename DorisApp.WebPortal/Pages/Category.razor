@@ -38,6 +38,22 @@
                                     @onchange="OnSelectSortChange">
                                 <option value="@OrderCategorySummaryBy.NameAcs">A-Z</option>
                                 <option value="@OrderCategorySummaryBy.NameDesc">Z-A</option>
+
+                                <option value="@OrderCategorySummaryBy.ProductCountAcs">
+                                    Product &#x2191;&#xFE0E;
+                                </option>
+
+                                <option value="@OrderCategorySummaryBy.ProductCountDesc">
+                                    Product &#x2193;&#xFE0E;
+                                </option>
+
+                                <option value="@OrderCategorySummaryBy.ProductCountAcs">
+                                    SubCategory &#x2191;&#xFE0E;
+                                </option>
+
+                                <option value="@OrderCategorySummaryBy.ProductCountDesc">
+                                    SubCategory &#x2193;&#xFE0E;
+                                </option>
                             </select>
 
                         </div>
@@ -58,9 +74,9 @@
                             </tr>
                         </thead>
 
-                        @if (categoryTableRequest != null)
+                        @if (categorySummaryRequest != null)
                         {
-                            @foreach (var item in categoryTableRequest.Models)
+                            @foreach (var item in categorySummaryRequest.Models)
                             {
                                 <tbody>
                                     <tr>
@@ -90,10 +106,19 @@
 
                     </table>
 
-                    @if (categoryTableRequest == null)
+                    @if (categorySummaryRequest == null)
                     {
                         <div class="no-item">
-                            <h6>No Category has been loaded.</h6>
+                            @if (isLoading)
+                            {
+                                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <h6>No Category has been loaded.</h6>
+                            }
                         </div>
                     }
                 </div>
@@ -283,17 +308,26 @@
 
     @if (modalMode != "delete")
     {
-        <p class="card-description text-justify">
-            This is where you can modify your category list for your website.
-            Just fill out the form with the category name.
-        </p>
+        @if (string.IsNullOrEmpty(errorMessage))
+        {
+            <p class="card-description text-justify">
+                This is where you can modify your category list for your website.
+                Just fill out the form with the category name.
+            </p>
+        }
+        else
+        {
+            <p class="card-description text-justify text-danger">
+                @errorMessage
+            </p>
+        }
 
         <EditForm Model="@modalModel" OnInvalidSubmit="@SaveHandler">
             <DataAnnotationsValidator />
 
             <div class="mb-3">
-                <label for="productName" class="form-label">Category Name</label>
-                <InputText id="categoryName" class="form-control" placeholder="Product Name" @bind-Value="modalModel.CategoryName" />
+                <label for="categoryName" class="form-label">Category Name</label>
+                <InputText id="categoryName" class="form-control" placeholder="Category Name" @bind-Value="modalModel.CategoryName" />
                 <ValidationMessage For="@(()=> modalModel.CategoryName)" />
             </div>
 
@@ -315,12 +349,13 @@
 
 @code {
     private RequestPageDTO categoryPageRequest = new RequestPageDTO { PageNo = 1 };
-    private RequestModel<CategorySummaryDTO> categoryTableRequest;
+    private RequestModel<CategorySummaryDTO> categorySummaryRequest;
+    private bool isLoading = true;
     private int totalPages = 1;
     private int currentPage = 1;
 
+    private CategoryModel modalModel = new();
     private string modalTitle = string.Empty;
-    private CategoryModel modalModel = new CategoryModel();
     private string modalMode = string.Empty;
 
     private string errorMessage = string.Empty;
@@ -338,8 +373,14 @@
     {
         categoryPageRequest.PageNo = page;
         categoryPageRequest.OrderBy = orderBy;
-        categoryTableRequest = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
-        totalPages = categoryTableRequest.TotalPages;
+        isLoading = true;
+        categorySummaryRequest = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
+        totalPages = categorySummaryRequest.TotalPages;
+
+        if (categorySummaryRequest == null)
+        {
+            isLoading = false;
+        }
         StateHasChanged();
     }
 
@@ -409,6 +450,7 @@
             if (string.IsNullOrEmpty(modalModel.CategoryName))
             {
                 errorMessage = "Category name is required.";
+                await JSRuntime.InvokeVoidAsync("enableButtons");
                 return;
             }
             await CategoryEndpoint.AddCategoryAsync(modalModel.CategoryName);
@@ -478,7 +520,7 @@
 
     private void SetModalModel(int categoryId)
     {
-        var categoryToEdit = categoryTableRequest.Models.FirstOrDefault(x => x.Id == categoryId);
+        var categoryToEdit = categorySummaryRequest.Models.FirstOrDefault(x => x.Id == categoryId);
         if (categoryToEdit != null)
         {
             modalModel.CategoryName = categoryToEdit.CategoryName;

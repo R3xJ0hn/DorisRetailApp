@@ -4,5 +4,9 @@
     {
         NameAcs,
         NameDesc,
+        ProductCountAcs,
+        ProductCountDesc,
+        SubCategoryCountAcs,
+        SubCategoryCountDesc,
     }
 }

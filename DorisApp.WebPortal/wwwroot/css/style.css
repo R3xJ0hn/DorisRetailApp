@@ -10,7 +10,7 @@
 
 body {
   background: #f2edf3;
-  font-family: poppins, system-ui, -apple-system, Arial, sans-serif, "Segoe UI", "Helvetica Neue";
+  font-family: "Poppins", system-ui, -apple-system, Arial, sans-serif, "Segoe UI", "Helvetica Neue";
 }
 
 body::-webkit-scrollbar {
@@ -36,6 +36,7 @@ body::-webkit-scrollbar {
 .pagination p {
   margin-top: 0.5rem;
   margin-right: 1rem;
+  font-size: 12px;
 }
 
 /*!
@@ -12674,7 +12675,7 @@ textarea.form-control-lg {
   top: 0;
   height: 100vh;
   background: #fff;
-  font-family: poppins, system-ui, -apple-system, Arial, sans-serif, "Segoe UI", "Helvetica Neue";
+  font-family: "Poppins", system-ui, -apple-system, Arial, sans-serif, "Segoe UI", "Helvetica Neue";
   padding: 0;
   width: 260px;
   z-index: 999;

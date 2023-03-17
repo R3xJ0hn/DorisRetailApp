@@ -20,7 +20,7 @@ namespace DorisApp.WebAPI.Controllers
         }
 
         [HttpPost("add-category"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> AddCategory([FromBody] CategoryModel model)
+        public async Task<IActionResult> AddCategory(CategoryModel model)
         {
             try
             {
