@@ -74,12 +74,12 @@
                                             <div class="table-icons">
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                           data-bs-target="#categoryModal"
-                                           @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
+                                                   data-bs-target="#categoryModal"
+                                                   @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
-                                           data-bs-target="#categoryModal"
-                                           @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
+                                                   data-bs-target="#categoryModal"
+                                                   @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
 
                                             </div>
                                         </td>
@@ -98,8 +98,11 @@
                     }
                 </div>
 
-                <Pagination TotalPages="@totalPages"
-                            OnPageChange="ChangePageHandler" />
+                <Pagination 
+                    CurrentPage="@currentPage" 
+                    PageCount="@totalPages" 
+                    OnPageChanged="HandlePageChange" />
+
 
             </div>
         </div>
@@ -314,7 +317,7 @@
     private RequestPageDTO categoryPageRequest = new RequestPageDTO { PageNo = 1 };
     private RequestModel<CategorySummaryDTO> categoryTableRequest;
     private int totalPages = 1;
-    private int isInPage = 1;
+    private int currentPage = 1;
 
     private string modalTitle = string.Empty;
     private CategoryModel modalModel = new CategoryModel();
@@ -328,7 +331,7 @@
     protected override async Task OnInitializedAsync()
     {
         categoryPageRequest.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]); ;
-        RequestItems(isInPage, selectedSortValue);
+        RequestItems(currentPage, selectedSortValue);
     }
 
     private async Task RequestItems(int page, OrderCategorySummaryBy orderBy)
@@ -342,21 +345,22 @@
 
     private async Task OnSearchItem(ChangeEventArgs e)
     {
+        currentPage = 1;
         string? searchFor = e.Value.ToString();
         categoryPageRequest.LookFor = VerifySearchBar(searchFor);
-        await RequestItems(isInPage, selectedSortValue);
+        await RequestItems(currentPage, selectedSortValue);
     }
 
-    private async Task ChangePageHandler(int page)
+    private async Task HandlePageChange(int page)
     {
-        isInPage = page;
+        currentPage = page;
         await RequestItems(page, selectedSortValue);
     }
 
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderCategorySummaryBy)Enum.Parse(typeof(OrderCategorySummaryBy), e.Value.ToString());
-        isInPage = 1;
+        currentPage = 1;
         await RequestItems(1, selectedSortValue);
     }
 
@@ -381,7 +385,6 @@
         modalMode = "delete";
         SetModalModel(categoryId);
     }
-
 
     private async Task SaveHandler()
     {
@@ -428,10 +431,10 @@
             }
 
             var categoryToUpdate = new CategoryModel
-                {
-                    Id = modalModel.Id,
-                    CategoryName = modalModel.CategoryName
-                };
+            {
+                Id = modalModel.Id,
+                CategoryName = modalModel.CategoryName
+            };
 
             await CategoryEndpoint.UpdateCategory(categoryToUpdate);
             await CloseModal("Successfully updated category.");
@@ -470,7 +473,7 @@
         await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
 
         //Request for Update
-        await RequestItems(isInPage, selectedSortValue);
+        await RequestItems(currentPage, selectedSortValue);
     }
 
     private void SetModalModel(int categoryId)
