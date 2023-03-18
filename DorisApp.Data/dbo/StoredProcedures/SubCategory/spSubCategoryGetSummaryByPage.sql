@@ -9,11 +9,10 @@ BEGIN
 
     DECLARE @Offset INT = (@PageNo - 1) * @ItemPerPage;
 
-
-
     WITH SubCategoryCounts AS (
     SELECT 
         s.Id, 
+        s.CategoryId,
         s.SubCategoryName, 
         CASE 
             WHEN c.MarkAsDeleted = 1 THEN CONCAT(c.CategoryName, ' *') 
@@ -29,6 +28,7 @@ BEGIN
         (@LookFor IS NULL OR s.SubCategoryName LIKE '%' + @LookFor + '%')
     GROUP BY 
         s.Id, 
+        s.CategoryId,
         s.SubCategoryName, 
         CASE 
             WHEN c.MarkAsDeleted = 1 THEN CONCAT(c.CategoryName, ' *') 
@@ -38,18 +38,19 @@ BEGIN
     )
     SELECT 
         Id, 
+        CategoryId,
         SubCategoryName,
         CategoryName, 
         ProductCount
     FROM 
         SubCategoryCounts
     ORDER BY 
-        CASE WHEN @OrderBy = 0 THEN CategoryName END ASC, -- sort by category name from A to Z
-        CASE WHEN @OrderBy = 1 THEN CategoryName END DESC, -- sort by category name from Z to A
-        CASE WHEN @OrderBy = 2 THEN ProductCount END DESC, -- sort by product count from high to low
-        CASE WHEN @OrderBy = 3 THEN ProductCount END ASC, -- sort by product count from low to high
-        CASE WHEN @OrderBy = 4 THEN CategoryName END DESC, -- sort by subcategory count from high to low
-        CASE WHEN @OrderBy = 5 THEN CategoryName END ASC -- sort by subcategory count from low to high
+        CASE WHEN @OrderBy = 0 THEN SubCategoryName END ASC,
+        CASE WHEN @OrderBy = 1 THEN SubCategoryName END DESC,
+        CASE WHEN @OrderBy = 2 THEN ProductCount END ASC, 
+        CASE WHEN @OrderBy = 3 THEN ProductCount END DESC,
+        CASE WHEN @OrderBy = 4 THEN CategoryName END ASC, 
+        CASE WHEN @OrderBy = 5 THEN CategoryName END DESC
     OFFSET @Offset ROWS
     FETCH NEXT @ItemPerPage ROWS ONLY
 

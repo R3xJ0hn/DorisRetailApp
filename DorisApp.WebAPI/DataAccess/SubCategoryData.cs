@@ -44,6 +44,7 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task UpdateCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
+
             subCategory.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
                 .Select(c => c.Value).SingleOrDefault() ?? "-1");
@@ -55,6 +56,12 @@ namespace DorisApp.WebAPI.DataAccess
             //Get the old name
             string oldName = (await GetByIdAsync (identity, subCategory.Id)).SubCategoryName;
 
+            if (subCategory.CategoryId == 0)
+            {
+                var msg = $"The Category ID in {subCategory.SubCategoryName} Subcategory is zero.";
+                _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName, msg);
+                throw new Exception(msg);
+            }
             try
             {
                 await _sql.UpdateDataAsync("dbo.spSubCategoryUpdate", subCategory);
@@ -63,7 +70,7 @@ namespace DorisApp.WebAPI.DataAccess
             catch (Exception ex)
             {
                 _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName, ex.Message);
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -86,7 +93,7 @@ namespace DorisApp.WebAPI.DataAccess
             catch (Exception ex)
             {
                 _logger.FailDelete(identity, subCategory.SubCategoryName, TableName, ex.Message);
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 

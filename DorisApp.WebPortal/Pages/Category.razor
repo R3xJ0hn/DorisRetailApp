@@ -376,7 +376,7 @@
         isLoading = true;
         categorySummaryRequest = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
 
-        if (categorySummaryRequest == null)
+        if (categorySummaryRequest != null)
         {
             totalPages = categorySummaryRequest.TotalPages;
         }

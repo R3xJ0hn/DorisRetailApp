@@ -59,7 +59,7 @@ namespace DorisApp.WebAPI.DataAccess.Logger
 
             if (!string.IsNullOrEmpty(oldName))
             {
-                message += $" to {oldName}";
+                message += $" from {oldName}";
             }
 
             if (count != 0)

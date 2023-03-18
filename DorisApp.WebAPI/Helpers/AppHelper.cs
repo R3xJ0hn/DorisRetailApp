@@ -19,6 +19,7 @@ namespace DorisApp.WebAPI.Helpers
             if (value.Length == 0)
                 return value;
 
+            value = value.ToLower();
             StringBuilder result = new(value);
             result[0] = char.ToUpper(result[0]);
 

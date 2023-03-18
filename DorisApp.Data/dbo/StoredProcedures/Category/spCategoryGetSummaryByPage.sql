@@ -34,12 +34,12 @@ BEGIN
     FROM 
         CategoryCounts
     ORDER BY 
-        CASE WHEN @OrderBy = 0 THEN CategoryName END ASC, -- sort by category name from A to Z
-        CASE WHEN @OrderBy = 1 THEN CategoryName END DESC, -- sort by category name from Z to A
-        CASE WHEN @OrderBy = 2 THEN ProductCount END DESC, -- sort by product count from high to low
-        CASE WHEN @OrderBy = 3 THEN ProductCount END ASC, -- sort by product count from low to high
-        CASE WHEN @OrderBy = 4 THEN SubcategoryCount END DESC, -- sort by subcategory count from high to low
-        CASE WHEN @OrderBy = 5 THEN SubcategoryCount END ASC -- sort by subcategory count from low to high
+        CASE WHEN @OrderBy = 0 THEN CategoryName END ASC, 
+        CASE WHEN @OrderBy = 1 THEN CategoryName END DESC,
+        CASE WHEN @OrderBy = 2 THEN ProductCount END ASC,
+        CASE WHEN @OrderBy = 3 THEN ProductCount END DESC, 
+        CASE WHEN @OrderBy = 4 THEN SubcategoryCount END ASC,
+        CASE WHEN @OrderBy = 5 THEN SubcategoryCount END DESC 
     OFFSET @Offset ROWS
     FETCH NEXT @ItemPerPage ROWS ONLY
 

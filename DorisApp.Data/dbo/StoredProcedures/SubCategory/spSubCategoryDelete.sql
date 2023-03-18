@@ -1,6 +1,7 @@
 ﻿CREATE PROCEDURE [dbo].[spSubCategoryDelete]
 	@Id					INT,
-    @CategoryName		NVARCHAR(100),
+    @SubCategoryName	NVARCHAR(100),
+    @CategoryId			INT,
 	@CreatedByUserId	INT,
 	@UpdatedByUserId	INT,
 	@CreatedAt			DATETIME2,

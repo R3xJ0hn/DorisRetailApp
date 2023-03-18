@@ -13,7 +13,7 @@
 
             <div class="row align-items-end">
                 <div class="col ">
-                    <h3 class="table-title">List of SubCategories</h3>
+                    <h3 class="table-title">List of Sub Categories</h3>
                 </div>
 
                 <div class="col ">
@@ -50,11 +50,11 @@
                                 </option>
 
                                 <option value="@OrderSubCategorySummaryBy.CategoryCountAcs">
-                                    Category &#x2191;&#xFE0E;
+                                    Category A-Z
                                 </option>
 
                                 <option value="@OrderSubCategorySummaryBy.CategoryCountDesc">
-                                    Category &#x2193;&#xFE0E;
+                                    Category Z-A
                                 </option>
 
                             </select>
@@ -88,18 +88,19 @@
                                             <span></span>
                                         </td>
                                         <td>@item.SubCategoryName</td>
-                                        <td>@item.CategoryName</td>
+                                        <td class="@((@item.CategoryName.Contains("*")) ? "text-danger" : "")">
+                                            @item.CategoryName.Replace("*", "")</td>
                                         <td>@item.ProductCount</td>
                                         <td>
                                             <div class="table-icons">
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                           data-bs-target="#categoryModal"
-                                           @onclick="@(() => OpenEditModal(item.Id))"></i>
+                                                   data-bs-target="#subcategoryModal"
+                                                   @onclick="@(() => OpenEditModal(item.Id))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
-                                           data-bs-target="#categoryModal"
-                                           @onclick="@(() => OpenDeleteModal(item.Id))"></i>
+                                                   data-bs-target="#subcategoryModal"
+                                                   @onclick="@(() => OpenDeleteModal(item.Id))"></i>
 
                                             </div>
                                         </td>
@@ -174,7 +175,7 @@
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
                         <InputSelect class="form-select" id="category" @bind-Value="modalModel.CategoryId">
-                            <option value="0" selected>Select Category</option>
+                            <option value="0" selected>--Select Category--</option>
 
                             @if (categorySummary != null)
                             {
@@ -262,7 +263,7 @@
         isLoading = true;
         subCategorySummary = await SubCategoryEndpoint.GetSubCategorySummary(subCategoryPageRequest);
 
-        if (subCategorySummary == null)
+        if (subCategorySummary != null)
         {
             totalPages = subCategorySummary.TotalPages;
         }
@@ -273,19 +274,24 @@
 
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
-
+        selectedSortValue = (OrderSubCategorySummaryBy)Enum.Parse(typeof(OrderSubCategorySummaryBy), e.Value.ToString());
+        currentPage = 1;
+        await RequestItems(1, selectedSortValue);
     }
 
     private async Task OnSearchItem(ChangeEventArgs e)
     {
-
+        currentPage = 1;
+        string? searchFor = e.Value.ToString();
+        subCategoryPageRequest.LookFor = VerifySearchBar(searchFor);
+        await RequestItems(currentPage, selectedSortValue);
     }
 
     private async Task HandlePageChange(int page)
     {
-
+        currentPage = page;
+        await RequestItems(page, selectedSortValue);
     }
-
 
     private async Task AddSubCategory()
     {
@@ -314,12 +320,55 @@
 
     private async Task EditSubCategory()
     {
+        try
+        {
+            if (string.IsNullOrEmpty(modalModel.SubCategoryName))
+            {
+                errorMessage = "Sub Category name is required.";
+                return;
+            }
 
+
+            if (modalModel.CategoryId == 0)
+            {
+                errorMessage += Environment.NewLine + "Select a category.";
+                return;
+            }
+
+            var subCategoryToUpdate = new SubCategoryModel
+            {
+                Id = modalModel.Id,
+                SubCategoryName = modalModel.SubCategoryName,
+                CategoryId = modalModel.CategoryId
+            };
+
+            await SubCategoryEndpoint.UpdateCategory(subCategoryToUpdate);
+            await CloseModal("Successfully updated sub category.");
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Failed to update sub category: {ex.Message}";
+        }
     }
 
     private async Task DeleteSubCategory()
     {
+        try
+        {
+            var subCategoryToUpdate = new SubCategoryModel
+            {
+                Id = modalModel.Id,
+                SubCategoryName = modalModel.SubCategoryName,
+                CategoryId = modalModel.CategoryId
+            };
 
+            await SubCategoryEndpoint.DeleteCategory(subCategoryToUpdate);
+            await CloseModal("Successfully remove sub category.");
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Failed to remove sub category: {ex.Message}";
+        }
     }
 
     private async Task SaveModalHandler()
@@ -370,17 +419,37 @@
         await RequestItems(currentPage, selectedSortValue);
     }
 
-
-    private void SetModalModel(int categoryId)
+    private void SetModalModel(int subCategoryId)
     {
-        var categoryToEdit = subCategorySummary.Models.FirstOrDefault(x => x.Id == categoryId);
-        if (categoryToEdit != null)
+        var subCategoryToEdit = subCategorySummary.Models.FirstOrDefault(x => x.Id == subCategoryId);
+        if (subCategoryToEdit != null)
         {
-            modalModel.SubCategoryName = categoryToEdit.CategoryName;
-            modalModel.Id = categoryId;
+            modalModel.SubCategoryName = subCategoryToEdit.SubCategoryName;
+            modalModel.CategoryId = subCategoryToEdit.CategoryId;
+            modalModel.Id = subCategoryId;
         }
     }
 
+    private string? VerifySearchBar(string? str)
+    {
+        if (string.IsNullOrWhiteSpace(str))
+        {
+            return null;
+        }
+        else
+        {
+            return str;
+        }
+    }
+
+    private string CleanData(string data)
+    {
+        if (data.Contains("*"))
+        {
+            data = data.Replace("*", "");
+        }
+        return data;
+    }
 
 
 }
