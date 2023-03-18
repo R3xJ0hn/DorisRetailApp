@@ -34,8 +34,7 @@ namespace DorisApp.WebAPI.DataAccess.Database
 
         public async Task<int> CountAsync(string tableName)
         {
-            string sql = $"SELECT COUNT(*) FROM {tableName}";
-
+            string sql = $"SELECT COUNT(*) FROM {tableName} WHERE MarkAsDeleted != 1";
             using IDbConnection connection = new SqlConnection(_connectionString);
             var result = (await connection.QueryAsync<int>(sql)).FirstOrDefault();
 

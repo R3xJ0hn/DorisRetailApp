@@ -2,6 +2,7 @@
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
+using DorisApp.WebAPI.Helpers;
 using System.Security.Claims;
 
 namespace DorisApp.WebAPI.DataAccess
@@ -22,7 +23,7 @@ namespace DorisApp.WebAPI.DataAccess
         public async Task AddAsync(ClaimsIdentity identity, RoleModel role)
         {
             var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
-            role.RoleName = role.RoleName.ToLower();
+            role.RoleName = AppHelper.CapitalizeFirstWords(role.RoleName);
             role.CreatedByUserId = userId;
             role.UpdatedByUserId = role.CreatedByUserId;
             role.CreatedAt = DateTime.UtcNow;
@@ -39,6 +40,11 @@ namespace DorisApp.WebAPI.DataAccess
                 _logger.FailInsert(identity, role.RoleName, TableName,ex.Message);
                 throw;
             }
+        }
+
+        public async Task<RoleModel> GetByIdAsync(ClaimsIdentity identity, int id)
+        {
+            return await GetByIdAsync<RoleModel>(identity,"dbo.spRoleGetById", id);
         }
 
         public int GetIdForNewUser()

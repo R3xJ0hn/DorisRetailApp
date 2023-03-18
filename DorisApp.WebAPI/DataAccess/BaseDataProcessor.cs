@@ -20,12 +20,12 @@ namespace DorisApp.WebAPI.DataAccess
             _logger = logger;
         }
 
-        public async Task<T?> GetByIdAsync<T>(ClaimsIdentity identity, int modelId) where T : class 
+        protected async Task<T?> GetByIdAsync<T>(ClaimsIdentity identity, string storeProcedureName, int modelId) where T : class 
         {
             try
             {
                 var p = new { Id = modelId };
-                var output = await _sql.LoadDataAsync<T, dynamic>("dbo.spRoleGetById", p);
+                var output = await _sql.LoadDataAsync<T, dynamic>(storeProcedureName, p);
                 _logger.SuccessRead(identity, TableName, output.Count);
                 return output.FirstOrDefault();
             }
@@ -50,8 +50,14 @@ namespace DorisApp.WebAPI.DataAccess
                 throw new ArgumentNullException(nameof(storeProcedureName));
             }
 
+            if (request.ItemPerPage == 0)
+            {
+                _logger.FailRead(identity, TableName, 0, $"Item per page is 0");
+                throw new ArgumentNullException(nameof(request.ItemPerPage));
+            }
+
             var count = await CountAsync(identity);
-            var countPages = AppHelpers.CountPages(count, request.ItemPerPage);
+            var countPages = AppHelper.CountPages(count, request.ItemPerPage);
 
             if (!ValidateRequestPageDTO(request, countPages))
             {

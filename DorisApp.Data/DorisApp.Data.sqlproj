@@ -81,6 +81,11 @@
     <Build Include="dbo\StoredProcedures\Category\spCategoryUpdate.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryDelete.sql" />
     <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryInsert.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetSummaryByPage.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryUpdate.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryDelete.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryGetById.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetById.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

@@ -28,7 +28,7 @@ namespace DorisApp.WebAPI.Controllers
                 }
 
                 var result =  await _userData.RegisterUserAsync(user);
-                return Ok($"Welcome {AppHelpers.GetFullName(result)}");
+                return Ok($"Welcome {AppHelper.GetFullName(result)}");
 
             }
             catch (Exception)
@@ -59,7 +59,7 @@ namespace DorisApp.WebAPI.Controllers
             return Ok(new
             {
                 Access_Token = token,
-                Name = AppHelpers.GetFullName(user),
+                Name = AppHelper.GetFullName(user),
                 Email = user.EmailAddress
             });
         }

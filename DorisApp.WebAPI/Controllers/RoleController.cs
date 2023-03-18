@@ -24,7 +24,7 @@ namespace DorisApp.WebAPI.Controllers
         [Route("get-role/id"), Authorize(Roles = "admin")]
         public async Task<IActionResult> GetRoleId(int id)
         {
-            var role = await _data.GetByIdAsync<RoleModel>(GetUserIdentity(), id);
+            var role = await _data.GetByIdAsync(GetUserIdentity(), id);
 
             if (role != null)
             {

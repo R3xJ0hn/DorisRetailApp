@@ -17,6 +17,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 
 builder.Services.AddSingleton<IAPIHelper, APIHelper>();
 builder.Services.AddTransient<CategoryEndpoint>();
+builder.Services.AddTransient<SubCategoryEndpoint>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

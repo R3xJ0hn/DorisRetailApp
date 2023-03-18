@@ -365,22 +365,23 @@
 
     protected override async Task OnInitializedAsync()
     {
-        categoryPageRequest.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]); ;
+        categoryPageRequest.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
         RequestItems(currentPage, selectedSortValue);
     }
 
     private async Task RequestItems(int page, OrderCategorySummaryBy orderBy)
     {
         categoryPageRequest.PageNo = page;
-        categoryPageRequest.OrderBy = orderBy;
+        categoryPageRequest.OrderBy = (int)orderBy;
         isLoading = true;
         categorySummaryRequest = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
-        totalPages = categorySummaryRequest.TotalPages;
 
         if (categorySummaryRequest == null)
         {
-            isLoading = false;
+            totalPages = categorySummaryRequest.TotalPages;
         }
+
+        isLoading = false;
         StateHasChanged();
     }
 

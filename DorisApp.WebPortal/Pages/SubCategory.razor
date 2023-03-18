@@ -1,6 +1,9 @@
 ﻿@page "/category/subcategories"
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Config
+@inject CategoryEndpoint CategoryEndpoint
+@inject SubCategoryEndpoint SubCategoryEndpoint
+
 
 <div class="subcategory-page-content">
 
@@ -75,9 +78,9 @@
                             </tr>
                         </thead>
 
-                        @if (subCategorySummaryRequest != null)
+                        @if (subCategorySummary != null)
                         {
-                            @foreach (var item in subCategorySummaryRequest.Models)
+                            @foreach (var item in subCategorySummary.Models)
                             {
                                 <tbody>
                                     <tr>
@@ -107,13 +110,13 @@
 
                     </table>
 
-                    @if (subCategorySummaryRequest == null)
+                    @if (subCategorySummary == null)
                     {
                         <div class="no-item">
 
                             @if (isLoading)
                             {
-                                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                                <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
                             }
@@ -169,6 +172,22 @@
                     <DataAnnotationsValidator />
 
                     <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <InputSelect class="form-select" id="category" @bind-Value="modalModel.CategoryId">
+                            <option value="0" selected>Select Category</option>
+
+                            @if (categorySummary != null)
+                            {
+                                @foreach (var category in categorySummary.Models)
+                                {
+                                    <option value="@category.Id">@(category.CategoryName)</option>
+                                }
+                            }
+
+                        </InputSelect>
+                    </div>
+
+                    <div class="mb-3 p-2">
                         <label for="subCategoryName" class="form-label">Sub Category Name</label>
                         <InputText id="subCategoryName" class="form-control" placeholder="Sub Category Name" @bind-Value="modalModel.SubCategoryName" />
                         <ValidationMessage For="@(()=> modalModel.SubCategoryName)" />
@@ -186,6 +205,9 @@
 
         </Modal>
 
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <Toast ToastId="categoryToast" Message="@toastMessage" />
+        </div>
 
     </div>
 
@@ -193,7 +215,10 @@
 
 @code
 {
-    private RequestModel<SubCategorySummaryDTO>? subCategorySummaryRequest;
+    private RequestModel<SubCategorySummaryDTO>? subCategorySummary;
+    private RequestModel<CategorySummaryDTO> categorySummary;
+    private RequestPageDTO categoryRequest = new();
+    private RequestPageDTO subCategoryPageRequest = new();
 
     private int totalPages = 1;
     private int currentPage = 1;
@@ -202,13 +227,48 @@
     private SubCategoryModel modalModel = new();
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
-
     private string errorMessage = string.Empty;
+    private int totalCategories = 0;
+
+    private string toastMessage = string.Empty;
+
+    private OrderSubCategorySummaryBy selectedSortValue;
 
 
     protected override async Task OnInitializedAsync()
     {
+        subCategoryPageRequest.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
+        await RequestItems(currentPage, selectedSortValue);
 
+        //Pre Request to get the total category items in api;
+        categoryRequest.PageNo = 1;
+        categoryRequest.ItemPerPage = 1;
+        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryRequest);
+
+        if (categorySummary != null)
+        {
+            //Get all the category items
+            totalCategories = categorySummary.TotalItems;
+            categoryRequest.ItemPerPage = totalCategories;
+            categorySummary = await CategoryEndpoint.GetCategorySummary(categoryRequest);
+        }
+
+    }
+
+    private async Task RequestItems(int page, OrderSubCategorySummaryBy orderBy)
+    {
+        subCategoryPageRequest.PageNo = page;
+        subCategoryPageRequest.OrderBy = (int)orderBy;
+        isLoading = true;
+        subCategorySummary = await SubCategoryEndpoint.GetSubCategorySummary(subCategoryPageRequest);
+
+        if (subCategorySummary == null)
+        {
+            totalPages = subCategorySummary.TotalPages;
+        }
+
+        isLoading = false;
+        StateHasChanged();
     }
 
     private async Task OnSelectSortChange(ChangeEventArgs e)
@@ -233,10 +293,17 @@
         {
             if (string.IsNullOrEmpty(modalModel.SubCategoryName))
             {
-                errorMessage = "Category name is required.";
+                errorMessage = "Sub Category name is required.";
                 return;
             }
-            //await CategoryEndpoint.AddCategoryAsync(modalModel.SubCategoryName);
+
+            if (modalModel.CategoryId == 0)
+            {
+                errorMessage += Environment.NewLine + "Select a category.";
+                return;
+            }
+
+            await SubCategoryEndpoint.AddSubCategoryAsync(modalModel.SubCategoryName, modalModel.CategoryId);
             await CloseModal("Successfully added new category.");
         }
         catch (HttpRequestException ex)
@@ -273,7 +340,7 @@
 
     private void OpenAddModal()
     {
-        modalTitle = "Add New Category";
+        modalTitle = "Add New Sub Category";
         modalMode = "add";
         modalModel.SubCategoryName = string.Empty;
         modalModel.Id = 0;
@@ -281,31 +348,32 @@
 
     private void OpenEditModal(int id)
     {
-        modalTitle = "Edit Category";
+        modalTitle = "Edit Sub Category";
         modalMode = "edit";
         SetModalModel(id);
     }
 
     private void OpenDeleteModal(int id)
     {
-        modalTitle = "Delete Category";
+        modalTitle = "Delete Sub Category";
         modalMode = "delete";
         SetModalModel(id);
     }
 
     private async Task CloseModal(string toastmsg)
     {
-        //toastMessage = toastmsg;
-        //await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
-        //await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+        toastMessage = toastmsg;
+        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#subcategoryModal");
+        await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
 
-        ////Request for Update
-        //await RequestItems(currentPage, selectedSortValue);
+        //Request for Update
+        await RequestItems(currentPage, selectedSortValue);
     }
+
 
     private void SetModalModel(int categoryId)
     {
-        var categoryToEdit = subCategorySummaryRequest.Models.FirstOrDefault(x => x.Id == categoryId);
+        var categoryToEdit = subCategorySummary.Models.FirstOrDefault(x => x.Id == categoryId);
         if (categoryToEdit != null)
         {
             modalModel.SubCategoryName = categoryToEdit.CategoryName;

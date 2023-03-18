@@ -72,7 +72,7 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.SaveDataAsync("dbo.spUserInsert", newUser);
-                _logger.LogInfo($"Welcome {AppHelpers.GetFullName(newUser)}");
+                _logger.LogInfo($"Welcome {AppHelper.GetFullName(newUser)}");
                 return newUser;
             }
             catch (Exception ex)
@@ -117,11 +117,11 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync<UserModel>("dbo.spUserUpdateToken", user);
-                _logger.LogInfo($"Seccessfully request {AppHelpers.GetFullName(user)} for new request token.");
+                _logger.LogInfo($"Seccessfully request {AppHelper.GetFullName(user)} for new request token.");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Fail {AppHelpers.GetFullName(user)} " +
+                _logger.LogError($"Fail {AppHelper.GetFullName(user)} " +
                     $"to for new request token." +
                     Environment.NewLine + ex.Message);
                 throw new Exception(ex.Message);
@@ -131,11 +131,11 @@ namespace DorisApp.WebAPI.DataAccess
         public async Task<string> RequestToken(UserModel user)
         {
             var identity = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.Name, AppHelpers.GetFullName(user)) }, "Request Token");
+                    new Claim(ClaimTypes.Name, AppHelper.GetFullName(user)) }, "Request Token");
 
             var a = identity;
 
-            var role = (await _roleData.GetByIdAsync<RoleModel>(identity, user.RoleId)).RoleName;
+            var role = (await _roleData.GetByIdAsync(identity, user.RoleId)).RoleName;
 
             return CreateToken(user,role);
         }
@@ -147,7 +147,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, AppHelpers.GetFullName(user)),
+                    new Claim(ClaimTypes.Name, AppHelper.GetFullName(user)),
                     new Claim(ClaimTypes.Role, roleName),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),

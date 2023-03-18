@@ -12,7 +12,7 @@ namespace DorisApp.Data.Library.DTO
         public int ItemPerPage { get; set; } 
 
         [Required]
-        public OrderCategorySummaryBy OrderBy { get; set; }
+        public int OrderBy { get; set; }
 
         public string? LookFor { get; set; }
 

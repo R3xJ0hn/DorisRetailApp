@@ -79,7 +79,7 @@ BEGIN
 		[CreatedAt],		
 		[UpdatedAt]) 
 	VALUES(
-		'undefine',				
+		'undefined',				
 		1,		
 		1,		
 		GETUTCDATE(),				
@@ -96,7 +96,7 @@ BEGIN
 		[CreatedAt],		
 		[UpdatedAt]) 
 	VALUES(
-		'undefine',
+		'undefined',
 		@@IDENTITY,
 		1,		
 		1,		

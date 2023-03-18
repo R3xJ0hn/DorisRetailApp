@@ -14,25 +14,29 @@ namespace DorisApp.Data.Library.API
 
         public async Task AddSubCategoryAsync(string subCategoryName, int categoryId)
         {
-            //TODO: Here Na You
-            var category = new SubCategoryModel() { SubCategoryName = subCategoryName };
-            await SendPostAysnc(category, "URL:add-category");
+            var subCategory = new SubCategoryModel() 
+            { 
+                SubCategoryName = subCategoryName,
+                CategoryId= categoryId
+            };
+
+            await SendPostAysnc(subCategory, "URL:add-subcategory");
         }
 
-        public async Task<RequestModel<CategorySummaryDTO>?> GetCategorySummary(RequestPageDTO request)
+        public async Task<RequestModel<SubCategorySummaryDTO>?> GetSubCategorySummary(RequestPageDTO request)
         {
-            var result = await SendPostAysnc(request, "URL:get-category/summary");
-            return JsonConvert.DeserializeObject<RequestModel<CategorySummaryDTO>>(result);
+            var result = await SendPostAysnc(request, "URL:get-subcategory/summary");
+            return JsonConvert.DeserializeObject<RequestModel<SubCategorySummaryDTO>>(result);
         }
 
-        public async Task<string> UpdateCategory(CategoryModel model)
+        public async Task<string> UpdateCategory(SubCategoryModel model)
         {
-            return await SendPostAysnc(model, "URL:update-category");
+            return await SendPostAysnc(model, "URL:update-subcategory");
         }
 
-        public async Task<string> DeleteCategory(CategoryModel model)
+        public async Task<string> DeleteCategory(SubCategoryModel model)
         {
-            return await SendPostAysnc(model, "URL:delete-category");
+            return await SendPostAysnc(model, "URL:delete-subcategory");
         }
 
     }

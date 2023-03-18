@@ -3,16 +3,16 @@ using System.Text;
 
 namespace DorisApp.WebAPI.Helpers
 {
-    public static class AppHelpers
+    public static class AppHelper
     {
         public static string GetFullName(UserModel user)
         {
             var firstName = char.ToUpper(user.FirstName[0]) + user.FirstName[1..];
             var lastName = char.ToUpper(user.LastName[0]) + user.LastName[1..];
-            return $"{CapitalizeWords(firstName)} {CapitalizeWords(lastName)}";
+            return $"{CapitalizeFirstWords(firstName)} {CapitalizeFirstWords(lastName)}";
         }
 
-        public static string CapitalizeWords(string value)
+        public static string CapitalizeFirstWords(string value)
         {
             if (value == null)
                 throw new Exception(nameof(value));

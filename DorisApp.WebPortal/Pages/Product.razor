@@ -1,0 +1,90 @@
+﻿@page "/products"
+@inject CategoryEndpoint CategoryEndpoint
+@inject IJSRuntime JSRuntime
+
+<style>
+
+        select.form-select {
+            height: 3rem;
+        }
+
+        select.form-select option {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            height: 5rem;
+        }
+
+</style>
+
+<h6>@totalCategories</h6>
+
+
+<div class="mb-3">
+    <label for="category" class="form-label">Category</label>
+    <select class="form-select" id="category" data-dropup-auto="false" data-size="5" @ref="selectElement" @onchange="HandleSelectionChange">
+
+        
+        @if(categorySummary != null)
+        {
+            int i = 0;
+
+            @foreach (var category in categorySummary.Models)
+            {
+                i++;
+                <option value="@category.Id">@(i) @(category.CategoryName) </option>
+            }
+        }
+
+    </select>
+
+</div>
+
+
+
+
+@code {
+    private string Header = "ewan";
+
+    private ElementReference selectElement;
+
+
+    private RequestPageDTO categoryPageRequest = new() { PageNo = 1 };
+    private RequestModel<CategorySummaryDTO> categorySummary;
+    private int totalCategories = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Pre Request to get the total items in api;
+        categoryPageRequest.ItemPerPage = 1;
+        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
+        totalCategories = categorySummary.TotalItems;
+
+        //Get all the items
+        categoryPageRequest.PageNo = 1;
+        categoryPageRequest.ItemPerPage = totalCategories;
+        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
+
+    }
+
+
+
+    [JSInvokable]
+    public async Task LoadMoreData()
+    {
+        // Load more data into the dropdown list
+    }
+
+    private void HandleSelectionChange(ChangeEventArgs args)
+    {
+        Header = "EWWWWWWWW";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToBottom", selectElement);
+        }
+    }
+}
+

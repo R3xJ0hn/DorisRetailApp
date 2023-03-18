@@ -49,3 +49,13 @@ function showToast(toastId) {
     var toast = new bootstrap.Toast(document.querySelector(toastId))
     toast.show()
 }
+
+
+
+function scrollToBottom(element) {
+    element.addEventListener("scroll", () => {
+        if (element.scrollTop === element.scrollHeight - element.offsetHeight) {
+            DotNet.invokeMethodAsync("MyBlazorComponent", "LoadMoreData");
+        }
+    });
+}

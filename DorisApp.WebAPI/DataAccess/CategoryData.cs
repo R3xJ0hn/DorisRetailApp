@@ -2,6 +2,7 @@
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
+using DorisApp.WebAPI.Helpers;
 using System.Security.Claims;
 
 namespace DorisApp.WebAPI.DataAccess
@@ -21,7 +22,7 @@ namespace DorisApp.WebAPI.DataAccess
         public async Task AddAsync(ClaimsIdentity identity, CategoryModel category)
         {
             var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
-            category.CategoryName = category.CategoryName.ToLower();
+            category.CategoryName = AppHelper.CapitalizeFirstWords(category.CategoryName);
             category.CreatedByUserId = userId;
             category.UpdatedByUserId = category.CreatedByUserId;
             category.CreatedAt = DateTime.UtcNow;
@@ -50,8 +51,7 @@ namespace DorisApp.WebAPI.DataAccess
             model.CreatedAt = DateTime.UtcNow;
 
             //Get the old name
-            var oldName = (await GetByIdAsync<CategoryModel>
-                (identity, model.Id)).CategoryName;
+            var oldName = (await GetByIdAsync (identity, model.Id)).CategoryName;
 
             try
             {
@@ -87,7 +87,10 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-
+        public async Task<CategoryModel> GetByIdAsync(ClaimsIdentity identity, int id)
+        {
+            return await GetByIdAsync<CategoryModel>(identity, "dbo.spCategoryGetById", id);
+        }
 
     }
 }
