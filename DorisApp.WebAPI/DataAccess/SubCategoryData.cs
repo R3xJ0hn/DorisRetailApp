@@ -22,6 +22,8 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task AddAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
+            ValidateFields(identity, subCategory);
+
             var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
             subCategory.SubCategoryName = AppHelper.CapitalizeFirstWords(subCategory.SubCategoryName);
             subCategory.CategoryId= subCategory.CategoryId;
@@ -56,12 +58,8 @@ namespace DorisApp.WebAPI.DataAccess
             //Get the old name
             string oldName = (await GetByIdAsync (identity, subCategory.Id)).SubCategoryName;
 
-            if (subCategory.CategoryId == 0)
-            {
-                var msg = $"The Category ID in {subCategory.SubCategoryName} Subcategory is zero.";
-                _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName, msg);
-                throw new Exception(msg);
-            }
+            ValidateFields(identity, subCategory, oldName);
+
             try
             {
                 await _sql.UpdateDataAsync("dbo.spSubCategoryUpdate", subCategory);
@@ -102,7 +100,27 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByIdAsync<SubCategoryModel>(identity, "dbo.spSubCategoryGetById", id);
         }
 
+        private void ValidateFields(ClaimsIdentity identity, SubCategoryModel subCategory, string? oldName = null)
+        {
+            string errorMessage =  null;
 
+            if (subCategory.CategoryId == 0)
+            {
+                errorMessage = $"The Category ID in {subCategory.SubCategoryName} Subcategory is zero.";
+            }
+
+            if (string.IsNullOrWhiteSpace(subCategory.SubCategoryName))
+            {
+                errorMessage = $"The Sub Category name in Subcategory is null.";
+            }
+
+            if (errorMessage != null)
+            {
+                _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName, errorMessage);
+                throw new NullReferenceException(errorMessage);
+            }
+
+        }
 
     }
 }

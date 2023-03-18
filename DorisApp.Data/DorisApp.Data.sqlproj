@@ -62,18 +62,14 @@
     <Folder Include="PublishLocations" />
     <Folder Include="dbo\StoredProcedures\Category" />
     <Folder Include="dbo\StoredProcedures\SubCategory" />
+    <Folder Include="dbo\StoredProcedures\Role" />
+    <Folder Include="dbo\StoredProcedures\User" />
+    <Folder Include="dbo\StoredProcedures\Brand" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Roles.sql" />
     <Build Include="dbo\Tables\Users.sql" />
-    <Build Include="dbo\StoredProcedures\spRoleGetById.sql" />
-    <Build Include="dbo\StoredProcedures\spRoleInsert.sql" />
-    <Build Include="dbo\StoredProcedures\spUserGetByEmail.sql" />
-    <Build Include="dbo\StoredProcedures\spUserGetById.sql" />
-    <Build Include="dbo\StoredProcedures\spUserInsert.sql" />
-    <Build Include="dbo\StoredProcedures\spUserUpdateToken.sql" />
     <Build Include="dbo\Tables\Categories.sql" />
-    <Build Include="dbo\StoredProcedures\spRoleGetByPage.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryInsert.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryGetSummaryByPage.sql" />
     <Build Include="dbo\Tables\SubCategories.sql" />
@@ -86,6 +82,15 @@
     <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryDelete.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryGetById.sql" />
     <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetById.sql" />
+    <Build Include="dbo\StoredProcedures\Role\spRoleGetById.sql" />
+    <Build Include="dbo\StoredProcedures\Role\spRoleGetByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Role\spRoleInsert.sql" />
+    <Build Include="dbo\StoredProcedures\User\spUserGetByEmail.sql" />
+    <Build Include="dbo\StoredProcedures\User\spUserGetById.sql" />
+    <Build Include="dbo\StoredProcedures\User\spUserInsert.sql" />
+    <Build Include="dbo\StoredProcedures\User\spUserUpdateToken.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandInsert.sql" />
+    <Build Include="dbo\Tables\Brands.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />
