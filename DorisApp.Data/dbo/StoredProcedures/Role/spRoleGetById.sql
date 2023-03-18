@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spRoleGetById]
-	@Id nvarchar(128)
+	@Id INT
 AS
 begin	
 	set nocount on;

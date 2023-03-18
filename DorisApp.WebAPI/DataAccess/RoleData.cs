@@ -22,6 +22,7 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task AddAsync(ClaimsIdentity identity, RoleModel role)
         {
+            ValidateFields(identity, role);
             var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
             role.RoleName = AppHelper.CapitalizeFirstWords(role.RoleName);
             role.CreatedByUserId = userId;
@@ -51,6 +52,31 @@ namespace DorisApp.WebAPI.DataAccess
         {
             //TODO: Get the id for Anonymous user.
             return 1;
+        }
+
+        private void ValidateFields(ClaimsIdentity identity, RoleModel role)
+        {
+            string Name = AppHelper.GetFirstWord(
+                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                .Select(c => c.Value).SingleOrDefault() ?? "");
+
+            string? msg = null;
+
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                msg = $"Unauthorized to modify the role.";
+            }
+
+            if (string.IsNullOrEmpty(role.RoleName))
+            {
+                msg = $"The Role name is null.";
+            }
+
+            if (!string.IsNullOrWhiteSpace(msg))
+            {
+                _logger.LogError($"{Name}: {msg}");
+                throw new NullReferenceException(msg);
+            }
         }
 
     }

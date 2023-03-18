@@ -1,8 +1,8 @@
 ﻿CREATE PROCEDURE [dbo].[spUserUpdateToken]
 	@Id					INT,
 	@RoleID				INT,
-	@FirstName			NVARCHAR(50), 
-	@LastName			NVARCHAR(50),
+	@FirstName			NVARCHAR(256), 
+	@LastName			NVARCHAR(256),
 	@EmailAddress		NVARCHAR(256), 
 	@PasswordHash		NVARCHAR(MAX), 
 	@LastPasswordHash	NVARCHAR(MAX), 

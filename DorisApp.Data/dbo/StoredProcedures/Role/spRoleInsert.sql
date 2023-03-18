@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [dbo].[spRoleInsert]
 	@Id					INT,
-    @RoleName			NVARCHAR(100),
+    @RoleName			NVARCHAR(256),
 	@CreatedByUserId	INT,
 	@UpdatedByUserId	INT,
 	@CreatedAt			DATETIME2,

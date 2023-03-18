@@ -19,6 +19,7 @@ builder.Services.AddTransient<UserData>();
 builder.Services.AddTransient<RoleData>();
 builder.Services.AddTransient<CategoryData>();
 builder.Services.AddTransient<SubCategoryData>();
+builder.Services.AddTransient<BrandData>();
 
 //Add Logger Services
 builder.Services.AddLogging(builder =>

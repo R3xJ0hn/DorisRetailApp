@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using DorisApp.WebAPI.Helpers;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 
 namespace DorisApp.WebAPI.DataAccess.Logger
@@ -16,10 +17,10 @@ namespace DorisApp.WebAPI.DataAccess.Logger
         {
             var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
             var userName = identity.Claims.Where(c => c.Type == ClaimTypes.Name).Select(c => c.Value).SingleOrDefault() ?? "anonymous";
-            string firstName = Regex.Match(userName ?? "Anonymous", @"^([\w\-]+)").Value;
 
             var deviceName = "";
             var date = DateTime.UtcNow;
+            var firstName = AppHelper.GetFirstWord(userName);
 
             //User[identity] successfullyAdded[action]  oatmeal[noun] Product[tableName]
             //User[identity]    failToAdd[action]       oatmeal[noun] Product[tableName]

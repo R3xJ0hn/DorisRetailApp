@@ -1,5 +1,6 @@
 ﻿using DorisApp.Data.Library.Model;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DorisApp.WebAPI.Helpers
 {
@@ -43,6 +44,10 @@ namespace DorisApp.WebAPI.Helpers
             return numPages;
         }
 
+        public static string GetFirstWord(string str)
+        {
+            return Regex.Match(str ?? "Anonymous", @"^([\w\-]+)").Value;
+        }
 
     }
 }

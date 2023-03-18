@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spUserGetByEmail]
-	@Email nvarchar(128)
+	@Email nvarchar(256)
 AS
 begin	
 	set nocount on;

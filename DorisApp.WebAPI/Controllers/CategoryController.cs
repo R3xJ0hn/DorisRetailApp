@@ -21,16 +21,16 @@ namespace DorisApp.WebAPI.Controllers
 
 
         [HttpPost("add-category"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> AddCategory(CategoryModel model)
+        public async Task<IActionResult> AddCategory(CategoryModel category)
         {
             try
             {
                 await _data.AddAsync(GetUserIdentity(),
-                    new CategoryModel { CategoryName = model.CategoryName });
+                    new CategoryModel { CategoryName = category.CategoryName });
 
-                return Ok($"Successfully added {model.CategoryName} category");
+                return Ok($"Successfully added {category.CategoryName} category");
             }
-            catch { return BadRequest("Unable to Add new role."); }
+            catch { return BadRequest("Unable to add new category."); }
         }
 
         [HttpPost("get-category/summary")]

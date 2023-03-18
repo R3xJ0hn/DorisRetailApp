@@ -15,9 +15,9 @@ namespace DorisApp.WebAPI.DataAccess
         {
         }
 
-        public async Task<RequestModel<BrandModel>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
+        public async Task<RequestModel<BrandSummaryDTO>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
         {
-            return await GetByPageAsync<BrandModel>(identity, "dbo.spBrandGetByPage", request);
+            return await GetByPageAsync<BrandSummaryDTO>(identity, "dbo.spBrandGetSummaryByPage", request);
         }
 
         public async Task AddAsync(ClaimsIdentity identity, BrandModel brand)
@@ -48,6 +48,8 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task UpdateCategoryAsync(ClaimsIdentity identity, BrandModel brand)
         {
+            ValidateFields(identity, brand);
+
             brand.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
                 .Select(c => c.Value).SingleOrDefault() ?? "-1");
@@ -58,8 +60,6 @@ namespace DorisApp.WebAPI.DataAccess
 
             //Get the old name
             var oldName = (await GetByIdAsync(identity, brand.Id)).BrandName;
-
-            ValidateFields(identity, brand, oldName);
 
             try
             {
@@ -75,7 +75,6 @@ namespace DorisApp.WebAPI.DataAccess
                 throw;
             }
         }
-
 
         public async Task DeleteCategoryAsync(ClaimsIdentity identity, BrandModel brand)
         {
@@ -99,19 +98,32 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-
-
         public async Task<BrandModel> GetByIdAsync(ClaimsIdentity identity, int id)
         {
             return await GetByIdAsync<BrandModel>(identity, "dbo.spBrandGetById", id);
         }
 
-        private void ValidateFields(ClaimsIdentity identity, BrandModel brand, string? oldName = null)
+        public void ValidateFields(ClaimsIdentity identity, BrandModel brand)
         {
-            if (brand.BrandName != null)
+            string Name = AppHelper.GetFirstWord(
+                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                .Select(c => c.Value).SingleOrDefault() ?? "");
+       
+            string? msg = null;
+
+            if (string.IsNullOrWhiteSpace(Name))
             {
-                var msg = $"The Category name in Subcategory is null.";
-                _logger.FailUpdate(identity, brand.BrandName, TableName, oldName, msg);
+                msg = $"Unauthorized to modify the brand.";
+            }
+
+            if (string.IsNullOrEmpty(brand.BrandName))
+            {
+                msg = $"The Brand name is null.";
+            }
+
+            if (!string.IsNullOrWhiteSpace(msg))
+            {
+                _logger.LogError($"{Name}: {msg}");
                 throw new NullReferenceException(msg);
             }
         }

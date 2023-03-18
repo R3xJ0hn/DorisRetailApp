@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [dbo].[spSubCategoryUpdate]
 	@Id					INT,
-    @SubCategoryName	NVARCHAR(100),
+    @SubCategoryName	NVARCHAR(256),
     @CategoryId			INT,
 	@CreatedByUserId	INT,
 	@UpdatedByUserId	INT,

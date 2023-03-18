@@ -2,7 +2,7 @@
     @PageNo         INT,
     @ItemPerPage    INT,
     @OrderBy        INT,
-    @LookFor        NVARCHAR(100) = NULL
+    @LookFor        NVARCHAR(256) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -36,10 +36,10 @@ BEGIN
     ORDER BY 
         CASE WHEN @OrderBy = 0 THEN CategoryName END ASC, 
         CASE WHEN @OrderBy = 1 THEN CategoryName END DESC,
-        CASE WHEN @OrderBy = 2 THEN ProductCount END ASC,
-        CASE WHEN @OrderBy = 3 THEN ProductCount END DESC, 
-        CASE WHEN @OrderBy = 4 THEN SubcategoryCount END ASC,
-        CASE WHEN @OrderBy = 5 THEN SubcategoryCount END DESC 
+        CASE WHEN @OrderBy = 2 THEN CAST(ProductCount AS INT) END ASC,
+        CASE WHEN @OrderBy = 3 THEN CAST(ProductCount AS INT) END DESC, 
+        CASE WHEN @OrderBy = 4 THEN CAST(SubcategoryCount AS INT) END ASC,
+        CASE WHEN @OrderBy = 5 THEN CAST(SubcategoryCount AS INT) END DESC 
     OFFSET @Offset ROWS
     FETCH NEXT @ItemPerPage ROWS ONLY
 

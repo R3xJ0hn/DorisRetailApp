@@ -1,6 +1,31 @@
 ﻿CREATE PROCEDURE [dbo].[spBrandInsert]
-	@param1 int = 0,
-	@param2 int
+	@Id					INT,
+    @BrandName			NVARCHAR(256),
+    @ThumbnailName		NVARCHAR(256),
+	@CreatedByUserId	INT, 
+	@UpdatedByUserId	INT, 
+	@CreatedAt			DATETIME2,
+	@UpdatedAt			DATETIME2
 AS
-	SELECT @param1, @param2
-RETURN 0
+
+BEGIN
+	SET NOCOUNT ON;
+
+	INSERT INTO dbo.Brands(
+		[BrandName],
+		[ThumbnailName],
+		[CreatedByUserId],
+		[UpdatedByUserId],
+		[CreatedAt],
+		[UpdatedAt]) 
+		
+	VALUES(
+	    @BrandName,		
+	    @ThumbnailName,	
+		@CreatedByUserId,
+		@UpdatedByUserId,
+		@CreatedAt,		
+		@UpdatedAt)
+
+	SELECT @Id =  SCOPE_IDENTITY()
+END

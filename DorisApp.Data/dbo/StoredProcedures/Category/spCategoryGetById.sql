@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spCategoryGetById]
-	@Id nvarchar(128)
+	@Id nvarchar(256)
 AS
 begin	
 	set nocount on;

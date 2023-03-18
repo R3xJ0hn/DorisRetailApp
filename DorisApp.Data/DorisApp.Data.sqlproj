@@ -91,6 +91,10 @@
     <Build Include="dbo\StoredProcedures\User\spUserUpdateToken.sql" />
     <Build Include="dbo\StoredProcedures\Brand\spBrandInsert.sql" />
     <Build Include="dbo\Tables\Brands.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandDelete.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandGetById.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandGetSummaryByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandUpdate.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

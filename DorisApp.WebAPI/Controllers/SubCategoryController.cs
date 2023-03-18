@@ -2,9 +2,7 @@
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using System.Security.Claims;
 
 namespace DorisApp.WebAPI.Controllers
@@ -23,20 +21,20 @@ namespace DorisApp.WebAPI.Controllers
 
 
         [HttpPost("add-subcategory"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> AddSubCategory(SubCategoryModel model)
+        public async Task<IActionResult> AddSubCategory(SubCategoryModel subcategory)
         {
             try
             {
                 await _data.AddAsync(GetUserIdentity(),
                     new SubCategoryModel 
                     {
-                        SubCategoryName = model.SubCategoryName,
-                        CategoryId= model.CategoryId
+                        SubCategoryName = subcategory.SubCategoryName,
+                        CategoryId= subcategory.CategoryId
                     });
 
-                return Ok($"Successfully added {model.SubCategoryName} category");
+                return Ok($"Successfully added {subcategory.SubCategoryName} category");
             }
-            catch { return BadRequest("Unable to Add new role."); }
+            catch { return BadRequest("Unable to add new sub category."); }
         }
 
         [HttpPost("get-subcategory/summary")]
@@ -47,29 +45,29 @@ namespace DorisApp.WebAPI.Controllers
                 var categoryItems = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
                 return Ok(categoryItems);
             }
-            catch { return BadRequest("Unable to get categories."); }
+            catch { return BadRequest("Unable to get sub categories."); }
         }
 
         [HttpPost("update-subcategory"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> UpdateSubCategories(SubCategoryModel model)
+        public async Task<IActionResult> UpdateSubCategories(SubCategoryModel subcategory)
         {
             try
             {
-                await _data.UpdateCategoryAsync(GetUserIdentity(), model);
-                return Ok($"Successfully update {model.SubCategoryName}");
+                await _data.UpdateCategoryAsync(GetUserIdentity(), subcategory);
+                return Ok($"Successfully update {subcategory.SubCategoryName}");
             }
-            catch { return BadRequest("Unable to update categories."); }
+            catch { return BadRequest("Unable to update sub categories."); }
         }
 
         [HttpPost("delete-subcategory"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> DeleteCategories(SubCategoryModel model)
+        public async Task<IActionResult> DeleteCategories(SubCategoryModel subcategory)
         {
             try
             {
-                await _data.DeleteCategoryAsync(GetUserIdentity(), model);
-                return Ok($"Successfully remove {model.SubCategoryName}");
+                await _data.DeleteCategoryAsync(GetUserIdentity(), subcategory);
+                return Ok($"Successfully remove {subcategory.SubCategoryName}");
             }
-            catch { return BadRequest("Unable to delete categories."); }
+            catch { return BadRequest("Unable to delete sub categories."); }
         }
 
     }

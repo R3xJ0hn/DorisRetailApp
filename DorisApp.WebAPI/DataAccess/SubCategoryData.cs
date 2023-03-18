@@ -3,6 +3,7 @@ using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
 using DorisApp.WebAPI.Helpers;
+using System.Data;
 using System.Security.Claims;
 
 namespace DorisApp.WebAPI.DataAccess
@@ -46,6 +47,7 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task UpdateCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
+            ValidateFields(identity, subCategory);
 
             subCategory.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
@@ -57,8 +59,6 @@ namespace DorisApp.WebAPI.DataAccess
 
             //Get the old name
             string oldName = (await GetByIdAsync (identity, subCategory.Id)).SubCategoryName;
-
-            ValidateFields(identity, subCategory, oldName);
 
             try
             {
@@ -100,27 +100,34 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByIdAsync<SubCategoryModel>(identity, "dbo.spSubCategoryGetById", id);
         }
 
-        private void ValidateFields(ClaimsIdentity identity, SubCategoryModel subCategory, string? oldName = null)
+        private void ValidateFields(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
-            string errorMessage =  null;
+            string Name = AppHelper.GetFirstWord(
+                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                .Select(c => c.Value).SingleOrDefault() ?? "");
+
+            string? msg = null;
+
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                msg = $"Unauthorized to modify the sub category.";
+            }
 
             if (subCategory.CategoryId == 0)
             {
-                errorMessage = $"The Category ID in {subCategory.SubCategoryName} Subcategory is zero.";
+                msg = $"The Category ID in {subCategory.SubCategoryName} Subcategory is zero.";
             }
 
             if (string.IsNullOrWhiteSpace(subCategory.SubCategoryName))
             {
-                errorMessage = $"The Sub Category name in Subcategory is null.";
+                msg = $"The Sub Category name in Subcategory is null.";
             }
 
-            if (errorMessage != null)
+            if (!string.IsNullOrWhiteSpace(msg))
             {
-                _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName, errorMessage);
-                throw new NullReferenceException(errorMessage);
+                _logger.LogError($"{Name}: {msg}");
+                throw new NullReferenceException(msg);
             }
-
         }
-
     }
 }

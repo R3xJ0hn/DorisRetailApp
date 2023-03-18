@@ -2,8 +2,8 @@
 (
 	[Id]                 INT NOT NULL PRIMARY KEY IDENTITY, 
 	[RoleID]			 INT NOT NULL,
-	[FirstName]			 NVARCHAR(50) NOT NULL, 
-	[LastName]			 NVARCHAR(50) NOT NULL,
+	[FirstName]			 NVARCHAR(256) NOT NULL, 
+	[LastName]			 NVARCHAR(256) NOT NULL,
 	[EmailAddress]		 NVARCHAR(256) NOT NULL UNIQUE, 
 	[PasswordHash]		 NVARCHAR(MAX) NOT NULL, 
 	[LastPasswordHash]	 NVARCHAR(MAX) NOT NULL, 

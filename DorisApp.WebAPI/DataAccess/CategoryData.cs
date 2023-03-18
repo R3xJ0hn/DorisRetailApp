@@ -4,7 +4,6 @@ using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
 using DorisApp.WebAPI.Helpers;
 using System.Security.Claims;
-using static Dapper.SqlMapper;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -45,6 +44,8 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task UpdateCategoryAsync(ClaimsIdentity identity, CategoryModel category)
         {
+            ValidateFields(identity, category);
+
             category.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
                 .Select(c => c.Value).SingleOrDefault() ?? "-1");
@@ -55,8 +56,6 @@ namespace DorisApp.WebAPI.DataAccess
 
             //Get the old name
             var oldName = (await GetByIdAsync (identity, category.Id)).CategoryName;
-
-            ValidateFields(identity,category,oldName);
 
             try
             {
@@ -97,12 +96,27 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByIdAsync<CategoryModel>(identity, "dbo.spCategoryGetById", id);
         }
 
-        private void ValidateFields(ClaimsIdentity identity, CategoryModel category, string? oldName = null)
+        private void ValidateFields(ClaimsIdentity identity, CategoryModel category)
         {
+            string Name = AppHelper.GetFirstWord(
+                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                .Select(c => c.Value).SingleOrDefault() ?? "");
+
+            string? msg = null;
+
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                msg = $"Unauthorized to modify the category.";
+            }
+
             if (string.IsNullOrWhiteSpace(category.CategoryName))
             {
-                var msg = $"The Category name in Subcategory is null.";
-                _logger.FailUpdate(identity, category.CategoryName, TableName, oldName, msg);
+                msg = $"The Category name in Subcategory is null.";
+            }
+
+            if (!string.IsNullOrWhiteSpace(msg))
+            {
+                _logger.LogError($"{Name}: {msg}");
                 throw new NullReferenceException(msg);
             }
         }

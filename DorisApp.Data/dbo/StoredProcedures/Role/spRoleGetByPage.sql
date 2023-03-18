@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spRoleGetByPage]
-	@PageNo				INT
+	@PageNo	INT
 AS
 
 BEGIN
