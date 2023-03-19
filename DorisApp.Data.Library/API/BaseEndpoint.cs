@@ -27,7 +27,7 @@ namespace DorisApp.Data.Library.API
             }
             else
             {
-                throw new Exception(response.ReasonPhrase);
+                throw new HttpRequestException(response.ReasonPhrase);
             }
         }
 

@@ -45,27 +45,33 @@ namespace DorisApp.WebAPI.Controllers
         }
 
         [HttpPost("update-category"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> UpdateCategories(CategoryModel model)
+        public async Task<IActionResult> UpdateCategories(CategoryModel category)
         {
             try
             {
-                await _data.UpdateCategoryAsync(GetUserIdentity(), model);
-                return Ok($"Successfully update {model.CategoryName}");
+                if (!await _data.IsExist(category.Id))
+                { return BadRequest($"Unable to get category [{category.Id}]"); }
+
+                await _data.UpdateCategoryAsync(GetUserIdentity(), category);
+                return Ok($"Successfully update {category.CategoryName}");
             }
             catch { return BadRequest("Unable to update categories."); }
         }
 
         [HttpPost("delete-category"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> DeleteCategories(CategoryModel model)
+        public async Task<IActionResult> DeleteCategories(CategoryModel category)
         {
             try
             {
-                await _data.DeleteCategoryAsync(GetUserIdentity(), model);
-                return Ok($"Successfully remove {model.CategoryName}");
+                if (!await _data.IsExist(category.Id))
+                { return BadRequest($"Unable to get category [{category.Id}]"); }
+
+                await _data.DeleteCategoryAsync(GetUserIdentity(), category);
+                return Ok($"Successfully remove {category.CategoryName}");
             }
             catch { return BadRequest("Unable to delete categories."); }
         }
 
-   
+
     }
 }

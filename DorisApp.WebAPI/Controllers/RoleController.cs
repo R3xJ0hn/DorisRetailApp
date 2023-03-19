@@ -19,7 +19,6 @@ namespace DorisApp.WebAPI.Controllers
         }
         private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
 
-
         [HttpGet]
         [Route("get-role/id"), Authorize(Roles = "admin")]
         public async Task<IActionResult> GetRoleId(int id)

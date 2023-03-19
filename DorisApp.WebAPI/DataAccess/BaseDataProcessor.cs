@@ -104,6 +104,13 @@ namespace DorisApp.WebAPI.DataAccess
             return request != null && request.PageNo > 0 && request.PageNo <= totalPage;
         }
 
+        protected async Task<bool> IsItemExistAsync<T>(string storeProcedureName, int id) where T : class
+        {
+            var p = new { Id = id };
+            var exist = await _sql.LoadDataAsync<T, dynamic>(storeProcedureName, p);
+            return exist.Count != 0;
+        }
+
         public void Dispose()
         {
             _sql.Dispose();

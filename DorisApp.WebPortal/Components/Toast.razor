@@ -1,5 +1,5 @@
 ﻿
-<div id="@ToastId" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 999999; background: #d582fc">
+<div id="@ToastId" class="toast align-items-center @toastColor" role="alert" aria-live="assertive" aria-atomic="true">
   <div class="d-flex">
     <div class="toast-body" style="color: white">
             @Message
@@ -10,10 +10,39 @@
 
 
 @code {
+
+    private string toastColor = "";
+
+    private string toastMode = "";
+
+    [Parameter]
+    public string ToastMode
+    {
+        get => toastMode;
+        set
+        {
+            toastMode = value;
+
+            if (value == "danger" )
+            {
+                toastColor = "bg-danger";
+            }
+            else if (value == "success")
+            {
+                toastColor = "bg-success";
+            }
+            else
+            {
+                toastColor = "bg-warning";
+            }
+        }
+    }
+
     [Parameter]
     public string ToastId { get; set; }
 
     [Parameter]
     public string Message { get; set; }
+
 
 }

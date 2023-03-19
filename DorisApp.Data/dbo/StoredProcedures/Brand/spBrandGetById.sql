@@ -5,6 +5,6 @@ begin
 	SET NOCOUNT ON;
 
 	SELECT *
-	FROM dbo.Categories
+	FROM dbo.Brands
 	WHERE id = @id
 end		

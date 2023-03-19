@@ -100,6 +100,11 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByIdAsync<SubCategoryModel>(identity, "dbo.spSubCategoryGetById", id);
         }
 
+        public async Task<bool> IsExist(int id)
+        {
+            return await IsItemExistAsync<SubCategoryModel>("dbo.spSubCategoryGetById", id);
+        }
+
         private void ValidateFields(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
             string Name = AppHelper.GetFirstWord(

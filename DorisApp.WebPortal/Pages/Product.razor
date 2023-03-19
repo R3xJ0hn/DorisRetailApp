@@ -48,21 +48,21 @@
     private ElementReference selectElement;
 
 
-    private RequestPageDTO categoryPageRequest = new() { PageNo = 1 };
+    private RequestPageDTO categoryDTO = new() { PageNo = 1 };
     private RequestModel<CategorySummaryDTO> categorySummary;
     private int totalCategories = 0;
 
     protected override async Task OnInitializedAsync()
     {
         //Pre Request to get the total items in api;
-        categoryPageRequest.ItemPerPage = 1;
-        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
+        categoryDTO.ItemPerPage = 1;
+        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryDTO);
         totalCategories = categorySummary.TotalItems;
 
         //Get all the items
-        categoryPageRequest.PageNo = 1;
-        categoryPageRequest.ItemPerPage = totalCategories;
-        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryPageRequest);
+        categoryDTO.PageNo = 1;
+        categoryDTO.ItemPerPage = totalCategories;
+        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryDTO);
 
     }
 

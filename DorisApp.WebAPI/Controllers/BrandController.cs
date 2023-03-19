@@ -20,8 +20,7 @@ namespace DorisApp.WebAPI.Controllers
         private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
 
 
-        //[HttpPost("add-brand"), Authorize(Roles = "admin")]
-        [HttpPost("add-brand")]
+        [HttpPost("add-brand"), Authorize(Roles = "admin")]
         public async Task<IActionResult> AddBrand(BrandModel brand)
         {
             try
@@ -49,30 +48,34 @@ namespace DorisApp.WebAPI.Controllers
             catch { return BadRequest("Unable to get brand."); }
         }
 
-        //[HttpPost("update-brand"), Authorize(Roles = "admin")]
-        [HttpPost("update-brand")]
+        [HttpPost("update-brand"), Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateCategories(BrandModel brand)
         {
             try
             {
+                bool result = await _data.IsExist(brand.Id);
+                if (!result)
+                { return BadRequest($"Unable to get brand [{brand.Id}]"); }
+
                 await _data.UpdateCategoryAsync(GetUserIdentity(), brand);
                 return Ok($"Successfully update {brand.BrandName}");
             }
             catch { return BadRequest("Unable to update brand."); }
         }
 
-        [HttpPost("delete-brand")]
-        //[HttpPost("delete-brand"), Authorize(Roles = "admin")]
+        [HttpPost("delete-brand"), Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategories(BrandModel brand)
         {
             try
             {
+                if (!await _data.IsExist(brand.Id))
+                { return BadRequest($"Unable to get brand [{brand.Id}]"); }
+
                 await _data.DeleteCategoryAsync(GetUserIdentity(), brand);
                 return Ok($"Successfully remove {brand.BrandName}");
             }
             catch { return BadRequest("Unable to delete brand."); }
         }
-
 
     }
 }

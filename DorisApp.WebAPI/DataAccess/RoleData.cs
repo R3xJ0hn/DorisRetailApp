@@ -48,6 +48,11 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByIdAsync<RoleModel>(identity,"dbo.spRoleGetById", id);
         }
 
+        public async Task<bool> IsExist(int id)
+        {
+            return await IsItemExistAsync<RoleModel>("dbo.spRoleGetById", id);
+        }
+
         public int GetIdForNewUser()
         {
             //TODO: Get the id for Anonymous user.

@@ -103,6 +103,11 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByIdAsync<BrandModel>(identity, "dbo.spBrandGetById", id);
         }
 
+        public async Task<bool> IsExist(int id)
+        {
+            return await IsItemExistAsync<BrandModel>("dbo.spBrandGetById", id);
+        }
+
         public void ValidateFields(ClaimsIdentity identity, BrandModel brand)
         {
             string Name = AppHelper.GetFirstWord(

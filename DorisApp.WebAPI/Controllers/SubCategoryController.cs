@@ -53,6 +53,9 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
+                if (!await _data.IsExist(subcategory.Id))
+                { return BadRequest($"Unable to get sub category [{subcategory.Id}]"); }
+
                 await _data.UpdateCategoryAsync(GetUserIdentity(), subcategory);
                 return Ok($"Successfully update {subcategory.SubCategoryName}");
             }
@@ -64,6 +67,9 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
+                if (!await _data.IsExist(subcategory.Id))
+                { return BadRequest($"Unable to get sub category [{subcategory.Id}]"); }
+
                 await _data.DeleteCategoryAsync(GetUserIdentity(), subcategory);
                 return Ok($"Successfully remove {subcategory.SubCategoryName}");
             }
