@@ -1,90 +1,292 @@
 ﻿@page "/products"
-@inject CategoryEndpoint CategoryEndpoint
-@inject IJSRuntime JSRuntime
-
-<style>
-
-        select.form-select {
-            height: 3rem;
-        }
-
-        select.form-select option {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            height: 5rem;
-        }
-
-</style>
-
-<h6>@totalCategories</h6>
 
 
-<div class="mb-3">
-    <label for="category" class="form-label">Category</label>
-    <select class="form-select" id="category" data-dropup-auto="false" data-size="5" @ref="selectElement" @onchange="HandleSelectionChange">
+<div class="product-page-content">
 
-        
-        @if(categorySummary != null)
-        {
-            int i = 0;
+    <!-- Start Panel 1 -->
+    <div class="app-panel" id="panel1" style="opacity:1; display: flex;">
+        <div class="container-fluid">
 
-            @foreach (var category in categorySummary.Models)
-            {
-                i++;
-                <option value="@category.Id">@(i) @(category.CategoryName) </option>
-            }
-        }
+            <div class="row align-items-end">
+                <div class="col ">
+                    <h3 class="table-title">List of Products</h3>
+                </div>
 
-    </select>
+                <div class="col ">
+                    <button type="button" id="openPanel2" class="add-btn btn btn-gradient-primary ">
+                        <i class="fa-regular fa-circle-plus"></i>
+                        Add
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-card">
+
+                <div class="row ">
+                    <div class="col-md  d-flex">
+                        <div class="search-bar">
+                            <input type="search" class="form-control" placeholder="Search...">
+                        </div>
+
+                        <div class="sort-select">
+                            <label for="sort-table">Sort by:</label>
+                            <select class="form-select form-select-sm" id="sort-table"
+                                    aria-label=".form-select-sm example">
+                                <option selected>Open this select menu</option>
+                                <option value="1">One</option>
+                                <option value="2">Two</option>
+                                <option value="3">Three</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="table">
+
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">Image</th>
+                                <th scope="col">Product Name</th>
+                                <th scope="col">SKU</th>
+                                <th scope="col">Stock</th>
+                                <th scope="col">Inventory</th>
+                                <th scope="col">Available</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td scope="row">
+                                    <span></span>
+                                </td>
+                                <td>
+                                    <img src="./assets/images/profile-3.jpg" alt="product1">
+                                </td>
+                                <td>Dove Antibacterial</td>
+                                <td>#026274562815</td>
+                                <td>100</td>
+                                <td>
+                                    <a href="#">
+                                        2 on hand
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="flexSwitchCheckDefault">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-icons">
+                                        <i class="fa-regular fa-eye"></i>
+                                        <i class="fa-solid fa-pencil"></i>
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item disabled">
+                            <a class="page-link">Previous</a>
+                        </li>
+                        <li class="page-item"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+    </div>
+    <!-- End Panel 1 -->
+    <!-- Start Panel 2 -->
+    <div class="app-panel" id="panel2" style="display: none;">
+
+        <div class="container-fluid">
+
+            <div class="card">
+
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col">
+                            <h4 class="col card-title">Add Product</h4>
+                        </div>
+
+                        <div class="col">
+                            <button id="openPanel1" class="btn btn-back">
+                                <i class="fa-solid fa-chevron-left"></i>
+                                Back
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+                        <p class="col-8 card-description">
+                            Add New Product to showcase your latest
+                            merchandise and
+                            attract more customers.
+                        </p>
+                        <div class="col-4">
+
+                            <button type="button" class="btn btn-success import-btn" data-bs-toggle="modal"
+                                    data-bs-target="#productModal">
+                                <i class="fa-regular fa-file-spreadsheet"></i>
+                                Import File
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md">
+
+                            <div class="col-sm">
+                                <div class="upload-image-container mb-3">
+                                    <div class="upload-image-wrapper">
+
+                                        <img class="upload-image" src="" alt="">
+                                        <button class="openFileBtn">
+                                            <i class="fa-regular fa-circle-plus"></i>
+                                        </button>
+                                        <div class="text">
+                                            Add image
+                                        </div>
+                                        <div id="cancel-btn">
+                                            <i class="fas fa-times"></i>
+                                        </div>
+                                        <div class="file-name">
+                                            File name here
+                                        </div>
+
+                                    </div>
+                                    <input id="default-btn" type="file"
+                                           accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" hidden>
+                                </div>
+                            </div>
+
+                            <div class="col-sm">
+                                <div class="mb-3">
+                                    <label for="productName" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="productName"
+                                           placeholder="Product Name">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="product-size" class="form-label">SKU</label>
+                                    <input type="text" class="form-control" id="product-size"
+                                           placeholder="SKU">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-sm">
+                            <div class="mb-3">
+                                <label for="brand" class="form-label">Brand</label>
+                                <select class="form-select" id="brand">
+                                    <option selected>Open this select menu</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category">
+                                    <option selected>Open this select menu</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="subcategory" class="form-label">Sub Category</label>
+                                <select class="form-select" id="subcategory">
+                                    <option selected>Open this select menu</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="col-sm">
+                            <div class="mb-3">
+                                <label for="product-size" class="form-label">Size</label>
+                                <input type="text" class="form-control" id="product-size"
+                                       placeholder="Size">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="product-color" class="form-label">Color</label>
+                                <input type="text" class="form-control" id="product-color"
+                                       placeholder="Color">
+                            </div>
+
+                            <div class="form-check taxable-check">
+                                <input class="form-check-input" type="checkbox" value="" id="isTaxable">
+                                <label class="form-check-label" for="isTaxable">
+                                    Taxable
+                                </label>
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="exampleFormControlTextarea1" class="form-label">
+                                Description
+                            </label>
+                            <textarea class="form-control" id="exampleFormControlTextarea1"
+                                      rows="3"></textarea>
+                        </div>
+
+                    </div>
+
+
+
+                </div>
+
+
+            </div>
+
+
+
+
+
+        </div>
+
+    </div>
+    <!-- End Panel 2 -->
 
 </div>
 
 
 
 
-@code {
-    private string Header = "ewan";
-
-    private ElementReference selectElement;
 
 
-    private RequestPageDTO categoryDTO = new() { PageNo = 1 };
-    private RequestModel<CategorySummaryDTO> categorySummary;
-    private int totalCategories = 0;
-
-    protected override async Task OnInitializedAsync()
-    {
-        //Pre Request to get the total items in api;
-        categoryDTO.ItemPerPage = 1;
-        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryDTO);
-        totalCategories = categorySummary.TotalItems;
-
-        //Get all the items
-        categoryDTO.PageNo = 1;
-        categoryDTO.ItemPerPage = totalCategories;
-        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryDTO);
-
-    }
+@code{
 
 
 
-    [JSInvokable]
-    public async Task LoadMoreData()
-    {
-        // Load more data into the dropdown list
-    }
-
-    private void HandleSelectionChange(ChangeEventArgs args)
-    {
-        Header = "EWWWWWWWW";
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("scrollToBottom", selectElement);
-        }
-    }
 }
-
