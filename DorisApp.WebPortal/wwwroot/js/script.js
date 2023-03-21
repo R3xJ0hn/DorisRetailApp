@@ -16,18 +16,18 @@
     }
 };
 
-openPanelBtn1.addEventListener('click', function (event) {
-    handleClick(openPanelBtn1, event, panel1, panel2);
-});
+//openPanelBtn1.addEventListener('click', function (event) {
+//    handleClick(openPanelBtn1, event, panel1, panel2);
+//});
 
-openPanelBtn2.addEventListener('click', function (event) {
-    handleClick(openPanelBtn2, event, panel2, panel1);
-});
+//openPanelBtn2.addEventListener('click', function (event) {
+//    handleClick(openPanelBtn2, event, panel2, panel1);
+//});
 
 
-const panel1 = document.getElementById('panel1');
-const panel2 = document.getElementById('panel2');
-let timeoutId = null;
+//const panel1 = document.getElementById('panel1');
+//const panel2 = document.getElementById('panel2');
+//let timeoutId = null;
 
 function handleClick(event, panelToShow, panelToHide) {
     if (timeoutId !== null) {
@@ -49,10 +49,6 @@ function handleClick(event, panelToShow, panelToHide) {
         timeoutId = null;
     }, 300);
 }
-
-
-
-
 
 function modalProcessing() {
     var proceedBtn = document.getElementById('saveButton');
@@ -86,3 +82,49 @@ function showToast(toastId) {
     var toast = new bootstrap.Toast(document.querySelector(toastId))
     toast.show()
 }
+
+function uploadImage() {
+    const selectImgBtn = document.getElementById("open-img");
+    selectImgBtn.click();
+
+    selectImgBtn.addEventListener("change", function () {
+        const wrapper = document.querySelector(".upload-image-wrapper");
+        const img = document.querySelector(".upload-image");
+        const fileName = document.querySelector(".file-name");
+        const cancelBtn = document.querySelector("#cancel-btn i");
+
+        let regExp = /[0-9a-zA-Z\^\&\'\@\{\}\[\]\,\$\=\!\-\#\(\)\.\%\+\~\_ ]+$/;
+
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const result = reader.result; 
+                img.src = result;
+                wrapper.classList.add("active");
+            }
+
+            cancelBtn.addEventListener("click", function () {
+                clearUploadValue();
+            })
+
+            reader.readAsDataURL(file);
+        }
+        if (this.value) {
+            let valueStore = this.value.match(regExp);
+            fileName.textContent = valueStore;
+        }
+    });
+}
+
+function clearUploadValue() {
+    const fileInput = document.getElementById("open-img");
+    const wrapper = document.querySelector(".upload-image-wrapper");
+    const img = document.querySelector(".upload-image");
+
+    fileInput.value = "";
+    img.src = "";
+    wrapper.classList.remove("active");
+}
+
+

@@ -55,6 +55,35 @@ namespace DorisApp.WebAPI.Controllers
 
         }
 
+        [HttpGet("get/{type}/{filename}")]
+        public Stream GetFileStream(string type, string? filename)
+        {
+            var uploadsFolder = Path.Combine(_env.ContentRootPath, "uploads");
+            var noImg = System.IO.File.OpenRead(
+                Path.Combine(_env.ContentRootPath, "assets", "no_image.jpg"));
+
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                var imgPath = Path.Combine(uploadsFolder, type, filename);
+
+                if (System.IO.File.Exists(imgPath)) 
+                {
+                    return System.IO.File.OpenRead(imgPath);
+                }
+                else
+                {
+                    return noImg;
+                }
+            }
+
+            return noImg;
+        }
+
+        [HttpGet("get/{type}/")]
+        public Stream NoImage(string type)
+        {
+            return GetFileStream(type, null);
+        }
 
     }
 

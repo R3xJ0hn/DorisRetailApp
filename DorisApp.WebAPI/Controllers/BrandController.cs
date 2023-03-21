@@ -29,44 +29,43 @@ namespace DorisApp.WebAPI.Controllers
         [HttpPost("add-brand"), Authorize(Roles = "admin")]
         public async Task<IActionResult> AddBrand(BrandModel brand)
         {
-            // TODO: Move The upload
             var fileName = brand.StoredImageName;
             var uploadsFolder = Path.Combine(_env.ContentRootPath, "uploads");
             var tempFolder = Path.Combine(uploadsFolder, "temp");
-            var targetTempFile = Path.Combine(tempFolder, fileName);
             var destinationPath = Path.Combine(uploadsFolder, "brand");
 
-            if (System.IO.File.Exists(targetTempFile))
+            if (fileName != null)
             {
-                if (!Directory.Exists(destinationPath))
+                var targetTempFile = Path.Combine(tempFolder, fileName);
+
+                if (System.IO.File.Exists(targetTempFile))
                 {
-                    Directory.CreateDirectory(destinationPath);
+                    if (!Directory.Exists(destinationPath))
+                    {
+                        Directory.CreateDirectory(destinationPath);
+                    }
+
+                    var path = Path.Combine(destinationPath, fileName);
+
+                    System.IO.File.Move(targetTempFile, path);
+                    System.IO.File.Delete(targetTempFile);
                 }
-
-                var path = Path.Combine(destinationPath, fileName);
-
-                System.IO.File.Move(targetTempFile, path);
-                System.IO.File.Delete(targetTempFile);
-                
-                try
-                {
-                    await _data.AddAsync(GetUserIdentity(),
-                        new BrandModel
-                        {
-                            BrandName = brand.BrandName,
-                            StoredImageName = brand.StoredImageName,
-                        });
-
-                    return Ok($"Successfully added {brand.BrandName} category");
-                }
-                catch { return BadRequest("Unable to add new brand."); }
             }
-            else
+
+            try
             {
-               return BadRequest($"{fileName} not found!");
+                await _data.AddAsync(GetUserIdentity(),
+                    new BrandModel
+                    {
+                        BrandName = brand.BrandName,
+                        StoredImageName = fileName,
+                    });
+
+                return Ok($"Successfully added {brand.BrandName} category");
             }
+            catch { return BadRequest("Unable to add new brand."); }
+
         }
-
 
         [HttpPost("get-brand/summary")]
         public async Task<IActionResult> GetCategorySummary(RequestPageDTO request)

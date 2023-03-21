@@ -1,0 +1,43 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="upload-image-container mb-3">
+    <div class="upload-image-wrapper">
+
+        <img class="upload-image" src="" alt="">
+
+        <button class="openFileBtn" @onclick="OpenFileBtn">
+            <i class="fa-regular fa-circle-plus"></i>
+        </button>
+        <div class="text">
+            Add image
+        </div>
+        <div id="cancel-btn">
+            <i class="fas fa-times"></i>
+        </div>
+        <div class="file-name">
+            File name here
+        </div>
+
+    </div>
+
+    @*<input type="file" accept=".png,.jpg,.jpeg" hidden>*@
+
+    <InputFile id="open-img" OnChange="HandleFileSelected" accept=".png,.jpg,.jpeg" hidden />
+
+</div>
+
+@code {
+
+    [Parameter]
+    public EventCallback<InputFileChangeEventArgs> OnFileChange { get; set; }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        await OnFileChange.InvokeAsync(e);
+    }
+
+    private async Task OpenFileBtn()
+    {
+        await JSRuntime.InvokeVoidAsync("uploadImage");
+    }
+}

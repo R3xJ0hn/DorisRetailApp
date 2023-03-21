@@ -25,16 +25,18 @@ namespace DorisApp.Data.Library.API
                 uploadResultDTO = JsonConvert.DeserializeObject<UploadResultDTO>(uploadResult);
             }
 
-            if (uploadResultDTO.Uploaded == true && !string.IsNullOrWhiteSpace(brand.BrandName))
+            if (!string.IsNullOrWhiteSpace(brand.BrandName) )
             {
-                brand.ImageName = uploadResultDTO.FileName;
-                brand.StoredImageName = uploadResultDTO.StoredFileName;
+
+                if (uploadResultDTO != null)
+                {
+                    brand.ImageName = uploadResultDTO.FileName;
+                    brand.StoredImageName = uploadResultDTO.StoredFileName;
+                }
+
                 await SendPostAysnc(brand, "URL:add-brand");
             }
-            else
-            {
-                throw new HttpRequestException("Unable to upload imge.");
-            }
+
         }
 
         private async Task<string> AddBrandImg(StreamContent content, string fileName)
