@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE [dbo].[spBrandDelete]
 	@Id					INT,
     @BrandName			NVARCHAR(256),
-    @ThumbnailName		NVARCHAR(256),
+    @ImageName			NVARCHAR(256),
+	@StoredImageName	NVARCHAR(256),
 	@CreatedByUserId	INT, 
 	@UpdatedByUserId	INT, 
 	@CreatedAt			DATETIME2,

@@ -13,7 +13,7 @@ BEGIN
         SELECT 
             b.Id, 
             b.BrandName,
-            b.ThumbnailName,
+            b.StoredImageName,
             COUNT(p.Id) AS ProductCount
         FROM 
             [dbo].[Brands] b
@@ -24,11 +24,11 @@ BEGIN
         GROUP BY 
             b.Id, 
             b.BrandName,
-            b.ThumbnailName)
+            b.StoredImageName)
         SELECT 
             Id, 
             BrandName,
-            ThumbnailName,
+            StoredImageName,
             ProductCount
         FROM 
             BrandCounts

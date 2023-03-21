@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE [dbo].[spBrandUpdate]
 	@Id					INT,
     @BrandName			NVARCHAR(256),
-    @ThumbnailName		NVARCHAR(256),
+    @ImageName			NVARCHAR(256),
+	@StoredImageName	NVARCHAR(256),
 	@CreatedByUserId	INT, 
 	@UpdatedByUserId	INT, 
 	@CreatedAt			DATETIME2,
@@ -13,7 +14,7 @@ BEGIN
 
 		UPDATE dbo.Brands SET
 			[BrandName] = @BrandName,
-			[ThumbnailName] = @ThumbnailName,
+			[StoredImageName] = @StoredImageName,
 			[UpdatedByUserId] = @UpdatedByUserId,
 			[UpdatedAt] = @UpdatedAt
 

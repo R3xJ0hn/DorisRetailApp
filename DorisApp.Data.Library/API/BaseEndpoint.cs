@@ -31,6 +31,19 @@ namespace DorisApp.Data.Library.API
             }
         }
 
+        protected async Task<string> SendFilePostAysnc(HttpContent content)
+        {
+            using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:upload-file"], content);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                throw new HttpRequestException(response.ReasonPhrase);
+            }
+        }
+
     }
 
 }

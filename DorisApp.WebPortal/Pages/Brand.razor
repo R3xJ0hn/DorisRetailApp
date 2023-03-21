@@ -168,6 +168,11 @@
                     <DataAnnotationsValidator />
 
                     <div class="mb-3 p-2">
+                        <label for="brandImage" class="form-label">Brand Image</label>
+                        <InputFile id="brandImage" class="form-control" OnChange="HandleFileSelected" accept=".png,.jpg,.jpeg" />
+                    </div>
+
+                    <div class="mb-3 p-2">
                         <label for="brandName" class="form-label">Brand Name</label>
                         <InputText id="brandName" class="form-control" placeholder="Brand Name" @bind-Value="modalModel.BrandName" />
                         <ValidationMessage For="@(()=> modalModel.BrandName)" />
@@ -196,6 +201,8 @@
 @code {
     private RequestModel<BrandSummaryDTO>? brandSummary;
     private RequestPageDTO brandRequestDTO = new();
+    private Stream? imgStream;
+
 
     private int totalPages = 1;
     private int currentPage = 1;
@@ -259,6 +266,12 @@
         await RequestItems(page, selectedSortValue);
     }
 
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        modalModel.ImageName = e.File.Name;
+        imgStream = e.File.OpenReadStream();
+    }
+
     private async Task SaveModalHandler()
     {
         if (modalMode == "add")
@@ -286,8 +299,7 @@
                 return;
             }
 
-            await BrandEndpoint.AddBrandAsync(
-                modalModel.BrandName, modalModel.ThumbnailName);
+            await BrandEndpoint.AddBrandAsync(modalModel, imgStream);
 
             await CloseModal("Successfully added new brand.", "success");
         }
@@ -311,8 +323,7 @@
             var brandToUpdate = new BrandModel
             {
                 Id = modalModel.Id,
-                BrandName = modalModel.BrandName,
-                ThumbnailName = modalModel.ThumbnailName,
+                BrandName = modalModel.BrandName
             };
 
             await BrandEndpoint.UpdateBrand(brandToUpdate);
@@ -334,7 +345,6 @@
             {
                 Id = modalModel.Id,
                 BrandName = modalModel.BrandName,
-                ThumbnailName = modalModel.ThumbnailName,
             };
 
             await BrandEndpoint.DeleteBrand(brandToDelete);
@@ -386,7 +396,7 @@
         if (brandToEdit != null)
         {
             modalModel.BrandName = brandToEdit.BrandName;
-            modalModel.ThumbnailName = brandToEdit.ThumbnailName;
+            modalModel.StoredImageName = brandToEdit.StoredImageName;
             modalModel.Id = brandId;
         }
     }
