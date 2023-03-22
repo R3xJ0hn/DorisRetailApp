@@ -122,9 +122,13 @@ function clearUploadValue() {
     const wrapper = document.querySelector(".upload-image-wrapper");
     const img = document.querySelector(".upload-image");
 
-    fileInput.value = "";
+    if (fileInput.value !== "" ) {
+        fileInput.value = "";
+    }
+
     img.src = "";
     wrapper.classList.remove("active");
 }
+
 
 

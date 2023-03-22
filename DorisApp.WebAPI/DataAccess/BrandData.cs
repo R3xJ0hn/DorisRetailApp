@@ -33,8 +33,6 @@ namespace DorisApp.WebAPI.DataAccess
 
             try
             {
-                //TODO: Uplaod Image
-
                 await _sql.SaveDataAsync("dbo.spBrandInsert", brand);
                 _logger.SuccessInsert(identity, brand.BrandName, TableName);
             }
@@ -49,6 +47,14 @@ namespace DorisApp.WebAPI.DataAccess
         public async Task UpdateCategoryAsync(ClaimsIdentity identity, BrandModel brand)
         {
             ValidateFields(identity, brand);
+            var exist = await IsExist(brand.Id);
+
+            if (!exist)
+            {
+                var msg = $"Brand[{brand.BrandName}[{brand.Id}]] not found.";
+                _logger.LogError(msg);
+                throw new Exception(msg);
+            }
 
             brand.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
@@ -63,9 +69,6 @@ namespace DorisApp.WebAPI.DataAccess
 
             try
             {
-                //TODO: Uplaod Image
-                //find first and remove if user change it
-
                 await _sql.UpdateDataAsync("dbo.spBrandUpdate", brand);
                 _logger.SuccessUpdate(identity, brand.BrandName, TableName, oldName);
             }

@@ -1,7 +1,7 @@
 ﻿@inject IJSRuntime JSRuntime
 
 <div class="modal fade" id="@modalId" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-     aria-labelledby="staticBackdropLabel" aria-hidden="true">
+     aria-labelledby="staticBackdropLabel" aria-hidden="true" @ref="modalRef">
     <div class="modal-dialog @dialogPosition">
         <div class="modal-content">
             <div class="modal-header">
@@ -34,6 +34,7 @@
 
     private string dialogPosition = "modal-dialog-centered";
 
+    private ElementReference modalRef;
 
     [Parameter]
     public string Title { get; set; }
@@ -79,6 +80,8 @@
         {
             await JSRuntime.InvokeVoidAsync("modalProcessing");
             await JSRuntime.InvokeVoidAsync("modalProcessDone");
+            JSRuntime.InvokeAsync<object>("$(document).ready(function() { $().on('hidden.bs.modal', function() { DotNet.invokeMethodAsync('$1', 'CloseModal'); }); })", modalRef, DotNetObjectReference.Create(this));
+
         }
     }
 
@@ -88,4 +91,9 @@
         await OnSave.InvokeAsync(null);
     }
 
+    [JSInvokable("CloseModal")]
+    private async Task OnCloseClicked()
+    {
+        await OnClose.InvokeAsync(null);
+    }
 }

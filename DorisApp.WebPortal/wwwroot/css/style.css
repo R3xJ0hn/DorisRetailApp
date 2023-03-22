@@ -12311,7 +12311,9 @@ textarea.form-control-lg {
 .upload-image-container {
   position: relative;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
 }
 .upload-image-container .upload-image-wrapper {
   position: relative;

@@ -20,19 +20,28 @@
 
     </div>
 
-    @*<input type="file" accept=".png,.jpg,.jpeg" hidden>*@
-
     <InputFile id="open-img" OnChange="HandleFileSelected" accept=".png,.jpg,.jpeg" hidden />
 
+    @if (fileSize > MaxFileSize)
+    {
+        <p class="text-danger">File size cannot exceed 1 MB.</p>
+    }
 </div>
 
 @code {
+
+    long fileSize = 0;
+
+    [Parameter]
+    public long  MaxFileSize { get; set; }
 
     [Parameter]
     public EventCallback<InputFileChangeEventArgs> OnFileChange { get; set; }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
+        var file = e.File;
+        fileSize = file.Size;
         await OnFileChange.InvokeAsync(e);
     }
 

@@ -1,7 +1,11 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.WebAPI.DataAccess.Logger;
+using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using static Dapper.SqlMapper;
 
 namespace DorisApp.WebAPI.Controllers
 {
@@ -17,6 +21,7 @@ namespace DorisApp.WebAPI.Controllers
             _env = env;
             _log = log;
         }
+        private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
 
         [HttpPost("upload-file")]
         public async Task<ActionResult<UploadResultDTO>> UploadFile(IFormFile file)
@@ -24,6 +29,26 @@ namespace DorisApp.WebAPI.Controllers
             var uploadResult = new UploadResultDTO();
             string trustedFileNameForFileStorage;
             var untrustedFileName = file.FileName;
+            long maxFileSize = 1024 * 1024; // 1 MB in bytes
+            var userName = GetUserIdentity().Claims.Where(c => c.Type == ClaimTypes.Name)
+                .Select(c => c.Value).SingleOrDefault() ?? "anonymous";
+            var firstName = AppHelper.GetFirstWord(userName);
+
+
+            if (file.Length == 0)
+            {
+                var msg = $"{untrustedFileName} length is 0";
+                _log.LogError($"{firstName} sent" + msg);
+                return BadRequest(msg);
+            }
+
+            else if (file.Length > maxFileSize)
+            {
+                var msg = $"{untrustedFileName} of {file.Length} bytes is " +
+                    $"larger than the limit of {maxFileSize} bytes";
+                _log.LogError($"{firstName} sent" + msg);
+                return BadRequest(msg);
+            }
 
             try
             {

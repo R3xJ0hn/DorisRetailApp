@@ -137,7 +137,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-3 d-flex justify-content-center align-content-center">
 
             NOTHING IN HERE?
 
@@ -364,14 +364,16 @@
     {
         try
         {
-            var subCategoryToUpdate = new SubCategoryModel
+            var subCategory = new SubCategoryModel
             {
                 Id = modalModel.Id,
                 SubCategoryName = modalModel.SubCategoryName,
                 CategoryId = modalModel.CategoryId
             };
 
-            await SubCategoryEndpoint.DeleteCategory(subCategoryToUpdate);
+            await SubCategoryEndpoint.DeleteCategory(subCategory);
+            await CloseModal($"{subCategory.SubCategoryName} remove from subcategory.", "danger");
+
             await CloseModal("Successfully remove sub category.", "success");
         }
         catch (HttpRequestException ex)

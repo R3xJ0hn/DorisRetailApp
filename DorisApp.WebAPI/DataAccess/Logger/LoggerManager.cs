@@ -60,7 +60,7 @@ namespace DorisApp.WebAPI.DataAccess.Logger
 
             if (!string.IsNullOrEmpty(oldName))
             {
-                message += $" from {oldName}";
+                message += $"from {oldName} to {noun}";
             }
 
             if (count != 0)
@@ -77,7 +77,7 @@ namespace DorisApp.WebAPI.DataAccess.Logger
             //    Date = date,
             //};
 
-            var msg = $"{message}: [{userId}] [{deviceName}] [{date}]";
+            var msg = $"{message}: [userId:{userId}] [device:{deviceName}] [date:{date}]";
 
             if (errorExept == null)
             {

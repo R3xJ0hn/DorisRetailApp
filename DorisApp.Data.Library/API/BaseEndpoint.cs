@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using DorisApp.Data.Library.DTO;
+using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +31,24 @@ namespace DorisApp.Data.Library.API
             {
                 throw new HttpRequestException(response.ReasonPhrase);
             }
+        }
+
+        protected async Task<UploadResultDTO?> SendImg(Stream? stream, string fileName)
+        {
+            if (stream != null && stream.Length > 0)
+            {
+                var content = new StreamContent(stream);
+
+                var newcontent = new MultipartFormDataContent
+                {
+                    { content, "file", fileName }
+                };
+
+                var uploadResult = await SendFilePostAysnc(newcontent);
+                return JsonConvert.DeserializeObject<UploadResultDTO>(uploadResult);
+            }
+
+            return null;
         }
 
         protected async Task<string> SendFilePostAysnc(HttpContent content)

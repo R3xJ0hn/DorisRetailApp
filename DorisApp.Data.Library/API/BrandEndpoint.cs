@@ -1,63 +1,57 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using Newtonsoft.Json;
+using System;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace DorisApp.Data.Library.API
 {
     public class BrandEndpoint : BaseEndpoint
     {
-        public BrandEndpoint(IAPIHelper apiHelper) 
+        public BrandEndpoint(IAPIHelper apiHelper)
             : base(apiHelper)
         {
         }
 
-        public async Task AddBrandAsync(BrandModel brand, Stream? imgStream)
+        public async Task AddBrandAsync(BrandModel brand, Stream? imgStream, string fileName)
         {
-            UploadResultDTO? uploadResultDTO = null;
+            if (string.IsNullOrWhiteSpace(brand.BrandName))
+                throw new NullReferenceException("Brand name is null.");
 
-            if (imgStream != null)
+            var result = await SendImg(imgStream, fileName);
+
+            if (result != null)
             {
-                var content = new StreamContent(imgStream);
-                var uploadResult = await AddBrandImg(content, brand.ImageName);
-                uploadResultDTO = JsonConvert.DeserializeObject<UploadResultDTO>(uploadResult);
+                brand.StoredImageName = result.StoredFileName;
             }
 
-            if (!string.IsNullOrWhiteSpace(brand.BrandName) )
-            {
-
-                if (uploadResultDTO != null)
-                {
-                    brand.ImageName = uploadResultDTO.FileName;
-                    brand.StoredImageName = uploadResultDTO.StoredFileName;
-                }
-
-                await SendPostAysnc(brand, "URL:add-brand");
-            }
-
+            await SendPostAysnc(brand, "URL:add-brand");
         }
 
-        private async Task<string> AddBrandImg(StreamContent content, string fileName)
+        public async Task<string> UpdateBrand(BrandModel brand, Stream? imgStream, string fileName)
         {
-            var newcontent = new MultipartFormDataContent
-            {
-                { content, "file", fileName }
-            };
+            if (string.IsNullOrWhiteSpace(brand.BrandName))
+                throw new NullReferenceException("Brand name is null.");
 
-           return await SendFilePostAysnc(newcontent);
+            var result = await SendImg(imgStream, fileName);
+
+            if (result != null)
+            {
+                brand.StoredImageName = result.StoredFileName;
+            }
+            else
+            {
+                brand.StoredImageName = null;
+            }
+
+            return await SendPostAysnc(brand, "URL:update-brand");
         }
 
         public async Task<RequestModel<BrandSummaryDTO>?> GetBrandSummary(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-brand/summary");
             return JsonConvert.DeserializeObject<RequestModel<BrandSummaryDTO>>(result);
-        }
-
-        public async Task<string> UpdateBrand(BrandModel model)
-        {
-            return await SendPostAysnc(model, "URL:update-brand");
         }
 
         public async Task<string> DeleteBrand(BrandModel model)

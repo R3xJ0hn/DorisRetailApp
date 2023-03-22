@@ -49,7 +49,6 @@
 
                             </select>
 
-
                         </div>
                     </div>
 
@@ -137,7 +136,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-3 d-flex justify-content-center align-content-center">
 
             NOTHING IN HERE?
 
@@ -147,7 +146,8 @@
                Title="@modalTitle"
                SaveButtonText="Save"
                modalMode="@modalMode"
-               OnSave="SaveModalHandler">
+               OnSave="OnOpenModal"
+               OnClose="OnCloseModal">
 
             @if (modalMode != "delete")
             {
@@ -166,10 +166,10 @@
                     </p>
                 }
 
-                <EditForm Model="@modalModel" OnInvalidSubmit="@SaveModalHandler">
+                <EditForm Model="@modalModel" OnInvalidSubmit="@OnOpenModal">
                     <DataAnnotationsValidator />
 
-                    <UploadImage OnFileChange="HandleFileChange"/>
+                    <UploadImage OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize"/>
 
                     <div class="mb-3 p-2">
                         <label for="brandName" class="form-label">Brand Name</label>
@@ -200,7 +200,9 @@
 @code {
     private RequestModel<BrandSummaryDTO>? brandSummary;
     private RequestPageDTO brandRequestDTO = new();
+    long maxFileSize = 1024 * 1024; // 1 MB in bytes
     private Stream? imgStream;
+    private string imgName;
 
     private int totalPages = 1;
     private int currentPage = 1;
@@ -210,7 +212,7 @@
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
 
-    private string errorMessage = string.Empty;
+    private string? errorMessage = null;
     private string toastMode = string.Empty;
     private string toastMessage = string.Empty;
 
@@ -264,13 +266,30 @@
         await RequestItems(page, selectedSortValue);
     }
 
-    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    private async Task OnHandleFileChange(InputFileChangeEventArgs e)
     {
-        modalModel.ImageName = e.File.Name;
-        imgStream = e.File.OpenReadStream();
+
+        try
+        {
+            imgName = e.File.Name;
+            imgStream = e.File.OpenReadStream(maxFileSize);
+        }
+        catch (Exception)
+        {
+
+            errorMessage = "File size cannot exceed 1 MB.";
+            await JSRuntime.InvokeVoidAsync("clearUploadValue");
+            StateHasChanged();
+        }
+
     }
 
-    private async Task SaveModalHandler()
+    private async Task OnCloseModal()
+    {
+        await CloseModal(null, null);
+    }
+
+    private async Task OnOpenModal()
     {
         if (modalMode == "add")
         {
@@ -297,8 +316,7 @@
                 return;
             }
 
-            await BrandEndpoint.AddBrandAsync(modalModel, imgStream);
-
+            await BrandEndpoint.AddBrandAsync(modalModel, imgStream, imgName);
             await CloseModal("Successfully added new brand.", "success");
         }
         catch (HttpRequestException ex)
@@ -318,13 +336,13 @@
                 return;
             }
 
-            var brandToUpdate = new BrandModel
-                {
-                    Id = modalModel.Id,
-                    BrandName = modalModel.BrandName
-                };
+            var brand = new BrandModel
+            {
+                Id = modalModel.Id,
+                BrandName = modalModel.BrandName,
+            };
 
-            await BrandEndpoint.UpdateBrand(brandToUpdate);
+            await BrandEndpoint.UpdateBrand(brand, imgStream, imgName);
             await CloseModal("Successfully updated brand.", "success");
         }
         catch (HttpRequestException ex)
@@ -332,21 +350,20 @@
             await JSRuntime.InvokeVoidAsync("enableButtons");
             errorMessage = $"Failed to update brand: {ex.Message}";
         }
-
     }
 
     private async Task DeleteBrand()
     {
         try
         {
-            var brandToDelete = new BrandModel
-                {
-                    Id = modalModel.Id,
-                    BrandName = modalModel.BrandName,
-                };
+            var brand = new BrandModel
+            {
+                Id = modalModel.Id,
+                BrandName = modalModel.BrandName,
+            };
 
-            await BrandEndpoint.DeleteBrand(brandToDelete);
-            await CloseModal("Successfully remove category.", "success");
+            await BrandEndpoint.DeleteBrand(brand);
+            await CloseModal($"{brand.BrandName} remove from brand.", "danger");
         }
         catch (HttpRequestException ex)
         {
@@ -360,8 +377,19 @@
         toastMessage = toastmsg;
         toastMode = mode;
         await JSRuntime.InvokeVoidAsync("modalProcessDone", "#brandModal");
-        await JSRuntime.InvokeVoidAsync("showToast", "#brandToast");
-        await JSRuntime.InvokeVoidAsync("clearUploadValue");
+       
+        if (mode != "danger")
+        {
+            await JSRuntime.InvokeVoidAsync("clearUploadValue");
+        }
+
+        if (toastmsg != null)
+        {
+            await JSRuntime.InvokeVoidAsync("showToast", "#brandToast");
+        }
+
+        errorMessage = null;
+        StateHasChanged();
 
         //Request for Update
         await RequestItems(currentPage, selectedSortValue);
@@ -391,11 +419,10 @@
 
     private void SetModalModel(int brandId)
     {
-        var brandToEdit = brandSummary.Models.FirstOrDefault(x => x.Id == brandId);
-        if (brandToEdit != null)
+        var brand = brandSummary.Models.FirstOrDefault(x => x.Id == brandId);
+        if (brand != null)
         {
-            modalModel.BrandName = brandToEdit.BrandName;
-            modalModel.StoredImageName = brandToEdit.StoredImageName;
+            modalModel.BrandName = brand.BrandName;
             modalModel.Id = brandId;
         }
     }
