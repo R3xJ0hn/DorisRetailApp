@@ -6,7 +6,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fs-3 @headerColorClass" id="staticBackdropLabel">@Title</h5>
-                <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="OnClose"></button>
             </div>
 
             <div class="modal-body">
@@ -81,7 +81,6 @@
             await JSRuntime.InvokeVoidAsync("modalProcessing");
             await JSRuntime.InvokeVoidAsync("modalProcessDone");
             JSRuntime.InvokeAsync<object>("$(document).ready(function() { $().on('hidden.bs.modal', function() { DotNet.invokeMethodAsync('$1', 'CloseModal'); }); })", modalRef, DotNetObjectReference.Create(this));
-
         }
     }
 

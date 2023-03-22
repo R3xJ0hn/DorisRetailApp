@@ -3,7 +3,7 @@
 <div class="upload-image-container mb-3">
     <div class="upload-image-wrapper">
 
-        <img class="upload-image" src="" alt="">
+        <img class="upload-image" src="@ImgSource" alt="">
 
         <button class="openFileBtn" @onclick="OpenFileBtn">
             <i class="fa-regular fa-circle-plus"></i>
@@ -11,7 +11,7 @@
         <div class="text">
             Add image
         </div>
-        <div id="cancel-btn">
+        <div id="cancel-btn" @onclick="RemoveActiveImg">
             <i class="fas fa-times"></i>
         </div>
         <div class="file-name">
@@ -33,7 +33,10 @@
     long fileSize = 0;
 
     [Parameter]
-    public long  MaxFileSize { get; set; }
+    public long MaxFileSize { get; set; }
+
+    [Parameter]
+    public string? ImgSource { get; set; }         
 
     [Parameter]
     public EventCallback<InputFileChangeEventArgs> OnFileChange { get; set; }
@@ -43,6 +46,11 @@
         var file = e.File;
         fileSize = file.Size;
         await OnFileChange.InvokeAsync(e);
+    }
+
+    private async Task RemoveActiveImg()
+    {
+        await JSRuntime.InvokeVoidAsync("setUploadImageToDeactive");
     }
 
     private async Task OpenFileBtn()

@@ -117,6 +117,16 @@ function uploadImage() {
     });
 }
 
+function setUploadImageToDeactive() {
+    const wrapper = document.querySelector(".upload-image-wrapper");
+    wrapper.classList.remove("active");
+}
+
+function setUploadImageToActive() {
+    const wrapper = document.querySelector(".upload-image-wrapper");
+    wrapper.classList.add("active");
+}
+
 function clearUploadValue() {
     const fileInput = document.getElementById("open-img");
     const wrapper = document.querySelector(".upload-image-wrapper");
