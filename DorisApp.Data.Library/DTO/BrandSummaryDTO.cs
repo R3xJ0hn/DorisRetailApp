@@ -7,4 +7,5 @@
         public string? StoredImageName { get; set; }
         public int ProductCount { get; set; }
     }
+
 }

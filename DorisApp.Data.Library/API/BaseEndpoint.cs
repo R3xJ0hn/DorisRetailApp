@@ -1,6 +1,5 @@
 ﻿using DorisApp.Data.Library.DTO;
 using Newtonsoft.Json;
-using System;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -23,6 +22,21 @@ namespace DorisApp.Data.Library.API
             var data = new StringContent(json, Encoding.UTF8, "application/json");
 
             using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config[urlKey], data);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                throw new HttpRequestException(response.ReasonPhrase);
+            }
+        }
+
+        protected async Task<string> SendPostByIdAysnc(int id, string urlKey)
+        {
+            using HttpResponseMessage response = await _apiHelper
+                .ApiCleint.GetAsync(_apiHelper.Config[urlKey] + "/" + id);
+
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsStringAsync();
@@ -65,5 +79,4 @@ namespace DorisApp.Data.Library.API
         }
 
     }
-
 }

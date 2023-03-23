@@ -14,10 +14,21 @@ namespace DorisApp.Data.Library.API
         {
         }
 
+        public async Task<int> CountBrandItems()
+        {
+            var request = new RequestPageDTO
+            {
+                PageNo = 1,
+                ItemPerPage = 1
+            };
+
+            var result = await GetBrandSummary(request);
+            return result != null ? result.TotalItems : 0;
+        }
+
         public async Task AddBrandAsync(BrandModel brand, Stream? imgStream, string fileName)
         {
-            if (string.IsNullOrWhiteSpace(brand.BrandName))
-                throw new NullReferenceException("Brand name is null.");
+            ValidateBrand(brand);
 
             var result = await SendImg(imgStream, fileName);
 
@@ -31,8 +42,7 @@ namespace DorisApp.Data.Library.API
 
         public async Task<string> UpdateBrand(BrandModel brand, Stream? imgStream, string fileName)
         {
-            if (string.IsNullOrWhiteSpace(brand.BrandName))
-                throw new NullReferenceException("Brand name is null.");
+            ValidateBrand(brand);
 
             var result = await SendImg(imgStream, fileName);
 
@@ -57,6 +67,12 @@ namespace DorisApp.Data.Library.API
         public async Task<string> DeleteBrand(BrandModel model)
         {
             return await SendPostAysnc(model, "URL:delete-brand");
+        }
+
+        private void ValidateBrand(BrandModel brand)
+        {
+            if (string.IsNullOrWhiteSpace(brand.BrandName))
+                throw new NullReferenceException("Brand name is null.");
         }
     }
 }

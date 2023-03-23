@@ -2,6 +2,7 @@
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.DataAccess.Logger;
+using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -25,14 +26,14 @@ namespace DorisApp.WebAPI.Controllers
             rootFolder = _env.ContentRootPath;
         }
 
-        private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
+        private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
         [HttpPost("add-brand"), Authorize(Roles = "admin")]
         public async Task<IActionResult> AddBrand(BrandModel brand)
         {
             var fileName = brand.StoredImageName;
 
-            MoveTempToDestPath(rootFolder, fileName, "brand");
+            AppHelper.MoveTempToDestPath(rootFolder, fileName, "brand");
 
             try
             {
@@ -45,40 +46,12 @@ namespace DorisApp.WebAPI.Controllers
 
                 return Ok($"Successfully added {brand.BrandName} category");
             }
-            catch { return BadRequest("Unable to add new brand."); }
 
-        }
-
-        public static bool MoveTempToDestPath(string rootFolder, string? soredFileName, string type)
-        {
-            var uploadsFolder = Path.Combine(rootFolder, "uploads");
-            var destinationFolder = Path.Combine(uploadsFolder, type);
-            var tempFolder = Path.Combine(uploadsFolder, "temp");
-
-            if (soredFileName == null) return false;
-
-            var targetTempFile = Path.Combine(tempFolder, soredFileName);
-            if (!System.IO.File.Exists(targetTempFile)) return false;
-
-
-            if (!Directory.Exists(destinationFolder))
+            catch (Exception ex)
             {
-                Directory.CreateDirectory(destinationFolder);
+                _log.LogError("BrandController[Add]: " + ex.Message);
+                return BadRequest("Unable to add new brand.");
             }
-
-            var path = Path.Combine(destinationFolder, soredFileName);
-
-            System.IO.File.Move(targetTempFile, path);
-            DeleteFile(targetTempFile);
-
-            return true;
-        }
-
-        public static bool DeleteFile(string path)
-        {
-            if (!System.IO.File.Exists(path)) return false;
-            System.IO.File.Delete(path);
-            return true;
         }
 
 
@@ -90,7 +63,7 @@ namespace DorisApp.WebAPI.Controllers
             if (getExisting == null)
             { return BadRequest($"Unable to get brand [{brand.Id}]"); }
 
-            var moved = MoveTempToDestPath(rootFolder, brand.StoredImageName, "brand");
+            var moved = AppHelper.MoveTempToDestPath(rootFolder, brand.StoredImageName, "brand");
 
             try
             {
@@ -100,18 +73,17 @@ namespace DorisApp.WebAPI.Controllers
                     {
                         var oldImg = Path.Combine(rootFolder, "uploads",
                         "brand", getExisting.StoredImageName);
-                        DeleteFile(oldImg);
+                        AppHelper.DeleteFile(oldImg);
                     }
-     
 
                     await _data.UpdateCategoryAsync(GetUserIdentity(), brand);
                 }
                 else
                 {
                     BrandModel justChangeName = new()
-                    { 
+                    {
                         Id = brand.Id,
-                        BrandName = brand.BrandName 
+                        BrandName = brand.BrandName
                     };
                     await _data.UpdateCategoryAsync(GetUserIdentity(), justChangeName);
                 }
@@ -119,9 +91,9 @@ namespace DorisApp.WebAPI.Controllers
                 return Ok($"Successfully update {brand.BrandName}");
 
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
-                _log.LogError(ex.Message);
+                _log.LogError("BrandController[Update]: " + ex.Message);
                 return BadRequest("Unable to update brand.");
             }
         }
@@ -137,7 +109,8 @@ namespace DorisApp.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _log.LogError(ex.Message); return BadRequest("Unable to get brand."); 
+                _log.LogError("BrandController[Get]: " + ex.Message);
+                return BadRequest("Unable to get brands.");
             }
         }
 
@@ -156,14 +129,29 @@ namespace DorisApp.WebAPI.Controllers
                 var oldImg = Path.Combine(rootFolder, "uploads",
                             "brand", getExisting.StoredImageName);
 
-                DeleteFile(oldImg);
+                AppHelper.DeleteFile(oldImg);
 
                 return Ok($"Successfully remove {brand.BrandName}");
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
-                _log.LogError(ex.Message);
+                _log.LogError("BrandController[Delete]: " + ex.Message);
                 return BadRequest("Unable to delete brand.");
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBrandById(int id)
+        {
+            try
+            {
+                var brandItem = await _data.GetByIdAsync(GetUserIdentity(), id);
+                return Ok(brandItem);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError("BrandController[GetById]: " + ex.Message);
+                return BadRequest($"Unable to get [{id}] brand.");
             }
         }
 

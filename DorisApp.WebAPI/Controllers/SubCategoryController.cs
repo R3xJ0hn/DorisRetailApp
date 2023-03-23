@@ -1,6 +1,7 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
+using DorisApp.WebAPI.DataAccess.Logger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,12 +13,14 @@ namespace DorisApp.WebAPI.Controllers
     public class SubCategoryController : ControllerBase
     {
         private readonly SubCategoryData _data;
+        private readonly ILoggerManager _log;
 
-        public SubCategoryController(SubCategoryData data)
+        public SubCategoryController(SubCategoryData data, ILoggerManager log)
         {
             _data = data;
+            _log = log;
         }
-        private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
+        private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
 
         [HttpPost("add-subcategory"), Authorize(Roles = "admin")]
@@ -34,7 +37,11 @@ namespace DorisApp.WebAPI.Controllers
 
                 return Ok($"Successfully added {subcategory.SubCategoryName} category");
             }
-            catch { return BadRequest("Unable to add new sub category."); }
+            catch (Exception ex)
+            {
+                _log.LogError("SubCategoryController[Add]: " + ex.Message);
+                return BadRequest("Unable to add new sub category.");
+            }
         }
 
         [HttpPost("get-subcategory/summary")]
@@ -45,7 +52,11 @@ namespace DorisApp.WebAPI.Controllers
                 var categoryItems = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
                 return Ok(categoryItems);
             }
-            catch { return BadRequest("Unable to get sub categories."); }
+            catch (Exception ex)
+            {
+                _log.LogError("SubCategoryController[Get]: " + ex.Message);
+                return BadRequest("Unable to get sub categories.");
+            }
         }
 
         [HttpPost("update-subcategory"), Authorize(Roles = "admin")]
@@ -59,7 +70,11 @@ namespace DorisApp.WebAPI.Controllers
                 await _data.UpdateCategoryAsync(GetUserIdentity(), subcategory);
                 return Ok($"Successfully update {subcategory.SubCategoryName}");
             }
-            catch { return BadRequest("Unable to update sub categories."); }
+            catch (Exception ex)
+            {
+                _log.LogError("SubCategoryController[Update]: " + ex.Message);
+                return BadRequest("Unable to update sub category.");
+            }
         }
 
         [HttpPost("delete-subcategory"), Authorize(Roles = "admin")]
@@ -73,7 +88,41 @@ namespace DorisApp.WebAPI.Controllers
                 await _data.DeleteCategoryAsync(GetUserIdentity(), subcategory);
                 return Ok($"Successfully remove {subcategory.SubCategoryName}");
             }
-            catch { return BadRequest("Unable to delete sub categories."); }
+            catch (Exception ex)
+            {
+                _log.LogError("SubCategoryController[Delete]: " + ex.Message);
+                return BadRequest("Unable to delete sub category.");
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSubCategoryById(int id)
+        {
+            try
+            {
+                var subCategoryItem = await _data.GetByIdAsync(GetUserIdentity(), id);
+                return Ok(subCategoryItem);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError("SubCategoryController[GetById]: " + ex.Message);
+                return BadRequest($"Unable to get [{id}] sub category.");
+            }
+        }
+
+        [HttpGet("get-subcategory/bycategory/{id}")]
+        public async Task<IActionResult> GetSubCategorySummaryByCategoryId(int id)
+        {
+            try
+            {
+                var categoryItems = await _data.GetByCategoryIdAsync(GetUserIdentity(), id);
+                return Ok(categoryItems);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError("SubCategoryController[GetByCategoryId]: " + ex.Message);
+                return BadRequest($"Unable to get [{id}] sub categories.");
+            }
         }
 
     }

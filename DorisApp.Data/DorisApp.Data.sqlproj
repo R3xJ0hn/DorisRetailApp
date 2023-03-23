@@ -94,6 +94,7 @@
     <Build Include="dbo\StoredProcedures\Brand\spBrandGetById.sql" />
     <Build Include="dbo\StoredProcedures\Brand\spBrandGetSummaryByPage.sql" />
     <Build Include="dbo\StoredProcedures\Brand\spBrandUpdate.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetByCategoryId.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

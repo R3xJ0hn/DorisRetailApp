@@ -305,7 +305,7 @@
                 await JSRuntime.InvokeVoidAsync("enableButtons");
                 return;
             }
-            await CategoryEndpoint.AddCategoryAsync(modalModel.CategoryName);
+            await CategoryEndpoint.AddCategoryAsync(modalModel);
             await CloseModal("Successfully added new category.", "success");
         }
         catch (HttpRequestException ex)

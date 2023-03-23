@@ -316,7 +316,7 @@
                 return;
             }
 
-            await SubCategoryEndpoint.AddSubCategoryAsync(modalModel.SubCategoryName, modalModel.CategoryId);
+            await SubCategoryEndpoint.AddSubCategoryAsync(modalModel);
             await CloseModal("Successfully added new category.", "success");
         }
         catch (HttpRequestException ex)

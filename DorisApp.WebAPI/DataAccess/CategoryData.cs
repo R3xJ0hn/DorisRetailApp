@@ -91,7 +91,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task<CategoryModel> GetByIdAsync(ClaimsIdentity identity, int id)
+        public async Task<CategoryModel?> GetByIdAsync(ClaimsIdentity identity, int id)
         {
             return await GetByIdAsync<CategoryModel>(identity, "dbo.spCategoryGetById", id);
         }

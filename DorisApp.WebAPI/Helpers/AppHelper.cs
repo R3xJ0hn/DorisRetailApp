@@ -49,5 +49,38 @@ namespace DorisApp.WebAPI.Helpers
             return Regex.Match(str ?? "Anonymous", @"^([\w\-]+)").Value;
         }
 
+        public static bool MoveTempToDestPath(string rootFolder, string? soredFileName, string type)
+        {
+            var uploadsFolder = Path.Combine(rootFolder, "uploads");
+            var destinationFolder = Path.Combine(uploadsFolder, type);
+            var tempFolder = Path.Combine(uploadsFolder, "temp");
+
+            if (soredFileName == null) return false;
+
+            var targetTempFile = Path.Combine(tempFolder, soredFileName);
+            if (!File.Exists(targetTempFile)) return false;
+
+
+            if (!Directory.Exists(destinationFolder))
+            {
+                Directory.CreateDirectory(destinationFolder);
+            }
+
+            var path = Path.Combine(destinationFolder, soredFileName);
+
+            File.Move(targetTempFile, path);
+            DeleteFile(targetTempFile);
+
+            return true;
+        }
+
+        public static bool DeleteFile(string path)
+        {
+            if (!File.Exists(path)) return false;
+            File.Delete(path);
+            return true;
+        }
+
+
     }
 }

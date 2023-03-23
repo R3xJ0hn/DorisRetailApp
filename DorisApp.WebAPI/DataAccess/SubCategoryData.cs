@@ -27,7 +27,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
             subCategory.SubCategoryName = AppHelper.CapitalizeFirstWords(subCategory.SubCategoryName);
-            subCategory.CategoryId= subCategory.CategoryId;
+            subCategory.CategoryId = subCategory.CategoryId;
             subCategory.CreatedByUserId = userId;
             subCategory.UpdatedByUserId = subCategory.CreatedByUserId;
             subCategory.CreatedAt = DateTime.UtcNow;
@@ -58,7 +58,7 @@ namespace DorisApp.WebAPI.DataAccess
             subCategory.CreatedAt = DateTime.UtcNow;
 
             //Get the old name
-            string oldName = (await GetByIdAsync (identity, subCategory.Id)).SubCategoryName;
+            string oldName = (await GetByIdAsync(identity, subCategory.Id)).SubCategoryName;
 
             try
             {
@@ -71,7 +71,6 @@ namespace DorisApp.WebAPI.DataAccess
                 throw new Exception(ex.Message);
             }
         }
-
 
         public async Task DeleteCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
@@ -98,6 +97,14 @@ namespace DorisApp.WebAPI.DataAccess
         public async Task<SubCategoryModel> GetByIdAsync(ClaimsIdentity identity, int id)
         {
             return await GetByIdAsync<SubCategoryModel>(identity, "dbo.spSubCategoryGetById", id);
+        }
+
+        public async Task<List<SubCategoryModel>> GetByCategoryIdAsync(ClaimsIdentity identity, int id)
+        {
+            var p = new { CategoryId = id };
+            var output = await _sql.LoadDataAsync<SubCategoryModel, dynamic>("dbo.spSubCategoryGetByCategoryId", p);
+            _logger.SuccessRead(identity, TableName, output.Count);
+            return output;
         }
 
         public async Task<bool> IsExist(int id)

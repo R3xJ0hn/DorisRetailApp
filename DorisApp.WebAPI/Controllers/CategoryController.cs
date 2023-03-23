@@ -1,6 +1,7 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.DataAccess;
+using DorisApp.WebAPI.DataAccess.Logger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,13 +13,14 @@ namespace DorisApp.WebAPI.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly CategoryData _data;
+        private readonly ILoggerManager _log;
 
-        public CategoryController(CategoryData data)
+        public CategoryController(CategoryData data, ILoggerManager log)
         {
             _data = data;
+            _log = log;
         }
-        private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
-
+        private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
         [HttpPost("add-category"), Authorize(Roles = "admin")]
         public async Task<IActionResult> AddCategory(CategoryModel category)
@@ -30,7 +32,11 @@ namespace DorisApp.WebAPI.Controllers
 
                 return Ok($"Successfully added {category.CategoryName} category");
             }
-            catch { return BadRequest("Unable to add new category."); }
+            catch (Exception ex)
+            {
+                _log.LogError("CategoryController[Add]: " + ex.Message);
+                return BadRequest("Unable to add new category.");
+            }
         }
 
         [HttpPost("get-category/summary")]
@@ -41,7 +47,11 @@ namespace DorisApp.WebAPI.Controllers
                 var categoryItems = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
                 return Ok(categoryItems);
             }
-            catch { return BadRequest("Unable to get categories."); }
+            catch (Exception ex)
+            {
+                _log.LogError("CategoryController[Get]: " + ex.Message);
+                return BadRequest("Unable to get categories.");
+            }
         }
 
         [HttpPost("update-category"), Authorize(Roles = "admin")]
@@ -55,7 +65,11 @@ namespace DorisApp.WebAPI.Controllers
                 await _data.UpdateCategoryAsync(GetUserIdentity(), category);
                 return Ok($"Successfully update {category.CategoryName}");
             }
-            catch { return BadRequest("Unable to update categories."); }
+            catch (Exception ex)
+            {
+                _log.LogError("CategoryController[Update]: " + ex.Message);
+                return BadRequest("Unable to update category.");
+            }
         }
 
         [HttpPost("delete-category"), Authorize(Roles = "admin")]
@@ -69,7 +83,26 @@ namespace DorisApp.WebAPI.Controllers
                 await _data.DeleteCategoryAsync(GetUserIdentity(), category);
                 return Ok($"Successfully remove {category.CategoryName}");
             }
-            catch { return BadRequest("Unable to delete categories."); }
+            catch (Exception ex)
+            {
+                _log.LogError("CategoryController[Delete]: " + ex.Message);
+                return BadRequest("Unable to delete category.");
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCategoryById(int id)
+        {
+            try
+            {
+                var categoryItem = await _data.GetByIdAsync(GetUserIdentity(), id);
+                return Ok(categoryItem);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError("CategoryController[GetById]: " + ex.Message);
+                return BadRequest($"Unable to get [{id}] category.");
+            }
         }
 
 

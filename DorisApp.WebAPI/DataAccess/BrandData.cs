@@ -101,7 +101,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task<BrandModel> GetByIdAsync(ClaimsIdentity identity, int id)
+        public async Task<BrandModel?> GetByIdAsync(ClaimsIdentity identity, int id)
         {
             return await GetByIdAsync<BrandModel>(identity, "dbo.spBrandGetById", id);
         }
