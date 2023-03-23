@@ -21,7 +21,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<SubCategorySummaryDTO>(identity, "dbo.spSubCategoryGetSummaryByPage", request);
         }
 
-        public async Task AddAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
+        public async Task AddSubCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
             ValidateFields(identity, subCategory);
 
@@ -45,7 +45,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task UpdateCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
+        public async Task UpdateSubCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
             ValidateFields(identity, subCategory);
 
@@ -72,7 +72,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task DeleteCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
+        public async Task DeleteSubCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
         {
             subCategory.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)

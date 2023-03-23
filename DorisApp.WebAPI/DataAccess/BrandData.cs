@@ -20,7 +20,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<BrandSummaryDTO>(identity, "dbo.spBrandGetSummaryByPage", request);
         }
 
-        public async Task AddAsync(ClaimsIdentity identity, BrandModel brand)
+        public async Task AddBrandAsync(ClaimsIdentity identity, BrandModel brand)
         {
             ValidateFields(identity, brand);
 
@@ -44,16 +44,21 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task UpdateCategoryAsync(ClaimsIdentity identity, BrandModel brand)
+        public async Task UpdateBrandAsync(ClaimsIdentity identity, BrandModel brand)
         {
             ValidateFields(identity, brand);
-            var exist = await IsExist(brand.Id);
+            var getExistingItem = await GetByIdAsync(identity, brand.Id);
 
-            if (!exist)
+            if (getExistingItem == null)
             {
                 var msg = $"Brand[{brand.BrandName}[{brand.Id}]] not found.";
                 _logger.LogError(msg);
                 throw new Exception(msg);
+            }
+
+            if (string.IsNullOrEmpty(brand.StoredImageName))
+            {
+                brand.StoredImageName = getExistingItem.StoredImageName;
             }
 
             brand.UpdatedByUserId = int.Parse(identity.Claims
@@ -79,7 +84,7 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-        public async Task DeleteCategoryAsync(ClaimsIdentity identity, BrandModel brand)
+        public async Task DeleteBrandAsync(ClaimsIdentity identity, BrandModel brand)
         {
             brand.UpdatedByUserId = int.Parse(identity.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)

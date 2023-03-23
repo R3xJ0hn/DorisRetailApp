@@ -16,7 +16,7 @@
 
                 <div class="col ">
                     <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
-                            data-bs-target="#brandModal" @onclick="OpenAddModal">
+                            data-bs-target="#brandModal" @onclick="OpenAddBrandModal">
                         <i class="fa-regular fa-circle-plus"></i>
                         Add
                     </button>
@@ -77,11 +77,11 @@
                                             <span></span>
                                         </td>
 
-                                            @{
-                                                var url = @Config["URL:apiUrl"] 
-                                                        + "/api/file/get/brand/"
-                                                        + @item.StoredImageName;
-                                            }
+                                        @{
+                                            var url = @Config["URL:apiUrl"]
+                                            + "/api/file/get/brand/"
+                                            + @item.StoredImageName;
+                                        }
 
                                         <td>
                                             <img src="@url" alt="brand logo">
@@ -95,11 +95,11 @@
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
                                            data-bs-target="#brandModal"
-                                           @onclick="@(() => OpenEditModal(item.Id, url))"></i>
+                                           @onclick="@(() => OpenEditBrandModal(item.Id, url))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
                                            data-bs-target="#brandModal"
-                                           @onclick="@(() => OpenDeleteModal(item.Id))"></i>
+                                           @onclick="@(() => OpenDeleteBrandModal(item.Id))"></i>
 
                                             </div>
                                         </td>
@@ -146,7 +146,7 @@
                Title="@modalTitle"
                SaveButtonText="Save"
                modalMode="@modalMode"
-               OnSave="OnOpenModal"
+               OnSave="OnSaveModal"
                OnClose="OnCloseModal">
 
             @if (modalMode != "delete")
@@ -166,7 +166,7 @@
                     </p>
                 }
 
-                <EditForm Model="@modalModel" OnInvalidSubmit="@OnOpenModal">
+                <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
                     <DataAnnotationsValidator />
 
                     <UploadImage OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@imgSourceEdit" />
@@ -174,7 +174,8 @@
                     <div class="mb-3 p-2">
                         <label for="brandName" class="form-label">Brand Name</label>
                         <InputText id="brandName" class="form-control" placeholder="Brand Name" @bind-Value="modalModel.BrandName" />
-                        <ValidationMessage For="@(()=> modalModel.BrandName)" />
+                        <ValidationMessage For="@(()=> modalModel.BrandName)" class="form-validation" />
+
                     </div>
 
                 </EditForm>
@@ -244,6 +245,14 @@
         StateHasChanged();
     }
 
+    private async Task OnSearchItem(ChangeEventArgs e)
+    {
+        currentPage = 1;
+        string? searchFor = e.Value.ToString();
+        brandRequestDTO.LookFor = VerifySearchBar(searchFor);
+        await RequestItems(currentPage, selectedSortValue);
+    }
+
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderBrandSummaryBy)Enum
@@ -251,14 +260,6 @@
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);
-    }
-
-    private async Task OnSearchItem(ChangeEventArgs e)
-    {
-        currentPage = 1;
-        string? searchFor = e.Value.ToString();
-        brandRequestDTO.LookFor = VerifySearchBar(searchFor);
-        await RequestItems(currentPage, selectedSortValue);
     }
 
     private async Task OnHandlePageChange(int page)
@@ -280,10 +281,9 @@
             await JSRuntime.InvokeVoidAsync("clearUploadValue");
             StateHasChanged();
         }
-
     }
 
-    private async Task OnOpenModal()
+    private async Task OnSaveModal()
     {
 
         if (modalMode == "add")
@@ -306,6 +306,35 @@
         await CloseModal(null, null);
     }
 
+    private void OpenAddBrandModal()
+    {
+        modalTitle = "Add New Brand";
+        modalMode = "add";
+        modalModel.BrandName = string.Empty;
+        modalModel.Id = 0;
+    }
+
+    private async Task OpenEditBrandModal(int id, string url)
+    {
+        modalTitle = "Edit Modal";
+        modalMode = "edit";
+        imgSourceEdit = url;
+
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            await JSRuntime.InvokeVoidAsync("setUploadImageToActive", url);
+        }
+
+        SetModalModel(id);
+    }
+
+    private void OpenDeleteBrandModal(int id)
+    {
+        modalTitle = "Delete Modal";
+        modalMode = "delete";
+        SetModalModel(id);
+    }
+
     private async Task AddBrand()
     {
         try
@@ -317,7 +346,12 @@
                 return;
             }
 
-            await BrandEndpoint.AddBrandAsync(modalModel, imgStream, imgName);
+            var brand = new BrandModel
+            {
+                BrandName = modalModel.BrandName,
+            };
+
+            await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
             await CloseModal("Successfully added new brand.", "success");
         }
         catch (HttpRequestException ex)
@@ -360,7 +394,7 @@
             var brand = new BrandModel
             {
                 Id = modalModel.Id,
-                BrandName = modalModel.BrandName,
+                BrandName = modalModel.BrandName
             };
 
             await BrandEndpoint.DeleteBrand(brand);
@@ -377,11 +411,13 @@
     {
         toastMessage = toastmsg;
         toastMode = mode;
+        imgStream = null;
+        imgName = null;
         await JSRuntime.InvokeVoidAsync("modalProcessDone", "#brandModal");
-        await JSRuntime.InvokeVoidAsync("setUploadImageToDeactive");
 
         if (mode != "danger")
         {
+            await JSRuntime.InvokeVoidAsync("setUploadImageToDeactive");
             await JSRuntime.InvokeVoidAsync("clearUploadValue");
         }
 
@@ -397,42 +433,17 @@
         await RequestItems(currentPage, selectedSortValue);
     }
 
-    private void OpenAddModal()
-    {
-        modalTitle = "Add New Brand";
-        modalMode = "add";
-        modalModel.BrandName = string.Empty;
-        modalModel.Id = 0;
-    }
 
-    private async Task OpenEditModal(int id, string url)
-    {
-        modalTitle = "Edit Modal";
-        modalMode = "edit";
-        imgSourceEdit = url;
-
-        if (!string.IsNullOrWhiteSpace(url))
-        {
-            await JSRuntime.InvokeVoidAsync("setUploadImageToActive");
-        }
-
-        SetModalModel(id);
-    }
-
-    private void OpenDeleteModal(int id)
-    {
-        modalTitle = "Delete Modal";
-        modalMode = "delete";
-        SetModalModel(id);
-    }
 
     private void SetModalModel(int brandId)
     {
-        var brand = brandSummary.Models.FirstOrDefault(x => x.Id == brandId);
+        var brand = brandSummary.Models
+        .FirstOrDefault(x => x.Id == brandId);
+
         if (brand != null)
         {
-            modalModel.BrandName = brand.BrandName;
             modalModel.Id = brandId;
+            modalModel.BrandName = brand.BrandName;
         }
         StateHasChanged();
     }

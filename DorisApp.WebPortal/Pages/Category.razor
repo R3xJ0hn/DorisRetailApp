@@ -90,12 +90,12 @@
                                             <div class="table-icons">
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                                   data-bs-target="#categoryModal"
-                                                   @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenEditCategoryModal(item.Id))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
-                                                   data-bs-target="#categoryModal"
-                                                   @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
+                                           data-bs-target="#categoryModal"
+                                           @onclick="@(() => OpenDeleteCategoryModal(item.Id))"></i>
 
                                             </div>
                                         </td>
@@ -123,10 +123,9 @@
                     }
                 </div>
 
-                <Pagination 
-                    CurrentPage="@currentPage" 
-                    PageCount="@totalPages" 
-                    OnPageChanged="HandlePageChange" />
+                <Pagination CurrentPage="@currentPage"
+                            PageCount="@totalPages"
+                            OnPageChanged="OnHandlePageChange" />
 
 
             </div>
@@ -147,7 +146,7 @@
        Title="@modalTitle"
        SaveButtonText="Save"
        modalMode="@modalMode"
-       OnSave="SaveHandler">
+       OnSave="OnSaveModal">
 
     @if (modalMode != "delete")
     {
@@ -165,13 +164,14 @@
             </p>
         }
 
-        <EditForm Model="@modalModel" OnInvalidSubmit="@SaveHandler">
+        <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
             <DataAnnotationsValidator />
 
             <div class="mb-3">
                 <label for="categoryName" class="form-label">Category Name</label>
                 <InputText id="categoryName" class="form-control" placeholder="Category Name" @bind-Value="modalModel.CategoryName" />
-                <ValidationMessage For="@(()=> modalModel.CategoryName)" />
+                <ValidationMessage For="@(()=> modalModel.CategoryName)" class="form-validation" />
+
             </div>
 
         </EditForm>
@@ -242,12 +242,6 @@
         await RequestItems(currentPage, selectedSortValue);
     }
 
-    private async Task HandlePageChange(int page)
-    {
-        currentPage = page;
-        await RequestItems(page, selectedSortValue);
-    }
-
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderCategorySummaryBy)Enum
@@ -255,6 +249,28 @@
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);
+    }
+
+    private async Task OnHandlePageChange(int page)
+    {
+        currentPage = page;
+        await RequestItems(page, selectedSortValue);
+    }
+
+    private async Task OnSaveModal()
+    {
+        if (modalMode == "add")
+        {
+            await AddCategory();
+        }
+        else if (modalMode == "edit")
+        {
+            await EditCategory();
+        }
+        else if (modalMode == "delete")
+        {
+            await DeleteCategory();
+        }
     }
 
     private void OpenAddCategoryModal()
@@ -279,22 +295,6 @@
         SetModalModel(categoryId);
     }
 
-    private async Task SaveHandler()
-    {
-        if (modalMode == "add")
-        {
-            await AddCategory();
-        }
-        else if (modalMode == "edit")
-        {
-            await EditCategory();
-        }
-        else if (modalMode == "delete")
-        {
-            await DeleteCategory();
-        }
-    }
-
     private async Task AddCategory()
     {
         try
@@ -305,7 +305,13 @@
                 await JSRuntime.InvokeVoidAsync("enableButtons");
                 return;
             }
-            await CategoryEndpoint.AddCategoryAsync(modalModel);
+
+            var category = new CategoryModel
+            {
+                CategoryName = modalModel.CategoryName
+            };
+
+            await CategoryEndpoint.AddCategoryAsync(category);
             await CloseModal("Successfully added new category.", "success");
         }
         catch (HttpRequestException ex)
@@ -367,7 +373,11 @@
         toastMessage = toastmsg;
         toastMode = mode;
         await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
-        await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+
+        if (toastmsg != null)
+        {
+            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+        }
 
         //Request for Update
         await RequestItems(currentPage, selectedSortValue);
@@ -380,12 +390,12 @@
 
         if (categoryToEdit != null)
         {
-            modalModel.CategoryName = categoryToEdit.CategoryName;
             modalModel.Id = categoryId;
+            modalModel.CategoryName = categoryToEdit.CategoryName;
         }
     }
 
-    private string? VerifySearchBar(string? str) => 
+    private string? VerifySearchBar(string? str) =>
     string.IsNullOrWhiteSpace(str) ? null : str;
 
 }

@@ -21,7 +21,6 @@ body::-webkit-scrollbar {
   display: flex;
   width: 100%;
   min-height: 110vh;
-  max-height: max-content;
 }
 
 .main-content {
@@ -767,6 +766,7 @@ progress {
 .container-fluid,
 .category-page-content,
 .brand-page-content,
+.product-page-content,
 .dashboard-page-content,
 .container-xxl,
 .container-xl,
@@ -4054,6 +4054,7 @@ textarea.form-control-lg {
 .navbar > .container-fluid,
 .navbar > .category-page-content,
 .navbar > .brand-page-content,
+.navbar > .product-page-content,
 .navbar > .dashboard-page-content,
 .navbar > .main-content,
 .navbar > .container-sm,
@@ -11819,7 +11820,6 @@ textarea.form-control-lg {
   }
 }
 .app-panel {
-  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -11828,22 +11828,28 @@ textarea.form-control-lg {
   justify-content: center;
 }
 .app-panel.out {
-  animation: panel-out 300ms ease;
+  animation: panel-out 500ms ease;
 }
 .app-panel.in {
-  animation: panel-in 500ms ease;
+  animation: panel-in 700ms ease;
 }
 
 @keyframes panel-out {
+  from {
+    position: absolute;
+    transform: scale(1);
+    opacity: 0.9;
+  }
   to {
-    transform: scale(0.5);
+    position: absolute;
+    transform: scale(0.7);
     opacity: 0;
   }
 }
 @keyframes panel-in {
   from {
     transform: scale(0.9);
-    opacity: 0;
+    opacity: 0.5;
   }
   to {
     transform: scale(1);
@@ -11887,6 +11893,11 @@ textarea.form-control-lg {
 
 .form-check-label {
   margin-left: 0.8rem;
+}
+
+.form-validation {
+  font-size: 12px;
+  color: #fa6d93;
 }
 
 .sort-select {
@@ -13119,13 +13130,21 @@ textarea.form-control-lg {
 
 .product-page-content {
   position: relative;
-  margin: 1rem;
 }
-.product-page-content .app-panel .container-fluid {
+.product-page-content #panel1 {
   margin-right: 20px;
 }
+.product-page-content .app-panel .container-fluid, .product-page-content .app-panel .product-page-content {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1rem;
+}
 .product-page-content .app-panel .taxable-check {
-  margin: 20% 0 1rem 25%;
+  margin-top: 0.5rem;
+}
+.product-page-content .app-panel .taxable-check p {
+  font-size: 12px;
+  margin-top: 0.3rem;
 }
 .product-page-content .app-panel .btn-back {
   float: right;
@@ -13133,6 +13152,12 @@ textarea.form-control-lg {
 }
 .product-page-content .app-panel .import-btn {
   float: right;
+}
+.product-page-content .app-panel textarea {
+  height: 30vh;
+}
+.product-page-content .app-panel .card-footer .btn {
+  margin: 0.5rem;
 }
 
 .product-import-modal .modal-lg {

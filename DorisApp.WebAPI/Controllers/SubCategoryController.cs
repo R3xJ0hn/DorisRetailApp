@@ -28,7 +28,7 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                await _data.AddAsync(GetUserIdentity(),
+                await _data.AddSubCategoryAsync(GetUserIdentity(),
                     new SubCategoryModel 
                     {
                         SubCategoryName = subcategory.SubCategoryName,
@@ -67,7 +67,7 @@ namespace DorisApp.WebAPI.Controllers
                 if (!await _data.IsExist(subcategory.Id))
                 { return BadRequest($"Unable to get sub category [{subcategory.Id}]"); }
 
-                await _data.UpdateCategoryAsync(GetUserIdentity(), subcategory);
+                await _data.UpdateSubCategoryAsync(GetUserIdentity(), subcategory);
                 return Ok($"Successfully update {subcategory.SubCategoryName}");
             }
             catch (Exception ex)
@@ -85,7 +85,7 @@ namespace DorisApp.WebAPI.Controllers
                 if (!await _data.IsExist(subcategory.Id))
                 { return BadRequest($"Unable to get sub category [{subcategory.Id}]"); }
 
-                await _data.DeleteCategoryAsync(GetUserIdentity(), subcategory);
+                await _data.DeleteSubCategoryAsync(GetUserIdentity(), subcategory);
                 return Ok($"Successfully remove {subcategory.SubCategoryName}");
             }
             catch (Exception ex)

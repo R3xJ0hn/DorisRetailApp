@@ -19,7 +19,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<CategorySummaryDTO>(identity, "dbo.spCategoryGetSummaryByPage", request);
         }
 
-        public async Task AddAsync(ClaimsIdentity identity, CategoryModel category)
+        public async Task AddCategoryAsync(ClaimsIdentity identity, CategoryModel category)
         {
             ValidateFields(identity, category);
 

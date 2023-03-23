@@ -89,18 +89,19 @@
                                         </td>
                                         <td>@item.SubCategoryName</td>
                                         <td class="@((@item.CategoryName.Contains("*")) ? "text-danger" : "")">
-                                            @item.CategoryName.Replace("*", "")</td>
+                                            @item.CategoryName.Replace("*", "")
+                                        </td>
                                         <td>@item.ProductCount</td>
                                         <td>
                                             <div class="table-icons">
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                                   data-bs-target="#subcategoryModal"
-                                                   @onclick="@(() => OpenEditModal(item.Id))"></i>
+                                           data-bs-target="#subcategoryModal"
+                                           @onclick="@(() => OpenEditModal(item.Id))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
-                                                   data-bs-target="#subcategoryModal"
-                                                   @onclick="@(() => OpenDeleteModal(item.Id))"></i>
+                                           data-bs-target="#subcategoryModal"
+                                           @onclick="@(() => OpenDeleteModal(item.Id))"></i>
 
                                             </div>
                                         </td>
@@ -132,7 +133,7 @@
 
                 <Pagination CurrentPage="@currentPage"
                             PageCount="@totalPages"
-                            OnPageChanged="HandlePageChange" />
+                            OnPageChanged="OnHandlePageChange" />
 
             </div>
         </div>
@@ -147,7 +148,7 @@
                Title="@modalTitle"
                SaveButtonText="Save"
                modalMode="@modalMode"
-               OnSave="SaveModalHandler">
+               OnSave="OnSaveModal">
 
             @if (modalMode != "delete")
             {
@@ -168,8 +169,7 @@
                     </p>
                 }
 
-
-                <EditForm Model="@modalModel" OnInvalidSubmit="@SaveModalHandler">
+                <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
                     <DataAnnotationsValidator />
 
                     <div class="mb-3">
@@ -191,7 +191,8 @@
                     <div class="mb-3 p-2">
                         <label for="subCategoryName" class="form-label">Sub Category Name</label>
                         <InputText id="subCategoryName" class="form-control" placeholder="Sub Category Name" @bind-Value="modalModel.SubCategoryName" />
-                        <ValidationMessage For="@(()=> modalModel.SubCategoryName)" />
+                        <ValidationMessage For="@(()=> modalModel.SubCategoryName)" class="form-validation" />
+
                     </div>
 
                 </EditForm>
@@ -277,6 +278,14 @@
         StateHasChanged();
     }
 
+    private async Task OnSearchItem(ChangeEventArgs e)
+    {
+        currentPage = 1;
+        string? searchFor = e.Value.ToString();
+        subCategoryRequestDTO.LookFor = VerifySearchBar(searchFor);
+        await RequestItems(currentPage, selectedSortValue);
+    }
+
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderSubCategorySummaryBy)Enum
@@ -286,18 +295,48 @@
         await RequestItems(1, selectedSortValue);
     }
 
-    private async Task OnSearchItem(ChangeEventArgs e)
-    {
-        currentPage = 1;
-        string? searchFor = e.Value.ToString();
-        subCategoryRequestDTO.LookFor = VerifySearchBar(searchFor);
-        await RequestItems(currentPage, selectedSortValue);
-    }
-
-    private async Task HandlePageChange(int page)
+    private async Task OnHandlePageChange(int page)
     {
         currentPage = page;
         await RequestItems(page, selectedSortValue);
+    }
+
+    private async Task OnSaveModal()
+    {
+        if (modalMode == "add")
+        {
+            await AddSubCategory();
+        }
+        else if (modalMode == "edit")
+        {
+            await EditSubCategory();
+        }
+        else if (modalMode == "delete")
+        {
+            await DeleteSubCategory();
+        }
+    }
+
+    private void OpenAddModal()
+    {
+        modalTitle = "Add New Sub Category";
+        modalMode = "add";
+        modalModel.SubCategoryName = string.Empty;
+        modalModel.Id = 0;
+    }
+
+    private void OpenEditModal(int id)
+    {
+        modalTitle = "Edit Sub Category";
+        modalMode = "edit";
+        SetModalModel(id);
+    }
+
+    private void OpenDeleteModal(int id)
+    {
+        modalTitle = "Delete Sub Category";
+        modalMode = "delete";
+        SetModalModel(id);
     }
 
     private async Task AddSubCategory()
@@ -316,13 +355,19 @@
                 return;
             }
 
-            await SubCategoryEndpoint.AddSubCategoryAsync(modalModel);
-            await CloseModal("Successfully added new category.", "success");
+            var subCategory = new SubCategoryModel
+            {
+                SubCategoryName = modalModel.SubCategoryName,
+                CategoryId = modalModel.CategoryId
+            };
+
+            await SubCategoryEndpoint.AddSubCategoryAsync(subCategory);
+            await CloseModal("Successfully added new sub category.", "success");
         }
         catch (HttpRequestException ex)
         {
             await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to add category: {ex.Message}";
+            errorMessage = $"Failed to add sub category: {ex.Message}";
         }
     }
 
@@ -367,14 +412,11 @@
             var subCategory = new SubCategoryModel
             {
                 Id = modalModel.Id,
-                SubCategoryName = modalModel.SubCategoryName,
-                CategoryId = modalModel.CategoryId
+                SubCategoryName = modalModel.SubCategoryName
             };
 
             await SubCategoryEndpoint.DeleteCategory(subCategory);
             await CloseModal($"{subCategory.SubCategoryName} remove from subcategory.", "danger");
-
-            await CloseModal("Successfully remove sub category.", "success");
         }
         catch (HttpRequestException ex)
         {
@@ -383,50 +425,16 @@
         }
     }
 
-    private async Task SaveModalHandler()
-    {
-        if (modalMode == "add")
-        {
-            await AddSubCategory();
-        }
-        else if (modalMode == "edit")
-        {
-            await EditSubCategory();
-        }
-        else if (modalMode == "delete")
-        {
-            await DeleteSubCategory();
-        }
-    }
-
-    private void OpenAddModal()
-    {
-        modalTitle = "Add New Sub Category";
-        modalMode = "add";
-        modalModel.SubCategoryName = string.Empty;
-        modalModel.Id = 0;
-    }
-
-    private void OpenEditModal(int id)
-    {
-        modalTitle = "Edit Sub Category";
-        modalMode = "edit";
-        SetModalModel(id);
-    }
-
-    private void OpenDeleteModal(int id)
-    {
-        modalTitle = "Delete Sub Category";
-        modalMode = "delete";
-        SetModalModel(id);
-    }
-
     private async Task CloseModal(string toastmsg, string mode)
     {
         toastMessage = toastmsg;
         toastMode = mode;
         await JSRuntime.InvokeVoidAsync("modalProcessDone", "#subcategoryModal");
-        await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+
+        if (toastmsg != null)
+        {
+            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
+        }
 
         //Request for Update
         await RequestItems(currentPage, selectedSortValue);
@@ -434,12 +442,14 @@
 
     private void SetModalModel(int subCategoryId)
     {
-        var subCategoryToEdit = subCategorySummary.Models.FirstOrDefault(x => x.Id == subCategoryId);
+        var subCategoryToEdit = subCategorySummary.Models
+        .FirstOrDefault(x => x.Id == subCategoryId);
+
         if (subCategoryToEdit != null)
         {
+            modalModel.Id = subCategoryId;
             modalModel.SubCategoryName = subCategoryToEdit.SubCategoryName;
             modalModel.CategoryId = subCategoryToEdit.CategoryId;
-            modalModel.Id = subCategoryId;
         }
     }
 

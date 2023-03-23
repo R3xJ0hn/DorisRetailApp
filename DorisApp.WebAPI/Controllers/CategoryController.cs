@@ -27,7 +27,7 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                await _data.AddAsync(GetUserIdentity(),
+                await _data.AddCategoryAsync(GetUserIdentity(),
                     new CategoryModel { CategoryName = category.CategoryName });
 
                 return Ok($"Successfully added {category.CategoryName} category");

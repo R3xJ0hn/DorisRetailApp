@@ -19,6 +19,7 @@ builder.Services.AddSingleton<IAPIHelper, APIHelper>();
 builder.Services.AddTransient<CategoryEndpoint>();
 builder.Services.AddTransient<SubCategoryEndpoint>();
 builder.Services.AddTransient<BrandEndpoint>();
+builder.Services.AddTransient<ProductEndpoint>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

@@ -16,20 +16,21 @@
     }
 };
 
-//openPanelBtn1.addEventListener('click', function (event) {
-//    handleClick(openPanelBtn1, event, panel1, panel2);
-//});
+function OpenPanel1(event) {
+    const panel1 = document.getElementById('panel1');
+    const panel2 = document.getElementById('panel2');
+    handleClick(event, panel1, panel2);
+}
 
-//openPanelBtn2.addEventListener('click', function (event) {
-//    handleClick(openPanelBtn2, event, panel2, panel1);
-//});
-
-
-//const panel1 = document.getElementById('panel1');
-//const panel2 = document.getElementById('panel2');
-//let timeoutId = null;
+function OpenPanel2(event) {
+    const panel1 = document.getElementById('panel1');
+    const panel2 = document.getElementById('panel2');
+    handleClick(event, panel2, panel1);
+}
 
 function handleClick(event, panelToShow, panelToHide) {
+    let timeoutId = null;
+
     if (timeoutId !== null) {
         event.preventDefault();
         return false;
@@ -43,11 +44,10 @@ function handleClick(event, panelToShow, panelToHide) {
     panelToShow.style.display = 'flex';
     panelToShow.style.opacity = '1';
 
-    // Start the timeout
     timeoutId = setTimeout(function () {
         panelToHide.style.display = 'none';
         timeoutId = null;
-    }, 300);
+    }, 500);
 }
 
 function modalProcessing() {
@@ -99,7 +99,7 @@ function uploadImage() {
         if (file) {
             const reader = new FileReader();
             reader.onload = function () {
-                const result = reader.result; 
+                const result = reader.result;
                 img.src = result;
                 wrapper.classList.add("active");
             }
@@ -122,9 +122,11 @@ function setUploadImageToDeactive() {
     wrapper.classList.remove("active");
 }
 
-function setUploadImageToActive() {
+function setUploadImageToActive(url) {
+    const img = document.querySelector(".upload-image");
     const wrapper = document.querySelector(".upload-image-wrapper");
     wrapper.classList.add("active");
+    img.src = url;
 }
 
 function clearUploadValue() {
@@ -132,13 +134,10 @@ function clearUploadValue() {
     const wrapper = document.querySelector(".upload-image-wrapper");
     const img = document.querySelector(".upload-image");
 
-    if (fileInput.value !== "" ) {
+    if (fileInput.value !== "") {
         fileInput.value = "";
     }
 
     img.src = "";
     wrapper.classList.remove("active");
 }
-
-
-

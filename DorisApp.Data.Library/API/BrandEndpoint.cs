@@ -30,11 +30,14 @@ namespace DorisApp.Data.Library.API
         {
             ValidateBrand(brand);
 
-            var result = await SendImg(imgStream, fileName);
-
-            if (result != null)
+            if (imgStream != null && imgStream.Length != 0)
             {
-                brand.StoredImageName = result.StoredFileName;
+                var result = await SendImg(imgStream, fileName);
+
+                if (result != null)
+                {
+                    brand.StoredImageName = result.StoredFileName;
+                }
             }
 
             await SendPostAysnc(brand, "URL:add-brand");
@@ -44,15 +47,14 @@ namespace DorisApp.Data.Library.API
         {
             ValidateBrand(brand);
 
-            var result = await SendImg(imgStream, fileName);
+            if (imgStream != null && imgStream.Length != 0)
+            {
+                var result = await SendImg(imgStream, fileName);
 
-            if (result != null)
-            {
-                brand.StoredImageName = result.StoredFileName;
-            }
-            else
-            {
-                brand.StoredImageName = null;
+                if (result != null)
+                {
+                    brand.StoredImageName = result.StoredFileName;
+                }
             }
 
             return await SendPostAysnc(brand, "URL:update-brand");
@@ -73,6 +75,8 @@ namespace DorisApp.Data.Library.API
         {
             if (string.IsNullOrWhiteSpace(brand.BrandName))
                 throw new NullReferenceException("Brand name is null.");
+
+           
         }
     }
 }

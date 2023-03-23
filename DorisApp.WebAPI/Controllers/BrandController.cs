@@ -37,7 +37,7 @@ namespace DorisApp.WebAPI.Controllers
 
             try
             {
-                await _data.AddAsync(GetUserIdentity(),
+                await _data.AddBrandAsync(GetUserIdentity(),
                     new BrandModel
                     {
                         BrandName = brand.BrandName,
@@ -76,7 +76,7 @@ namespace DorisApp.WebAPI.Controllers
                         AppHelper.DeleteFile(oldImg);
                     }
 
-                    await _data.UpdateCategoryAsync(GetUserIdentity(), brand);
+                    await _data.UpdateBrandAsync(GetUserIdentity(), brand);
                 }
                 else
                 {
@@ -85,7 +85,7 @@ namespace DorisApp.WebAPI.Controllers
                         Id = brand.Id,
                         BrandName = brand.BrandName
                     };
-                    await _data.UpdateCategoryAsync(GetUserIdentity(), justChangeName);
+                    await _data.UpdateBrandAsync(GetUserIdentity(), justChangeName);
                 }
 
                 return Ok($"Successfully update {brand.BrandName}");
@@ -124,7 +124,7 @@ namespace DorisApp.WebAPI.Controllers
                 if (getExisting == null)
                 { return BadRequest($"Unable to get brand [{brand.Id}]"); }
 
-                await _data.DeleteCategoryAsync(GetUserIdentity(), brand);
+                await _data.DeleteBrandAsync(GetUserIdentity(), brand);
 
                 var oldImg = Path.Combine(rootFolder, "uploads",
                             "brand", getExisting.StoredImageName);
