@@ -84,6 +84,11 @@
         }
     }
 
+    public async Task Close()
+    {
+        OnCloseClicked();
+    }
+
     private async Task OnSaveClicked()
     {
         await JSRuntime.InvokeVoidAsync("modalProcessing");
@@ -93,6 +98,9 @@
     [JSInvokable("CloseModal")]
     private async Task OnCloseClicked()
     {
+        await JSRuntime.InvokeVoidAsync("enableButtons");
+        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#" + modalId);
         await OnClose.InvokeAsync(null);
     }
+
 }

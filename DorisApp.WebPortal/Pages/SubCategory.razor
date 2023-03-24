@@ -18,7 +18,7 @@
 
                 <div class="col ">
                     <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
-                            data-bs-target="#subcategoryModal" @onclick="OpenAddModal">
+                            data-bs-target="#subCategoryModal" @onclick="OpenAddSubCategoryModal">
                         <i class="fa-regular fa-circle-plus"></i>
                         Add
                     </button>
@@ -96,12 +96,12 @@
                                             <div class="table-icons">
 
                                                 <i class="fa-solid fa-pencil" data-bs-toggle="modal"
-                                           data-bs-target="#subcategoryModal"
-                                           @onclick="@(() => OpenEditModal(item.Id))"></i>
+                                           data-bs-target="#subCategoryModal"
+                                           @onclick="@(() => OpenEditSubCategoryModal(item.Id))"></i>
 
                                                 <i class="fa-solid fa-xmark" data-bs-toggle="modal"
-                                           data-bs-target="#subcategoryModal"
-                                           @onclick="@(() => OpenDeleteModal(item.Id))"></i>
+                                           data-bs-target="#subCategoryModal"
+                                           @onclick="@(() => OpenDeleteSubCategoryModal(item.Id))"></i>
 
                                             </div>
                                         </td>
@@ -144,30 +144,22 @@
 
         </div>
 
-        <Modal modalId="subcategoryModal"
+        <Modal @ref="modalComponentRef"
+               modalId="subCategoryModal"
                Title="@modalTitle"
                SaveButtonText="Save"
                modalMode="@modalMode"
-               OnSave="OnSaveModal">
+               OnSave="OnSaveModal"
+               OnClose="OnCloseModal">
 
             @if (modalMode != "delete")
             {
-
-                @if (string.IsNullOrEmpty(errorMessage))
-                {
-                    <p class="card-description text-justify">
-                        You can change the subcategories on your website by filling out a form
-                        with the category name and selecting a category from a dropdown list.
-                        If the category you want isn't on the list, you can add a new one by
-                        going to the category page.
-                    </p>
-                }
-                else
-                {
-                    <p class="card-description text-justify text-danger">
-                        @errorMessage
-                    </p>
-                }
+                <p class="card-description text-justify">
+                    You can change the subcategories on your website by filling out a form
+                    with the category name and selecting a category from a dropdown list.
+                    If the category you want isn't on the list, you can add a new one by
+                    going to the category page.
+                </p>
 
                 <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
                     <DataAnnotationsValidator />
@@ -207,9 +199,6 @@
 
         </Modal>
 
-        <div class="toast-container position-fixed top-0 end-0 p-3">
-            <Toast ToastId="categoryToast" Message="@toastMessage" ToastMode="@toastMode" />
-        </div>
 
     </div>
 
@@ -221,42 +210,29 @@
     private RequestModel<CategorySummaryDTO>? categorySummary;
     private RequestPageDTO categoryRequestDTO = new();
     private RequestPageDTO subCategoryRequestDTO = new();
+    private SubCategoryModel modalModel = new();
 
     private int totalPages = 1;
     private int currentPage = 1;
     private bool isLoading = true;
 
-    private SubCategoryModel modalModel = new();
+    private Modal modalComponentRef;
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
-    private int totalCategories = 0;
-
-    private string toastMessage = string.Empty;
-    private string toastMode = string.Empty;
-    private string errorMessage = string.Empty;
 
     private OrderSubCategorySummaryBy selectedSortValue;
 
 
     protected override async Task OnInitializedAsync()
     {
-        subCategoryRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
+        subCategoryRequestDTO.PageNo = 1;
+        subCategoryRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"] ?? "10");
         await RequestItems(currentPage, selectedSortValue);
 
-        //Pre Request to get the total category items in api;
+        //Request to get all items in Category
         categoryRequestDTO.PageNo = 1;
-        categoryRequestDTO.ItemPerPage = 1;
-
-        categorySummary = await CategoryEndpoint
-        .GetCategorySummary(categoryRequestDTO);
-
-        if (categorySummary != null)
-        {
-            //Get all the category items
-            totalCategories = categorySummary.TotalItems;
-            categoryRequestDTO.ItemPerPage = totalCategories;
-            categorySummary = await CategoryEndpoint.GetCategorySummary(categoryRequestDTO);
-        }
+        categoryRequestDTO.ItemPerPage = await CategoryEndpoint.CountCategoryItems();
+        categorySummary = (await CategoryEndpoint.GetCategorySummary(categoryRequestDTO))?.Data;
 
     }
 
@@ -266,8 +242,8 @@
         subCategoryRequestDTO.OrderBy = (int)orderBy;
         isLoading = true;
 
-        subCategorySummary = await SubCategoryEndpoint
-        .GetSubCategorySummary(subCategoryRequestDTO);
+        subCategorySummary = (await SubCategoryEndpoint
+        .GetSubCategorySummary(subCategoryRequestDTO))?.Data;
 
         if (subCategorySummary != null)
         {
@@ -317,7 +293,14 @@
         }
     }
 
-    private void OpenAddModal()
+    private async Task OnCloseModal()
+    {
+        modalModel.SubCategoryName = null;
+        modalModel.CategoryId = 0;
+        await RequestItems(currentPage, selectedSortValue);
+    }
+
+    private void OpenAddSubCategoryModal()
     {
         modalTitle = "Add New Sub Category";
         modalMode = "add";
@@ -325,14 +308,14 @@
         modalModel.Id = 0;
     }
 
-    private void OpenEditModal(int id)
+    private void OpenEditSubCategoryModal(int id)
     {
         modalTitle = "Edit Sub Category";
         modalMode = "edit";
         SetModalModel(id);
     }
 
-    private void OpenDeleteModal(int id)
+    private void OpenDeleteSubCategoryModal(int id)
     {
         modalTitle = "Delete Sub Category";
         modalMode = "delete";
@@ -341,103 +324,42 @@
 
     private async Task AddSubCategory()
     {
-        try
-        {
-            if (string.IsNullOrEmpty(modalModel.SubCategoryName))
-            {
-                errorMessage = "Sub Category name is required.";
-                return;
-            }
-
-            if (modalModel.CategoryId == 0)
-            {
-                errorMessage += Environment.NewLine + "Select a category.";
-                return;
-            }
-
-            var subCategory = new SubCategoryModel
+        var subCategory = new SubCategoryModel
             {
                 SubCategoryName = modalModel.SubCategoryName,
                 CategoryId = modalModel.CategoryId
             };
 
-            await SubCategoryEndpoint.AddSubCategoryAsync(subCategory);
-            await CloseModal("Successfully added new sub category.", "success");
-        }
-        catch (HttpRequestException ex)
-        {
-            await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to add sub category: {ex.Message}";
-        }
+        var result = await SubCategoryEndpoint.AddSubCategoryAsync(subCategory);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
 
     private async Task EditSubCategory()
     {
-        try
-        {
-            if (string.IsNullOrEmpty(modalModel.SubCategoryName))
-            {
-                errorMessage = "Sub Category name is required.";
-                return;
-            }
-
-
-            if (modalModel.CategoryId == 0)
-            {
-                errorMessage += Environment.NewLine + "Select a category.";
-                return;
-            }
-
-            var subCategoryToUpdate = new SubCategoryModel
+        var subCategory = new SubCategoryModel
             {
                 Id = modalModel.Id,
                 SubCategoryName = modalModel.SubCategoryName,
                 CategoryId = modalModel.CategoryId
             };
 
-            await SubCategoryEndpoint.UpdateCategory(subCategoryToUpdate);
-            await CloseModal("Successfully updated sub category.", "success");
-        }
-        catch (HttpRequestException ex)
-        {
-            await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to update sub category: {ex.Message}";
-        }
+        var result = await SubCategoryEndpoint.UpdateCategory(subCategory);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
 
     private async Task DeleteSubCategory()
     {
-        try
-        {
-            var subCategory = new SubCategoryModel
+        var subCategory = new SubCategoryModel
             {
                 Id = modalModel.Id,
                 SubCategoryName = modalModel.SubCategoryName
             };
 
-            await SubCategoryEndpoint.DeleteCategory(subCategory);
-            await CloseModal($"{subCategory.SubCategoryName} remove from subcategory.", "danger");
-        }
-        catch (HttpRequestException ex)
-        {
-            await CloseModal($"Error request: {ex.Message}", "danger");
-            errorMessage = $"Failed to remove sub category: {ex.Message}";
-        }
-    }
-
-    private async Task CloseModal(string toastmsg, string mode)
-    {
-        toastMessage = toastmsg;
-        toastMode = mode;
-        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#subcategoryModal");
-
-        if (toastmsg != null)
-        {
-            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
-        }
-
-        //Request for Update
-        await RequestItems(currentPage, selectedSortValue);
+        var result = await SubCategoryEndpoint.DeleteCategory(subCategory);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
 
     private void SetModalModel(int subCategoryId)
@@ -453,7 +375,27 @@
         }
     }
 
-    private string? VerifySearchBar(string? str) => string.IsNullOrWhiteSpace(str) ? null : str;
+    private async Task HandleErrors(int errorCode, string message = "")
+    {
+        if (errorCode > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
+            modalComponentRef.Close();
+        }
+
+        if (errorCode == 401)
+        {
+            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
+        }
+
+        if (errorCode == 3)
+        {
+            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
+        }
+    }
+
+    private string? VerifySearchBar(string? str) =>
+    string.IsNullOrWhiteSpace(str) ? null : str;
 
     private string CleanData(string data)
     {

@@ -19,7 +19,7 @@ BEGIN
             [dbo].[Brands] b
             LEFT JOIN [dbo].[Products] p ON p.BrandID = b.Id
         WHERE 
-            b.MarkAsDeleted != 1 AND
+            b.MarkAsDeleted != 1 AND b.Id != 1 AND
             (@LookFor IS NULL OR b.BrandName LIKE '%' + @LookFor + '%')
         GROUP BY 
             b.Id, 

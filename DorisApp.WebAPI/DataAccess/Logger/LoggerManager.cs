@@ -1,22 +1,25 @@
-﻿using DorisApp.WebAPI.Helpers;
+﻿using DorisApp.Data.Library.Model;
+using DorisApp.WebAPI.DataAccess.Database;
+using DorisApp.WebAPI.Helpers;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
 
 namespace DorisApp.WebAPI.DataAccess.Logger
 {
     public class LoggerManager : ILoggerManager
     {
         private readonly ILogger _logger;
+        private readonly ISqlDataAccess _sql;
 
-        public LoggerManager(ILogger logger)
+        public LoggerManager(ILogger logger, ISqlDataAccess sql)
         {
             _logger = logger;
+            _sql = sql;
         }
 
-        private void Log(ClaimsIdentity identity, string action, string noun, string tableName, string? oldName = null, string? searchFor = null, int count = 0, string? errorExept = null)
+        private async Task Log(ClaimsIdentity? identity, string action, string noun, string tableName, string? oldName = null, string? searchFor = null, int count = 0, string? errorExept = null, int status = 0)
         {
-            var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
-            var userName = identity.Claims.Where(c => c.Type == ClaimTypes.Name).Select(c => c.Value).SingleOrDefault() ?? "anonymous";
+            var userId = int.Parse(identity?.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
+            var userName = identity?.Claims.Where(c => c.Type == ClaimTypes.Name).Select(c => c.Value).SingleOrDefault() ?? "anonymous";
 
             var deviceName = "";
             var date = DateTime.UtcNow;
@@ -68,14 +71,23 @@ namespace DorisApp.WebAPI.DataAccess.Logger
                 message += $"count[{count}]";
             }
 
-            //TODO: Save this in the database
-            //ActivityLogModel log = new()
-            //{
-            //    Message = message,
-            //    UserId = userId,
-            //    Username = userName,
-            //    Date = date,
-            //};
+            if (status == 1 || status == 3 || status == 5 )
+            {
+
+                ActivityLogModel log = new()
+                {
+                    Message = message,
+                    CreatedByUserId = userId,
+                    Username = userName,
+                    Device = "",
+                    Location = "",
+                    StatusCode = status,
+                    CreatedAt = date,
+                };
+
+                await _sql.SaveDataAsync("dbo.spActivityLogInsert", log);
+            }
+
 
             var msg = $"{message}: [userId:{userId}] [device:{deviceName}] [date:{date}]";
 
@@ -91,57 +103,67 @@ namespace DorisApp.WebAPI.DataAccess.Logger
 
         }
 
-        public void SuccessInsert(ClaimsIdentity identity, string propertyName, string tableName)
+        public async Task SuccessInsert(ClaimsIdentity? identity, string propertyName, string tableName)
         {
-            Log(identity, "Successfully added", propertyName, tableName, null, null, 0);
+            await Log(identity, "Successfully added", propertyName, tableName, null, null, 0, null, 1);
         }
 
-        public void FailInsert(ClaimsIdentity identity, string propertyName, string tableName, string errorMessage)
+        public async Task FailInsert(ClaimsIdentity? identity, string propertyName, string tableName, string errorMessage)
         {
-            Log(identity, "Fail to add", propertyName, tableName, null, null, 0, errorMessage);
+            await Log(identity, "Fail to add", propertyName, tableName, null, null, 0, errorMessage, 2);
         }
 
-        public void SuccessUpdate(ClaimsIdentity identity, string propertyName, string tableName, string oldName)
+        public async Task SuccessUpdate(ClaimsIdentity? identity, string propertyName, string tableName, string oldName)
         {
-            Log(identity, "Successfully update", propertyName, tableName, oldName, null, 0);
+            await Log(identity, "Successfully update", propertyName, tableName, oldName, null, 0, null, 3);
         }
 
-        public void FailUpdate(ClaimsIdentity identity, string propertyName, string tableName, string oldName, string errorMessage)
+        public async Task FailUpdate(ClaimsIdentity? identity, string propertyName, string tableName, string oldName, string errorMessage)
         {
-            Log(identity, "Fail to update", propertyName, tableName, oldName, null, 0, errorMessage);
+            await Log(identity, "Fail to update", propertyName, tableName, oldName, null, 0, errorMessage, 4);
         }
 
-        public void SuccessDelete(ClaimsIdentity identity, string propertyName, string tableName)
+        public async Task SuccessDelete(ClaimsIdentity? identity, string propertyName, string tableName)
         {
-            Log(identity, "Successfully deleted", propertyName, tableName, null, null, 0);
+            await Log(identity, "Successfully deleted", propertyName, tableName, null, null, 0, null, 5);
         }
-        public void FailDelete(ClaimsIdentity identity, string propertyName, string tableName, string errrorMessage)
+        public async Task FailDelete(ClaimsIdentity? identity, string propertyName, string tableName, string errrorMessage)
         {
-            Log(identity, "Fail to delete", propertyName, tableName, null, null, 0, errrorMessage);
-        }
-
-        public void SuccessRead(ClaimsIdentity identity, string tableName, int count)
-        {
-            Log(identity, "Successfully get", "e29h2oeks2#%wdw79yiuh6ada^&^57", tableName, null, null, count);
+            await Log(identity, "Fail to delete", propertyName, tableName, null, null, 0, errrorMessage, 6);
         }
 
-        public void FailRead(ClaimsIdentity identity, string tableName, int count, string errrorMessage)
+        public async Task SuccessRead(ClaimsIdentity? identity, string tableName, int count)
         {
-            Log(identity, "Fail to get", "e29h2oeks2#%wdw79yiuh6ada^&^57", tableName, null, null, count, errrorMessage);
+            await Log(identity, "Successfully get", "e29h2oeks2#%wdw79yiuh6ada^&^57", tableName, null, null, count, null, 7);
         }
 
-        public void LogError(string message)
+        public async Task FailRead(ClaimsIdentity? identity, string tableName, int count, string errrorMessage)
+        {
+            await Log(identity, "Fail to get", "e29h2oeks2#%wdw79yiuh6ada^&^57", tableName, null, null, count, errrorMessage, 8);
+        }
+
+        public async Task LogInfo(string message)
+        {
+            ActivityLogModel log = new()
+            {
+                Message = message,
+                CreatedByUserId = 1,
+                Username = "",
+                Device = "",
+                Location = "",
+                StatusCode = 9,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            await _sql.SaveDataAsync("dbo.spActivityLogInsert", log);
+            _logger.LogError(message + ": statusCode[9]");
+        }
+
+        public async Task LogError(string message)
         {
             //TODO: Log to the Json File
-            _logger.LogError(message);
+            _logger.LogError(message + ": statusCode[10]");
         }
-
-        public void LogInfo(string message)
-        {
-            //TODO: Log to the database
-            _logger.LogError(message);
-        }
-
     }
 
 }

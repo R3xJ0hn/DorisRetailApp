@@ -20,7 +20,7 @@ BEGIN
             LEFT JOIN [dbo].[SubCategories] s ON s.CategoryId = c.Id
             LEFT JOIN [dbo].[Products] p ON p.CategoryID = c.Id
         WHERE 
-            c.MarkAsDeleted != 1 AND
+            c.MarkAsDeleted != 1 AND c.Id != 1 AND
             (@LookFor IS NULL OR c.CategoryName LIKE '%' + @LookFor + '%')
         GROUP BY 
             c.Id, 

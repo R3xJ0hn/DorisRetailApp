@@ -1,7 +1,9 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Schema;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -22,11 +24,20 @@ namespace DorisApp.Data.Library.API
                 ItemPerPage = 1
             };
 
-            var result = await GetBrandSummary(request);
-            return result != null ? result.TotalItems : 0;
+            var sent = await GetBrandSummary(request);
+
+            var newRequest = new RequestPageDTO
+            {
+                PageNo = 1,
+                ItemPerPage = sent.Data.TotalItems 
+            };
+
+            var result = await GetBrandSummary(newRequest);
+
+            return result?.Data.Models.Count ?? 0;
         }
 
-        public async Task AddBrandAsync(BrandModel brand, Stream? imgStream, string fileName)
+        public async Task<ResultDTO<List<BrandSummaryDTO>>?> AddBrandAsync(BrandModel brand, Stream? imgStream, string? fileName)
         {
             ValidateBrand(brand);
 
@@ -40,10 +51,28 @@ namespace DorisApp.Data.Library.API
                 }
             }
 
-            await SendPostAysnc(brand, "URL:add-brand");
+            var summary = await SendPostAysnc(brand, "URL:add-brand");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <List<BrandSummaryDTO>>>(summary);
+            }
+            catch 
+            {
+                return new ResultDTO<List<BrandSummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = summary
+                };
+            }
+
+           
+
         }
 
-        public async Task<string> UpdateBrand(BrandModel brand, Stream? imgStream, string fileName)
+        public async Task<ResultDTO<List<BrandSummaryDTO>>?> UpdateBrand(BrandModel brand, Stream? imgStream, string? fileName)
         {
             ValidateBrand(brand);
 
@@ -57,26 +86,27 @@ namespace DorisApp.Data.Library.API
                 }
             }
 
-            return await SendPostAysnc(brand, "URL:update-brand");
+            var summary = await SendPostAysnc(brand, "URL:update-brand");
+            return JsonConvert.DeserializeObject<ResultDTO<List<BrandSummaryDTO>>>(summary);
         }
 
-        public async Task<RequestModel<BrandSummaryDTO>?> GetBrandSummary(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<BrandSummaryDTO>>?> GetBrandSummary(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-brand/summary");
-            return JsonConvert.DeserializeObject<RequestModel<BrandSummaryDTO>>(result);
+            return JsonConvert.DeserializeObject<ResultDTO<RequestModel<BrandSummaryDTO>>>(result);
         }
 
-        public async Task<string> DeleteBrand(BrandModel model)
+        public async Task<ResultDTO<BrandSummaryDTO>?> DeleteBrand(BrandModel model)
         {
-            return await SendPostAysnc(model, "URL:delete-brand");
+            var result = await SendPostAysnc(model, "URL:delete-brand");
+            return JsonConvert.DeserializeObject<ResultDTO<BrandSummaryDTO>>(result);
         }
 
         private void ValidateBrand(BrandModel brand)
         {
             if (string.IsNullOrWhiteSpace(brand.BrandName))
                 throw new NullReferenceException("Brand name is null.");
-
-           
         }
+
     }
 }

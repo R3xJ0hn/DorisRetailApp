@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 namespace DorisApp.WebAPI.DataAccess
 {
+
     public class BrandData : BaseDataProcessor
     {
         public override string TableName => "Brands";
@@ -15,80 +16,124 @@ namespace DorisApp.WebAPI.DataAccess
         {
         }
 
-        public async Task<RequestModel<BrandSummaryDTO>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<BrandSummaryDTO>?>> GetSummaryDataByPageAsync(ClaimsIdentity? identity, RequestPageDTO request)
         {
             return await GetByPageAsync<BrandSummaryDTO>(identity, "dbo.spBrandGetSummaryByPage", request);
         }
 
-        public async Task AddBrandAsync(ClaimsIdentity identity, BrandModel brand)
+        public async Task<ResultDTO<List<BrandSummaryDTO>>> AddBrandAsync(ClaimsIdentity? identity, BrandModel brand)
         {
-            ValidateFields(identity, brand);
-
-            var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
-            brand.BrandName = AppHelper.CapitalizeFirstWords(brand.BrandName);
-            brand.CreatedByUserId = userId;
-            brand.UpdatedByUserId = brand.CreatedByUserId;
-            brand.CreatedAt = DateTime.UtcNow;
-            brand.UpdatedAt = brand.CreatedAt;
 
             try
             {
+                int createdByUserId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+                brand.BrandName = AppHelper.CapitalizeFirstWords(brand.BrandName);
+                brand.CreatedByUserId = createdByUserId;
+                brand.UpdatedByUserId = createdByUserId;
+                brand.CreatedAt = DateTime.UtcNow;
+                brand.UpdatedAt = brand.CreatedAt;
+
+
+                var getIdentical = await _sql.LoadDataAsync<BrandSummaryDTO, BrandModel>("spBrandGetIdentical", brand);
+
+                if (getIdentical.Count > 0)
+                {
+                    return new ResultDTO<List<BrandSummaryDTO>>
+                    {
+                        Data = getIdentical,
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"Brand not saved: {getIdentical.Count} identical item(s) found."
+                    };
+                }
+
+                await ValidateFields(identity, brand);
                 await _sql.SaveDataAsync("dbo.spBrandInsert", brand);
-                _logger.SuccessInsert(identity, brand.BrandName, TableName);
-            }
+                await _logger.SuccessInsert(identity, brand.BrandName, TableName);
 
+                return new ResultDTO<List<BrandSummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully added new brand."
+                };
+            }
             catch (Exception ex)
             {
-                _logger.FailInsert(identity, brand.BrandName, TableName, ex.Message);
-                throw;
+                await _logger.FailInsert(identity, brand.BrandName, TableName, ex.Message);
+                return new ResultDTO<List<BrandSummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task UpdateBrandAsync(ClaimsIdentity identity, BrandModel brand)
+        public async Task<ResultDTO<List<BrandSummaryDTO>>> UpdateBrandAsync(ClaimsIdentity? identity, BrandModel brand)
         {
-            ValidateFields(identity, brand);
-            var getExistingItem = await GetByIdAsync(identity, brand.Id);
-
-            if (getExistingItem == null)
-            {
-                var msg = $"Brand[{brand.BrandName}[{brand.Id}]] not found.";
-                _logger.LogError(msg);
-                throw new Exception(msg);
-            }
-
-            if (string.IsNullOrEmpty(brand.StoredImageName))
-            {
-                brand.StoredImageName = getExistingItem.StoredImageName;
-            }
-
-            brand.UpdatedByUserId = int.Parse(identity.Claims
-                .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .Select(c => c.Value).SingleOrDefault() ?? "-1");
-            brand.UpdatedAt = DateTime.UtcNow;
-
-            //This will ignore by the stored procedure.
-            brand.CreatedAt = DateTime.UtcNow;
-
-            //Get the old name
-            var oldName = (await GetByIdAsync(identity, brand.Id)).BrandName;
+            var oldName = string.Empty;
 
             try
             {
+                var getExistingItem = await GetByIdAsync(identity, brand.Id);
+                oldName = (await GetByIdAsync(identity, brand.Id))?.BrandName;
+
+                if (getExistingItem == null)
+                {
+                    var msg = $"Brand[{brand.BrandName}[{brand.Id}]] not found.";
+                    await _logger.LogError(msg);
+                    return new ResultDTO<List<BrandSummaryDTO>>
+                    {
+                        ErrorCode = 5,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = msg
+                    };
+                }
+
+                if (string.IsNullOrEmpty(brand.StoredImageName))
+                {
+                    brand.StoredImageName = getExistingItem.StoredImageName;
+                }
+
+                brand.BrandName = AppHelper.CapitalizeFirstWords(brand.BrandName);
+                brand.UpdatedByUserId = int.Parse(identity?.Claims
+                    .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                    .Select(c => c.Value).SingleOrDefault() ?? "1");
+                brand.UpdatedAt = DateTime.UtcNow;
+
+                //This will ignore by the stored procedure.
+                brand.CreatedAt = DateTime.UtcNow;
+
+                await ValidateFields(identity, brand);
                 await _sql.UpdateDataAsync("dbo.spBrandUpdate", brand);
-                _logger.SuccessUpdate(identity, brand.BrandName, TableName, oldName);
+                await _logger.SuccessUpdate(identity, brand.BrandName, TableName, oldName ?? "");
+
+                return new ResultDTO<List<BrandSummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully update brand."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailUpdate(identity, brand.BrandName, TableName, oldName, ex.Message);
-                throw;
+                await _logger.FailUpdate(identity, brand.BrandName, TableName, oldName ?? "", ex.Message);
+                return new ResultDTO<List<BrandSummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task DeleteBrandAsync(ClaimsIdentity identity, BrandModel brand)
+        public async Task<ResultDTO<BrandSummaryDTO>> DeleteBrandAsync(ClaimsIdentity? identity, BrandModel brand)
         {
-            brand.UpdatedByUserId = int.Parse(identity.Claims
+            brand.UpdatedByUserId = int.Parse(identity?.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .Select(c => c.Value).SingleOrDefault() ?? "-1");
+                .Select(c => c.Value).SingleOrDefault() ?? "1");
 
             //This will ignore by the stored procedure.
             brand.CreatedAt = DateTime.UtcNow;
@@ -97,31 +142,43 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync("dbo.spBrandDelete", brand);
-                _logger.SuccessDelete(identity, brand.BrandName, TableName);
+                await _logger.SuccessDelete(identity, brand.BrandName, TableName);
+
+                return new ResultDTO<BrandSummaryDTO>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully deleted brand."
+                };
             }
             catch (Exception ex)
             {
-                _logger.FailDelete(identity, brand.BrandName, TableName, ex.Message);
-                throw;
+                await _logger.FailDelete(identity, brand.BrandName, TableName, ex.Message);
+                return new ResultDTO<BrandSummaryDTO>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task<BrandModel?> GetByIdAsync(ClaimsIdentity identity, int id)
+        public async Task<BrandModel?> GetByIdAsync(ClaimsIdentity? identity, int id)
         {
             return await GetByIdAsync<BrandModel>(identity, "dbo.spBrandGetById", id);
         }
 
-        public async Task<bool> IsExist(int id)
+        public async Task<bool> IsExistAsync(int id)
         {
             return await IsItemExistAsync<BrandModel>("dbo.spBrandGetById", id);
         }
 
-        public void ValidateFields(ClaimsIdentity identity, BrandModel brand)
+        public async Task ValidateFields(ClaimsIdentity? identity, BrandModel brand)
         {
             string Name = AppHelper.GetFirstWord(
-                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                identity?.Claims.Where(c => c.Type == ClaimTypes.Name)
                 .Select(c => c.Value).SingleOrDefault() ?? "");
-       
+
             string? msg = null;
 
             if (string.IsNullOrWhiteSpace(Name))
@@ -136,7 +193,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!string.IsNullOrWhiteSpace(msg))
             {
-                _logger.LogError($"{Name}: {msg}");
+                await _logger.LogError($"Data Access {Name}: {msg}");
                 throw new NullReferenceException(msg);
             }
         }

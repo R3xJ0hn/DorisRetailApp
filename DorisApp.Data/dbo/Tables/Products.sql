@@ -11,6 +11,7 @@
     [Color]             NVARCHAR(256) NULL, 
     [Sku]               NCHAR(256) NOT NULL, 
     [Description]       NVARCHAR(MAX) NULL, 
+    [StoredImageName]   NVARCHAR(MAX) NULL, 
 	[CreatedByUserId]	INT DEFAULT 0 NOT NULL,
 	[UpdatedByUserId]	INT DEFAULT 0 NOT NULL,
 	[CreatedAt]			DATETIME2 NOT NULL DEFAULT getutcdate(), 

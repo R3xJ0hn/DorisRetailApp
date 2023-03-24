@@ -64,6 +64,8 @@
     <Folder Include="dbo\StoredProcedures\Role" />
     <Folder Include="dbo\StoredProcedures\User" />
     <Folder Include="dbo\StoredProcedures\Brand" />
+    <Folder Include="dbo\StoredProcedures\Product" />
+    <Folder Include="dbo\StoredProcedures\ActivityLog" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Roles.sql" />
@@ -95,6 +97,13 @@
     <Build Include="dbo\StoredProcedures\Brand\spBrandGetSummaryByPage.sql" />
     <Build Include="dbo\StoredProcedures\Brand\spBrandUpdate.sql" />
     <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetByCategoryId.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductInsert.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductGetIdentical.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandGetIdentical.sql" />
+    <Build Include="dbo\StoredProcedures\ActivityLog\spActivityLogInsert.sql" />
+    <Build Include="dbo\Tables\ActivityLog.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryGetIdentical.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetIdentical.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

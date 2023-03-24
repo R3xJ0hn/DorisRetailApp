@@ -14,66 +14,118 @@ namespace DorisApp.WebAPI.DataAccess
         public CategoryData(ISqlDataAccess sql, ILoggerManager logger) : base(sql, logger)
         {
         }
-        public async Task<RequestModel<CategorySummaryDTO>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<CategorySummaryDTO>?>> GetSummaryDataByPageAsync(ClaimsIdentity? identity, RequestPageDTO request)
         {
             return await GetByPageAsync<CategorySummaryDTO>(identity, "dbo.spCategoryGetSummaryByPage", request);
         }
 
-        public async Task AddCategoryAsync(ClaimsIdentity identity, CategoryModel category)
+        public async Task<ResultDTO<List<CategorySummaryDTO>>> AddCategoryAsync(ClaimsIdentity? identity, CategoryModel category)
         {
-            ValidateFields(identity, category);
-
-            var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
-            category.CategoryName = AppHelper.CapitalizeFirstWords(category.CategoryName);
-            category.CreatedByUserId = userId;
-            category.UpdatedByUserId = category.CreatedByUserId;
-            category.CreatedAt = DateTime.UtcNow;
-            category.UpdatedAt = category.CreatedAt;
-
             try
             {
+                var userId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+                category.CategoryName = AppHelper.CapitalizeFirstWords(category.CategoryName);
+                category.CreatedByUserId = userId;
+                category.UpdatedByUserId = category.CreatedByUserId;
+                category.CreatedAt = DateTime.UtcNow;
+                category.UpdatedAt = category.CreatedAt;
+
+                var getIdentical = await _sql.LoadDataAsync<CategorySummaryDTO, CategoryModel>("spCategoryGetIdentical", category);
+
+                if (getIdentical.Count > 0)
+                {
+                    return new ResultDTO<List<CategorySummaryDTO>>
+                    {
+                        Data = getIdentical,
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"Category not saved: {getIdentical.Count} identical item(s) found."
+                    };
+                }
+
+                await ValidateFields(identity, category);
                 await _sql.SaveDataAsync("dbo.spCategoryInsert", category);
-                _logger.SuccessInsert(identity, category.CategoryName, TableName);
+                await _logger.SuccessInsert(identity, category.CategoryName, TableName);
+
+                return new ResultDTO<List<CategorySummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully added new category."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailInsert(identity, category.CategoryName, TableName,ex.Message);
-                throw;
+                await _logger.FailInsert(identity, category.CategoryName, TableName, ex.Message);
+                return new ResultDTO<List<CategorySummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task UpdateCategoryAsync(ClaimsIdentity identity, CategoryModel category)
+        public async Task<ResultDTO<List<CategorySummaryDTO>>> UpdateCategoryAsync(ClaimsIdentity? identity, CategoryModel category)
         {
-            ValidateFields(identity, category);
-
-            category.UpdatedByUserId = int.Parse(identity.Claims
-                .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .Select(c => c.Value).SingleOrDefault() ?? "-1");
-            category.UpdatedAt = DateTime.UtcNow;
-
-            //This will ignore by the stored procedure.
-            category.CreatedAt = DateTime.UtcNow;
-
-            //Get the old name
-            var oldName = (await GetByIdAsync (identity, category.Id)).CategoryName;
+            var oldName = string.Empty;
 
             try
             {
+                var getExistingItem = await GetByIdAsync(identity, category.Id);
+                oldName = (await GetByIdAsync(identity, category.Id))?.CategoryName;
+
+                if (getExistingItem == null)
+                {
+                    var msg = $"Category[{category.CategoryName}[{category.Id}]] not found.";
+                    await _logger.LogError(msg);
+                    return new ResultDTO<List<CategorySummaryDTO>>
+                    {
+                        ErrorCode = 5,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = msg
+                    };
+                }
+
+                category.CategoryName = AppHelper.CapitalizeFirstWords(category.CategoryName);
+                category.UpdatedByUserId = int.Parse(identity?.Claims
+                    .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                    .Select(c => c.Value).SingleOrDefault() ?? "1");
+                category.UpdatedAt = DateTime.UtcNow;
+
+                //This will ignore by the stored procedure.
+                category.CreatedAt = DateTime.UtcNow;
+
+                await ValidateFields(identity, category);
                 await _sql.UpdateDataAsync("dbo.spCategoryUpdate", category);
-                _logger.SuccessUpdate(identity,category.CategoryName,TableName,oldName);
+                await _logger.SuccessUpdate(identity, category.CategoryName, TableName, oldName ?? "");
+
+                return new ResultDTO<List<CategorySummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully update category."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailUpdate(identity,category.CategoryName,TableName,oldName,ex.Message);
-                throw;
+                await _logger.FailUpdate(identity, category.CategoryName, TableName, oldName ?? "", ex.Message);
+                return new ResultDTO<List<CategorySummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task DeleteCategoryAsync(ClaimsIdentity identity, CategoryModel category)
+        public async Task<ResultDTO<CategorySummaryDTO>> DeleteCategoryAsync(ClaimsIdentity? identity, CategoryModel category)
         {
-            category.UpdatedByUserId = int.Parse(identity.Claims
+            category.UpdatedByUserId = int.Parse(identity?.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .Select(c => c.Value).SingleOrDefault() ?? "-1");
+                .Select(c => c.Value).SingleOrDefault() ?? "1");
 
             //This will ignore by the stored procedure.
             category.CreatedAt = DateTime.UtcNow;
@@ -82,29 +134,43 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync("dbo.spCategoryDelete", category);
-                _logger.SuccessDelete(identity,category.CategoryName,TableName);
+                await _logger.SuccessDelete(identity, category.CategoryName, TableName);
+
+                return new ResultDTO<CategorySummaryDTO>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully deleted brand."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailDelete(identity,category.CategoryName,TableName, ex.Message);
-                throw;
+                await _logger.FailDelete(identity, category.CategoryName, TableName, ex.Message);
+                return new ResultDTO<CategorySummaryDTO>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
+
             }
         }
 
-        public async Task<CategoryModel?> GetByIdAsync(ClaimsIdentity identity, int id)
+        public async Task<CategoryModel?> GetByIdAsync(ClaimsIdentity? identity, int id)
         {
             return await GetByIdAsync<CategoryModel>(identity, "dbo.spCategoryGetById", id);
         }
 
-        public async Task<bool> IsExist(int id)
+        public async Task<bool> IsExistAsync(int id)
         {
             return await IsItemExistAsync<CategoryModel>("dbo.spCategoryGetById", id);
         }
 
-        private void ValidateFields(ClaimsIdentity identity, CategoryModel category)
+        private async Task ValidateFields(ClaimsIdentity? identity, CategoryModel category)
         {
             string Name = AppHelper.GetFirstWord(
-                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                identity?.Claims.Where(c => c.Type == ClaimTypes.Name)
                 .Select(c => c.Value).SingleOrDefault() ?? "");
 
             string? msg = null;
@@ -121,7 +187,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!string.IsNullOrWhiteSpace(msg))
             {
-                _logger.LogError($"{Name}: {msg}");
+                await _logger.LogError($"Data Access {Name}: {msg}");
                 throw new NullReferenceException(msg);
             }
         }

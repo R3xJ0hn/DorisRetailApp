@@ -8,35 +8,44 @@
     <div class="app-panel" id="panel1" style="opacity:1; display: flex;">
 
         <div class="container-fluid">
-            <button type="button" id="openPanel2" class="add-btn btn btn-gradient-primary" @onclick="OpenPanel2">
+            <button type="button" id="openPanel2" class="add-btn btn btn-gradient-primary" @onclick="OpenPanelToAddProduct">
                 <i class="fa-regular fa-circle-plus"></i>
                 Add
             </button>
         </div>
 
     </div>
-    <!-- End Panel 1 -->
 
+
+    <!-- End Panel 1 -->
     <!-- Start Panel 2 -->
     <div class="app-panel" id="panel2" style="display: none;">
 
-        <ProductForm OnBack="OpenPanel1"/>
+        <ProductForm OnBack="OpenPanel1" Mode="@productMode" />
 
     </div>
     <!-- End Panel 2 -->
 
 </div>
 
+
 @code {
+    private string productMode;
 
     private async Task OpenPanel1()
     {
         await JSRuntime.InvokeVoidAsync("OpenPanel1");
     }
 
-    private async Task OpenPanel2()
+    private async Task OpenPanelToAddProduct()
     {
+        productMode = "Add";
         await JSRuntime.InvokeVoidAsync("OpenPanel2");
     }
 
+
+
+    private async Task Alert()
+    {
+    }
 }

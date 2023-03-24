@@ -141,3 +141,62 @@ function clearUploadValue() {
     img.src = "";
     wrapper.classList.remove("active");
 }
+
+function SavedAlert(type, name) {
+    Swal.fire(
+        'Successfully saved new ' + type,
+        'You added '+ name + ' on the list!',
+        'success'
+    )
+}
+
+function ExistAlert(type) {
+    Swal.fire({
+        title: type + ' Exist!',
+        icon: 'warning'
+    })
+}
+
+function UnauthorizedAlert() {
+    Swal.fire({
+        title: 'Unauthorized',
+        icon: 'error'
+    })
+}
+
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-right',
+    iconColor: 'white',
+    customClass: {
+        popup: 'colored-toast'
+    },
+    showConfirmButton: false,
+    timer: 1500,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+})
+
+function SuccessToast(msg) {
+    Toast.fire({
+        icon: 'success',
+        title: msg
+    })
+}
+
+function ErrorToast(msg) {
+    Toast.fire({
+        icon: 'error',
+        title: msg
+    })
+}
+
+function WarningToast(msg) {
+    Toast.fire({
+        icon: 'warning',
+        title: msg
+    })
+}

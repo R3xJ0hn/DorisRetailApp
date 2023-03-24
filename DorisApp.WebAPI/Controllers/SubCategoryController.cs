@@ -22,25 +22,88 @@ namespace DorisApp.WebAPI.Controllers
         }
         private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
-
         [HttpPost("add-subcategory"), Authorize(Roles = "admin")]
         public async Task<IActionResult> AddSubCategory(SubCategoryModel subcategory)
         {
             try
             {
-                await _data.AddSubCategoryAsync(GetUserIdentity(),
-                    new SubCategoryModel 
+                var result = await _data.AddSubCategoryAsync(GetUserIdentity(),
+                    new SubCategoryModel
                     {
                         SubCategoryName = subcategory.SubCategoryName,
-                        CategoryId= subcategory.CategoryId
+                        CategoryId = subcategory.CategoryId
                     });
 
-                return Ok($"Successfully added {subcategory.SubCategoryName} category");
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
+
             }
             catch (Exception ex)
             {
-                _log.LogError("SubCategoryController[Add]: " + ex.Message);
-                return BadRequest("Unable to add new sub category.");
+                await _log.LogError("SubCategoryController[Add]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<SubCategorySummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to add new sub category.",
+                        IsSuccessStatusCode = false
+                    });
+            }
+        }
+
+        [HttpPost("update-subcategory"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateSubCategories(SubCategoryModel subCategory)
+        {
+            var getExisting = await _data.GetByIdAsync(GetUserIdentity(), subCategory.Id);
+
+            if (getExisting == null)
+            {
+                await _log.LogError("SubCategoryController[Add]: " + GetUserIdentity()?.Name +
+                    $"trying to update sub category[{subCategory.Id}]");
+                return BadRequest(
+                   new ResultDTO<BrandSummaryDTO>
+                   {
+                       ErrorCode = 4,
+                       ReasonPhrase = "Unable to update sub category.",
+                       IsSuccessStatusCode = false
+                   });
+            }
+
+            try
+            {
+                var categoryId = 0;
+
+                if (subCategory.CategoryId == 0 && getExisting.CategoryId > 0)
+                {
+                    categoryId = getExisting.CategoryId;
+                }
+                else{
+                    categoryId = subCategory.CategoryId;
+                }
+
+                SubCategoryModel newSubCategory = new()
+                {
+                    Id = subCategory.Id,
+                    SubCategoryName = subCategory.SubCategoryName,
+                    CategoryId = categoryId
+                };
+
+                var result = await _data.UpdateSubCategoryAsync(GetUserIdentity(), newSubCategory);
+
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
+
+            }
+            catch (Exception ex)
+            {
+                await _log.LogError("SubCategoryController[Update]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to update sub category.",
+                        IsSuccessStatusCode = false
+                    });
             }
         }
 
@@ -49,49 +112,57 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                var categoryItems = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
-                return Ok(categoryItems);
+                var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
             }
             catch (Exception ex)
             {
-                _log.LogError("SubCategoryController[Get]: " + ex.Message);
-                return BadRequest("Unable to get sub categories.");
-            }
-        }
-
-        [HttpPost("update-subcategory"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> UpdateSubCategories(SubCategoryModel subcategory)
-        {
-            try
-            {
-                if (!await _data.IsExist(subcategory.Id))
-                { return BadRequest($"Unable to get sub category [{subcategory.Id}]"); }
-
-                await _data.UpdateSubCategoryAsync(GetUserIdentity(), subcategory);
-                return Ok($"Successfully update {subcategory.SubCategoryName}");
-            }
-            catch (Exception ex)
-            {
-                _log.LogError("SubCategoryController[Update]: " + ex.Message);
-                return BadRequest("Unable to update sub category.");
+                await _log.LogError("SubCategoryController[Get]: " + ex.Message);
+                return BadRequest(
+                      new ResultDTO<ProductSummaryDTO>
+                      {
+                          ErrorCode = 5,
+                          ReasonPhrase = "Unable to get categories.",
+                          IsSuccessStatusCode = false
+                      });
             }
         }
 
         [HttpPost("delete-subcategory"), Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategories(SubCategoryModel subcategory)
         {
+            var getExisting = await _data.GetByIdAsync(GetUserIdentity(), subcategory.Id);
+
+            if (getExisting == null)
+            {
+                await _log.LogError("SubCategoryController[Add]: " + GetUserIdentity()?.Name +
+                    $"trying to delete sub category[{subcategory.Id}]");
+                return BadRequest(
+                   new ResultDTO<BrandSummaryDTO>
+                   {
+                       ErrorCode = 4,
+                       ReasonPhrase = "Unable to delete sub category.",
+                       IsSuccessStatusCode = false
+                   });
+            }
+
             try
             {
-                if (!await _data.IsExist(subcategory.Id))
-                { return BadRequest($"Unable to get sub category [{subcategory.Id}]"); }
-
-                await _data.DeleteSubCategoryAsync(GetUserIdentity(), subcategory);
-                return Ok($"Successfully remove {subcategory.SubCategoryName}");
+                var result = await _data.DeleteSubCategoryAsync(GetUserIdentity(), subcategory);
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result); 
             }
             catch (Exception ex)
             {
-                _log.LogError("SubCategoryController[Delete]: " + ex.Message);
-                return BadRequest("Unable to delete sub category.");
+               await _log.LogError("SubCategoryController[Delete]: " + ex.Message);
+                return BadRequest(
+                        new ResultDTO<ProductSummaryDTO>
+                        {
+                            ErrorCode = 5,
+                            ReasonPhrase = "Unable to delete sub category.",
+                            IsSuccessStatusCode = false
+                        });
             }
         }
 
@@ -101,12 +172,25 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var subCategoryItem = await _data.GetByIdAsync(GetUserIdentity(), id);
-                return Ok(subCategoryItem);
+                return Ok(
+                  new ResultDTO<SubCategoryModel?>
+                  {
+                      Data = subCategoryItem,
+                      ErrorCode = 0,
+                      ReasonPhrase = "Unable to get sub category.",
+                      IsSuccessStatusCode = false
+                  });
             }
             catch (Exception ex)
             {
-                _log.LogError("SubCategoryController[GetById]: " + ex.Message);
-                return BadRequest($"Unable to get [{id}] sub category.");
+                await _log.LogError("SubCategoryController[GetById]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to get sub category.",
+                        IsSuccessStatusCode = false
+                    });
             }
         }
 
@@ -115,13 +199,19 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                var categoryItems = await _data.GetByCategoryIdAsync(GetUserIdentity(), id);
-                return Ok(categoryItems);
+                var subCategoryItems = await _data.GetByCategoryIdAsync(GetUserIdentity(), id);
+                return Ok(subCategoryItems);
             }
             catch (Exception ex)
             {
-                _log.LogError("SubCategoryController[GetByCategoryId]: " + ex.Message);
-                return BadRequest($"Unable to get [{id}] sub categories.");
+                await _log.LogError("SubCategoryController[GetByCategoryId]: " + ex.Message);
+                return BadRequest(
+                     new ResultDTO<ProductSummaryDTO>
+                     {
+                         ErrorCode = 5,
+                         ReasonPhrase = "Unable to get sub categories.",
+                         IsSuccessStatusCode = false
+                     });
             }
         }
 

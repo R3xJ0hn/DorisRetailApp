@@ -17,7 +17,7 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task<RequestModel<RoleModel>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
         {
-            return await GetByPageAsync<RoleModel>(identity, "dbo.spRoleGetByPage", request);
+            return (await GetByPageAsync<RoleModel>(identity, "dbo.spRoleGetByPage", request)).Data;
         }
 
         public async Task AddAsync(ClaimsIdentity identity, RoleModel role)

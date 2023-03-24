@@ -5,5 +5,5 @@ begin
 	set nocount on;
 	SELECT *
 	FROM dbo.SubCategories
-	WHERE CategoryId = @CategoryId AND MarkAsDeleted = 0
+	WHERE CategoryId = @CategoryId AND MarkAsDeleted = 0 AND Id != 1
 end		

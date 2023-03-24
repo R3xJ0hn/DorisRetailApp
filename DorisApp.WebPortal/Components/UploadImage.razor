@@ -11,7 +11,7 @@
         <div class="text">
             Add image
         </div>
-        <div id="cancel-btn" @onclick="RemoveActiveImg">
+        <div id="cancel-btn" @onclick="RemoveActiveImage">
             <i class="fas fa-times"></i>
         </div>
         <div class="file-name">
@@ -48,9 +48,18 @@
         await OnFileChange.InvokeAsync(e);
     }
 
-    private async Task RemoveActiveImg()
+    public async Task SetActiveImage(string url)
+    {
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            await JSRuntime.InvokeVoidAsync("setUploadImageToActive", url);
+        }
+    }
+
+    public async Task RemoveActiveImage()
     {
         await JSRuntime.InvokeVoidAsync("setUploadImageToDeactive");
+        await JSRuntime.InvokeVoidAsync("clearUploadValue");
     }
 
     private async Task OpenFileBtn()

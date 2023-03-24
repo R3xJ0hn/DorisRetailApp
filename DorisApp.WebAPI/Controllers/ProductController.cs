@@ -1,24 +1,25 @@
-﻿using DorisApp.Data.Library.DTO;
-using DorisApp.Data.Library.Model;
+﻿using DorisApp.WebAPI.DataAccess.Logger;
 using DorisApp.WebAPI.DataAccess;
-using DorisApp.WebAPI.DataAccess.Logger;
+using Microsoft.AspNetCore.Mvc;
+using DorisApp.Data.Library.Model;
 using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using DorisApp.Data.Library.DTO;
 
 namespace DorisApp.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BrandController : ControllerBase
+    public class ProductController : ControllerBase
     {
-        private readonly BrandData _data;
+
+        private readonly ProductData _data;
         private readonly IWebHostEnvironment _env;
         private readonly ILoggerManager _log;
         private readonly string rootFolder = "";
 
-        public BrandController(BrandData data, IWebHostEnvironment env, ILoggerManager log)
+        public ProductController(ProductData data, IWebHostEnvironment env, ILoggerManager log)
         {
             _data = data;
             _env = env;
@@ -28,58 +29,67 @@ namespace DorisApp.WebAPI.Controllers
 
         private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
-        [HttpPost("add-brand"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> AddBrand(BrandModel brand)
+        [HttpPost("add-product"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> AddProduct(ProductModel product)
         {
-            var fileName = brand.StoredImageName;
+            var fileName = product.StoredImageName;
 
-            AppHelper.MoveTempToDestPath(rootFolder, fileName, "brand");
+            AppHelper.MoveTempToDestPath(rootFolder, fileName, "product");
 
             try
             {
-                var result = await _data.AddBrandAsync(GetUserIdentity(), new BrandModel
+                var result = await _data.AddProductAsync(GetUserIdentity(), new ProductModel
                 {
-                    BrandName = brand.BrandName,
-                    StoredImageName = fileName,
+                    ProductName = product.ProductName,
+                    Sku = product.Sku,
+                    BrandId = product.BrandId,
+                    CategoryId = product.CategoryId,
+                    SubcategoryId = product.SubcategoryId,
+                    IsTaxable = product.IsTaxable,
+                    Size = product.Size,
+                    Color = product.Color,
+                    StoredImageName = product.StoredImageName,
+                    Description = product.Description,
                 });
 
                 if (result.IsSuccessStatusCode) return Ok(result);
                 else return BadRequest(result);
+
             }
 
             catch (Exception ex)
             {
-                await _log.LogError("BrandController[Add]: " + ex.Message);
+                await _log.LogError("ProductController[Add]: " + ex.Message);
                 return BadRequest(
-                new ResultDTO<BrandSummaryDTO>
-                {
-                    ErrorCode = 5,
-                    ReasonPhrase = "Unable to add new product.",
-                    IsSuccessStatusCode = false
-                });
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to add new product.",
+                        IsSuccessStatusCode = false
+                    }
+                );
             }
         }
 
-
-        [HttpPost("update-brand"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> UpdateBrand(BrandModel brand)
+        [HttpPost("update-product"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateProduct(ProductModel product)
         {
-            var getExisting = await _data.GetByIdAsync(GetUserIdentity(), brand.Id);
+            var getExisting = await _data.GetByIdAsync(GetUserIdentity(), product.Id);
 
             if (getExisting == null)
             {
                 await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
-                    $"trying to update brand[{brand.Id}]");
+                    $"trying to update brand[{product.Id}]");
                 return BadRequest(
-                   new ResultDTO<BrandSummaryDTO>
+                   new ResultDTO<ProductSummaryDTO>
                    {
                        ErrorCode = 4,
-                       ReasonPhrase = "Unable to update brand.",
+                       ReasonPhrase = "Unable to update product.",
                        IsSuccessStatusCode = false
                    });
             }
 
-            var moved = AppHelper.MoveTempToDestPath(rootFolder, brand.StoredImageName, "brand");
+            var moved = AppHelper.MoveTempToDestPath(rootFolder, product.StoredImageName, "product");
 
             try
             {
@@ -88,11 +98,11 @@ namespace DorisApp.WebAPI.Controllers
                     if (getExisting.StoredImageName != null)
                     {
                         var oldImg = Path.Combine(rootFolder, "uploads",
-                        "brand", getExisting.StoredImageName);
+                        "product", getExisting.StoredImageName);
                         AppHelper.DeleteFile(oldImg);
                     }
 
-                    var result = await _data.UpdateBrandAsync(GetUserIdentity(), brand);
+                    var result = await _data.UpdateProductAsync(GetUserIdentity(), product);
 
                     if (result.IsSuccessStatusCode) return Ok(result);
                     else return BadRequest(result);
@@ -100,13 +110,13 @@ namespace DorisApp.WebAPI.Controllers
                 }
                 else
                 {
-                    BrandModel justChangeName = new()
+                    ProductModel justChangeName = new()
                     {
-                        Id = brand.Id,
-                        BrandName = brand.BrandName
+                        Id = product.Id,
+                        ProductName = product.ProductName
                     };
 
-                    var result = await _data.UpdateBrandAsync(GetUserIdentity(), justChangeName);
+                    var result = await _data.UpdateProductAsync(GetUserIdentity(), justChangeName);
 
                     if (result.IsSuccessStatusCode) return Ok(result);
                     else return BadRequest(result);
@@ -115,19 +125,20 @@ namespace DorisApp.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                await _log.LogError("BrandController[Update]: " + ex.Message);
+                await _log.LogError("ProductController[Update]: " + ex.Message);
                 return BadRequest(
                     new ResultDTO<ProductSummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to update brand.",
+                        ReasonPhrase = "Unable to update product.",
                         IsSuccessStatusCode = false
-                    });
+                    }
+                );
             }
         }
 
-        [HttpPost("get-brand/summary")]
-        public async Task<IActionResult> GetBrandSummary(RequestPageDTO request)
+        [HttpPost("get-product/summary")]
+        public async Task<IActionResult> GetProductSummary(RequestPageDTO request)
         {
             try
             {
@@ -137,44 +148,44 @@ namespace DorisApp.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                await _log.LogError("BrandController[Get]: " + ex.Message);
+                await _log.LogError("ProductController[Get]: " + ex.Message);
                 return BadRequest(
                     new ResultDTO<ProductSummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to get brands.",
+                        ReasonPhrase = "Unable to update product.",
                         IsSuccessStatusCode = false
-                    });
+                    }
+                );
             }
         }
 
-
-        [HttpPost("delete-brand"), Authorize(Roles = "admin")]
-        public async Task<IActionResult> DeleteBrand(BrandModel brand)
+        [HttpPost("delete-product"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteProduct(ProductModel product)
         {
             try
             {
-                var getExisting = await _data.GetByIdAsync(GetUserIdentity(), brand.Id);
+                var getExisting = await _data.GetByIdAsync(GetUserIdentity(), product.Id);
 
                 if (getExisting == null)
                 {
-                    await _log.LogError("BrandController[Add]: " + GetUserIdentity()?.Name +
-                        $"trying to delete brand[{brand.Id}]");
+                    await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
+                        $"trying to delete product[{product.Id}]");
                     return BadRequest(
                        new ResultDTO<ProductSummaryDTO>
                        {
                            ErrorCode = 4,
-                           ReasonPhrase = "Unable to delete brand.",
+                           ReasonPhrase = "Unable to delete product.",
                            IsSuccessStatusCode = false
                        });
                 }
 
-                var result = await _data.DeleteBrandAsync(GetUserIdentity(), brand);
+                var result = await _data.DeleteProductAsync(GetUserIdentity(), product);
 
                 if (result.IsSuccessStatusCode)
                 {
                     var oldImg = Path.Combine(rootFolder, "uploads",
-                    "brand", getExisting.StoredImageName ?? "");
+                    "product", getExisting.StoredImageName ?? "");
                     AppHelper.DeleteFile(oldImg);
                     return Ok(result);
                 }
@@ -186,13 +197,13 @@ namespace DorisApp.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                await _log.LogError("BrandController[Delete]: " + ex.Message);
+                await _log.LogError("ProductController[Delete]: " + ex.Message);
 
                 return BadRequest(
                     new ResultDTO<ProductSummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to delete brand.",
+                        ReasonPhrase = "Unable to delete product.",
                         IsSuccessStatusCode = false
                     }
                 );
@@ -200,31 +211,32 @@ namespace DorisApp.WebAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBrandById(int id)
+        public async Task<IActionResult> GetProductById(int id)
         {
             try
             {
-                var brandItem = await _data.GetByIdAsync(GetUserIdentity(), id);
+                var productItem = await _data.GetByIdAsync(GetUserIdentity(), id);
                 return Ok(
-                    new ResultDTO<BrandModel?>
+                    new ResultDTO<ProductModel?>
                     {
-                        Data = brandItem,
+                        Data = productItem,
                         ErrorCode = 0,
-                        ReasonPhrase = "Unable to delete brand.",
+                        ReasonPhrase = "Unable to delete product.",
                         IsSuccessStatusCode = false
                     }
                 );
             }
             catch (Exception ex)
             {
-                await _log.LogError("BrandController[GetById]: " + ex.Message);
+                await _log.LogError("ProductController[GetById]: " + ex.Message);
                 return BadRequest(
                     new ResultDTO<ProductSummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to delete brand.",
+                        ReasonPhrase = "Unable to delete product.",
                         IsSuccessStatusCode = false
-                    });
+                    }
+                );
             }
         }
 

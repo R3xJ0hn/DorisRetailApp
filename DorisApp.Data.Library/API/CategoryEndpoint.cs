@@ -2,6 +2,7 @@
 using DorisApp.Data.Library.Model;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DorisApp.Data.Library.API
@@ -21,31 +22,44 @@ namespace DorisApp.Data.Library.API
                 ItemPerPage = 1
             };
 
-            var result = await GetCategorySummary(request);
-            return result != null ? result.TotalItems : 0;
+            var sent = await GetCategorySummary(request);
+            
+            var newRequest = new RequestPageDTO
+            {
+                PageNo = 1,
+                ItemPerPage = sent.Data.TotalItems
+            };
+
+            var result = await GetCategorySummary(newRequest);
+
+            return result?.Data.Models.Count ?? 0;
         }
 
-        public async Task AddCategoryAsync(CategoryModel category)
+        public async Task<ResultDTO<List<CategorySummaryDTO>>?> AddCategoryAsync(CategoryModel category)
         {
             ValidateCategory(category);
-            await SendPostAysnc(category, "URL:add-category");
+            var summary = await SendPostAysnc(category, "URL:add-category");
+            return JsonConvert.DeserializeObject<ResultDTO<List<CategorySummaryDTO>>>(summary);
         }
 
-        public async Task<string> UpdateCategory(CategoryModel category)
+        public async Task<ResultDTO<List<CategorySummaryDTO>>?> UpdateCategory(CategoryModel category)
         {
             ValidateCategory(category);
-            return await SendPostAysnc(category, "URL:update-category");
+            var summary = await SendPostAysnc(category, "URL:update-category");
+            return JsonConvert.DeserializeObject<ResultDTO<List<CategorySummaryDTO>>>(summary);
+
         }
 
-        public async Task<RequestModel<CategorySummaryDTO>?> GetCategorySummary(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<CategorySummaryDTO>>?> GetCategorySummary(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-category/summary");
-            return JsonConvert.DeserializeObject<RequestModel<CategorySummaryDTO>>(result);
+            return JsonConvert.DeserializeObject<ResultDTO<RequestModel<CategorySummaryDTO>>>(result);
         }
 
-        public async Task<string> DeleteCategory(CategoryModel model)
+        public async Task<ResultDTO<CategorySummaryDTO>?> DeleteCategory(CategoryModel model)
         {
-            return await SendPostAysnc(model, "URL:delete-category");
+            var result = await SendPostAysnc(model, "URL:delete-category");
+            return JsonConvert.DeserializeObject<ResultDTO<CategorySummaryDTO>>(result);
         }
 
         private void ValidateCategory(CategoryModel category)

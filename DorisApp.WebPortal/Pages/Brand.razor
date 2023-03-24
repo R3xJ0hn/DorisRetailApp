@@ -54,6 +54,7 @@
 
                 </div>
 
+
                 <div class="table-wrapper">
                     <table class="table">
 
@@ -129,11 +130,14 @@
 
                 </div>
 
+
+
                 <Pagination CurrentPage="@currentPage"
                             PageCount="@totalPages"
                             OnPageChanged="OnHandlePageChange" />
 
             </div>
+
         </div>
 
         <div class="col-lg-3 d-flex justify-content-center align-content-center">
@@ -142,7 +146,8 @@
 
         </div>
 
-        <Modal modalId="brandModal"
+        <Modal @ref="modalComponentRef"
+               modalId="brandModal"
                Title="@modalTitle"
                SaveButtonText="Save"
                modalMode="@modalMode"
@@ -151,31 +156,20 @@
 
             @if (modalMode != "delete")
             {
-
-                @if (string.IsNullOrEmpty(errorMessage))
-                {
-                    <p class="card-description text-justify">
-                        This is where you can modify brands to your website.
-                        Just fill out the form with the brand name, and an image for the brand.
-                    </p>
-                }
-                else
-                {
-                    <p class="card-description text-justify text-danger">
-                        @errorMessage
-                    </p>
-                }
+                <p class="card-description text-justify">
+                    This is where you can modify brands to your website.
+                    Just fill out the form with the brand name, and an image for the brand.
+                </p>
 
                 <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
-                    <DataAnnotationsValidator />
 
-                    <UploadImage OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@imgSourceEdit" />
+                    <UploadImage @ref="uploadImageComponentRef"
+                             OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@imgSourceUrl" />
 
                     <div class="mb-3 p-2">
                         <label for="brandName" class="form-label">Brand Name</label>
                         <InputText id="brandName" class="form-control" placeholder="Brand Name" @bind-Value="modalModel.BrandName" />
                         <ValidationMessage For="@(()=> modalModel.BrandName)" class="form-validation" />
-
                     </div>
 
                 </EditForm>
@@ -190,10 +184,6 @@
 
         </Modal>
 
-        <div class="toast-container position-fixed top-0 end-0 p-3">
-            <Toast ToastId="brandToast" Message="@toastMessage" ToastMode="@toastMode" />
-        </div>
-
     </div>
 
 </div>
@@ -201,8 +191,11 @@
 @code {
     private RequestModel<BrandSummaryDTO>? brandSummary;
     private RequestPageDTO brandRequestDTO = new();
+    private BrandModel modalModel = new();
+
+    private UploadImage? uploadImageComponentRef;
     long maxFileSize = 1024 * 1024; // 1 MB in bytes
-    private string? imgSourceEdit;
+    private string? imgSourceUrl;
     private Stream? imgStream;
     private string? imgName;
 
@@ -210,20 +203,17 @@
     private int currentPage = 1;
     private bool isLoading = true;
 
-    private BrandModel modalModel = new();
+    private Modal modalComponentRef;
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
 
-    private string? errorMessage = null;
-    private string toastMode = string.Empty;
-    private string toastMessage = string.Empty;
-
     private OrderBrandSummaryBy selectedSortValue;
+
 
     protected async override Task OnInitializedAsync()
     {
         brandRequestDTO.PageNo = 1;
-        brandRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
+        brandRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"] ?? "10");
         await RequestItems(currentPage, selectedSortValue);
     }
 
@@ -233,8 +223,7 @@
         brandRequestDTO.OrderBy = (int)orderBy;
         isLoading = true;
 
-        brandSummary = await BrandEndpoint
-        .GetBrandSummary(brandRequestDTO);
+        brandSummary = (await BrandEndpoint.GetBrandSummary(brandRequestDTO))?.Data;
 
         if (brandSummary != null)
         {
@@ -277,15 +266,13 @@
         }
         catch (Exception)
         {
-            errorMessage = "File size cannot exceed 1 MB.";
-            await JSRuntime.InvokeVoidAsync("clearUploadValue");
+            await uploadImageComponentRef.RemoveActiveImage();
             StateHasChanged();
         }
     }
 
     private async Task OnSaveModal()
     {
-
         if (modalMode == "add")
         {
             await AddBrand();
@@ -302,8 +289,15 @@
 
     private async Task OnCloseModal()
     {
-        imgSourceEdit = null;
-        await CloseModal(null, null);
+        imgStream = null;
+        imgName = null;
+        imgSourceUrl = null;
+        modalModel.BrandName = "";
+
+        if (modalMode != "delete")
+        { await uploadImageComponentRef.RemoveActiveImage(); }
+       
+        await RequestItems(currentPage, selectedSortValue);
     }
 
     private void OpenAddBrandModal()
@@ -318,13 +312,8 @@
     {
         modalTitle = "Edit Modal";
         modalMode = "edit";
-        imgSourceEdit = url;
-
-        if (!string.IsNullOrWhiteSpace(url))
-        {
-            await JSRuntime.InvokeVoidAsync("setUploadImageToActive", url);
-        }
-
+        imgSourceUrl = url;
+        await uploadImageComponentRef.SetActiveImage(url);
         SetModalModel(id);
     }
 
@@ -337,102 +326,43 @@
 
     private async Task AddBrand()
     {
-        try
+        var brand = new BrandModel
         {
-            if (string.IsNullOrEmpty(modalModel.BrandName))
-            {
-                errorMessage = "Brand name is required.";
-                await JSRuntime.InvokeVoidAsync("enableButtons");
-                return;
-            }
+            BrandName = modalModel.BrandName
+        };
 
-            var brand = new BrandModel
-            {
-                BrandName = modalModel.BrandName,
-            };
+        var result = await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
 
-            await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
-            await CloseModal("Successfully added new brand.", "success");
-        }
-        catch (HttpRequestException ex)
-        {
-            await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to add brand: {ex.Message}";
-        }
     }
 
     private async Task EditBrand()
     {
-        try
+        var brand = new BrandModel
         {
-            if (string.IsNullOrEmpty(modalModel.BrandName))
-            {
-                errorMessage = "Brand name is required.";
-                return;
-            }
+            Id = modalModel.Id,
+            BrandName = modalModel.BrandName,
+        };
 
-            var brand = new BrandModel
-            {
-                Id = modalModel.Id,
-                BrandName = modalModel.BrandName,
-            };
+        var result = await BrandEndpoint.UpdateBrand(brand, imgStream, imgName);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
 
-            await BrandEndpoint.UpdateBrand(brand, imgStream, imgName);
-            await CloseModal("Successfully updated brand.", "success");
-        }
-        catch (HttpRequestException ex)
-        {
-            await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to update brand: {ex.Message}";
-        }
     }
 
     private async Task DeleteBrand()
     {
-        try
+        var brand = new BrandModel
         {
-            var brand = new BrandModel
-            {
-                Id = modalModel.Id,
-                BrandName = modalModel.BrandName
-            };
+            Id = modalModel.Id,
+            BrandName = modalModel.BrandName
+        };
 
-            await BrandEndpoint.DeleteBrand(brand);
-            await CloseModal($"{brand.BrandName} remove from brand.", "danger");
-        }
-        catch (HttpRequestException ex)
-        {
-            await CloseModal($"Error request: {ex.Message}", "danger");
-            errorMessage = $"Failed to remove category: {ex.Message}";
-        }
+        var result = await BrandEndpoint.DeleteBrand(brand);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
-
-    private async Task CloseModal(string toastmsg, string mode)
-    {
-        toastMessage = toastmsg;
-        toastMode = mode;
-        imgStream = null;
-        imgName = null;
-        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#brandModal");
-
-        if (mode != "danger")
-        {
-            await JSRuntime.InvokeVoidAsync("setUploadImageToDeactive");
-            await JSRuntime.InvokeVoidAsync("clearUploadValue");
-        }
-
-        if (toastmsg != null)
-        {
-            await JSRuntime.InvokeVoidAsync("showToast", "#brandToast");
-        }
-
-        errorMessage = null;
-        StateHasChanged();
-
-        //Request for Update
-        await RequestItems(currentPage, selectedSortValue);
-    }
-
 
 
     private void SetModalModel(int brandId)
@@ -447,6 +377,26 @@
         }
         StateHasChanged();
     }
+
+    private async Task HandleErrors(int errorCode, string message = "")
+    {
+        if (errorCode > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
+            modalComponentRef.Close();
+        }
+
+        if (errorCode == 401)
+        {
+            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
+        }
+
+        if (errorCode == 3)
+        {
+            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
+        }
+    }
+
 
     private string? VerifySearchBar(string? str) =>
     string.IsNullOrWhiteSpace(str) ? null : str;

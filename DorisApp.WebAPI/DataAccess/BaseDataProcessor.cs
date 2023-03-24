@@ -4,6 +4,7 @@ using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
 using DorisApp.WebAPI.Helpers;
 using System.Security.Claims;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DorisApp.WebAPI.DataAccess
 {
@@ -20,40 +21,58 @@ namespace DorisApp.WebAPI.DataAccess
             _logger = logger;
         }
 
-        protected async Task<T?> GetByIdAsync<T>(ClaimsIdentity identity, string storeProcedureName, int modelId) where T : class 
+        protected async Task<T?> GetByIdAsync<T>(ClaimsIdentity? identity, string storeProcedureName, int modelId) where T : class
         {
             try
             {
                 var p = new { Id = modelId };
                 var output = await _sql.LoadDataAsync<T, dynamic>(storeProcedureName, p);
-                _logger.SuccessRead(identity, TableName, output.Count);
+                await _logger.SuccessRead(identity, TableName, output.Count);
                 return output.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                _logger.FailRead(identity, TableName, 0,ex.Message);
+                await _logger.FailRead(identity, TableName, 0, ex.Message);
                 throw;
             }
         }
 
-        protected async Task<RequestModel<T>?> GetByPageAsync<T>(ClaimsIdentity identity, string storeProcedureName, RequestPageDTO request) where T : class
+        protected async Task<ResultDTO<RequestModel<T>?>> GetByPageAsync<T>(ClaimsIdentity? identity, string storeProcedureName, RequestPageDTO request) where T : class
         {
             if (request == null)
             {
-                _logger.FailRead(identity,TableName, 0, $"sent {typeof(T).Name} is null");
-                throw new ArgumentNullException(nameof(request));
+                var msg = $"sent {typeof(T).Name} is null";
+                await _logger.FailRead(identity, TableName, 0, msg);
+                return new ResultDTO<RequestModel<T>?>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = msg
+                };
             }
 
             if (storeProcedureName == null)
             {
-                _logger.FailRead(identity, TableName, 0, $"storeProcedureName is null");
-                throw new ArgumentNullException(nameof(storeProcedureName));
+                var msg = $"storeProcedureName is null";
+                await _logger.FailRead(identity, TableName, 0, msg);
+                return new ResultDTO<RequestModel<T>?>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = msg
+                };
             }
 
             if (request.ItemPerPage == 0)
             {
-                _logger.FailRead(identity, TableName, 0, $"Item per page is 0");
-                throw new ArgumentNullException(nameof(request.ItemPerPage));
+                var msg = $"Item per page is 0";
+                await _logger.FailRead(identity, TableName, 0, msg);
+                return new ResultDTO<RequestModel<T>?>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = msg
+                };
             }
 
             var count = await CountAsync(identity);
@@ -61,16 +80,22 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!ValidateRequestPageDTO(request, countPages))
             {
-                _logger.FailRead(identity, TableName, 0, $"Page {request.PageNo} is out of range: total pages {countPages}");
-                return null;
+                var msg = $"Page {request.PageNo} is out of range: total pages {countPages}";
+                await _logger.FailRead(identity, TableName, 0, msg);
+                return new ResultDTO<RequestModel<T>?>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = msg
+                };
             }
 
             try
             {
                 var output = await _sql.LoadDataAsync<T, RequestPageDTO>(storeProcedureName, request);
-                _logger.SuccessRead(identity, TableName, output.Count);
+                await _logger.SuccessRead(identity, TableName, output.Count);
 
-                return new RequestModel<T>
+                var data = new RequestModel<T>
                 {
                     Models = output,
                     IsInPage = request.PageNo,
@@ -78,15 +103,29 @@ namespace DorisApp.WebAPI.DataAccess
                     TotalPages = countPages,
                     TotalItems = count
                 };
+
+                return new ResultDTO<RequestModel<T>?>
+                {
+                    Data = data,
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = $"Product: {data?.TotalItems} item(s) found."
+                };
+
             }
             catch (Exception ex)
             {
-               _logger.FailRead(identity,TableName,0,ex.Message);
-                throw;
+                await _logger.FailRead(identity, TableName, 0, ex.Message);
+                return new ResultDTO<RequestModel<T>?>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task<int> CountAsync(ClaimsIdentity identity)
+        public async Task<int> CountAsync(ClaimsIdentity? identity)
         {
             try
             {
@@ -94,12 +133,12 @@ namespace DorisApp.WebAPI.DataAccess
             }
             catch (Exception ex)
             {
-                _logger.FailRead(identity,TableName,0, ex.Message);
+                await _logger.FailRead(identity, TableName, 0, ex.Message);
                 throw;
             }
         }
 
-        public bool ValidateRequestPageDTO(RequestPageDTO request, int totalPage)
+        private static bool ValidateRequestPageDTO(RequestPageDTO request, int totalPage)
         {
             return request != null && request.PageNo > 0 && request.PageNo <= totalPage;
         }
@@ -111,10 +150,7 @@ namespace DorisApp.WebAPI.DataAccess
             return exist.Count != 0;
         }
 
-        public void Dispose()
-        {
-            _sql.Dispose();
-        }
+        public void Dispose() => _sql.Dispose();
     }
 
 }

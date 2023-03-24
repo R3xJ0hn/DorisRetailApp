@@ -1,3 +1,4 @@
+using AutoMapper;
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 //App Services
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
@@ -20,6 +22,7 @@ builder.Services.AddTransient<RoleData>();
 builder.Services.AddTransient<CategoryData>();
 builder.Services.AddTransient<SubCategoryData>();
 builder.Services.AddTransient<BrandData>();
+builder.Services.AddTransient<ProductData>();
 
 //Add Logger Services
 builder.Services.AddLogging(builder =>
@@ -41,7 +44,7 @@ builder.Services.AddCors(policy =>
 builder.Services.AddScoped<ILogger>(serviceProvider =>
 {
     var factory = serviceProvider.GetRequiredService<ILoggerFactory>();
-    return factory.CreateLogger("AppLogger");
+    return factory.CreateLogger("DorisApp[API]");
 });
 
 //JWT Authentication

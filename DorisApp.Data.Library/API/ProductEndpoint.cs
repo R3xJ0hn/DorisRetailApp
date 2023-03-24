@@ -2,6 +2,7 @@
 using DorisApp.Data.Library.Model;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -22,44 +23,65 @@ namespace DorisApp.Data.Library.API
                 ItemPerPage = 1
             };
 
-            var result = await GetProductSummary(request);
-            return result?.TotalItems ?? 0;
+            var sent = await GetProductSummary(request);
+
+            var newRequest = new RequestPageDTO
+            {
+                PageNo = 1,
+                ItemPerPage = sent.Data.TotalItems
+            };
+
+            var result = await GetProductSummary(newRequest);
+
+            return result?.Data.Models.Count ?? 0;
         }
 
-        public async Task AddProductAsync(ProductModel product, Stream? imgStream, string fileName)
+        public async Task<ResultDTO<List<ProductSummaryDTO>>?> AddProductAsync(ProductModel product, Stream? imgStream, string fileName)
         {
            await ValidateProduct(product);
 
-            var result = await SendImg(imgStream, fileName);
-
-            if (result != null)
+            if (imgStream != null && imgStream.Length != 0)
             {
-                product.StoredImageName = result.StoredFileName;
+                var result = await SendImg(imgStream, fileName);
+
+                if (result != null)
+                {
+                    product.StoredImageName = result.StoredFileName;
+                }
             }
 
-            await SendPostAysnc(product, "URL:add-product");
+            var summary  = await SendPostAysnc(product, "URL:add-product");
+            return JsonConvert.DeserializeObject<ResultDTO<List<ProductSummaryDTO>>>(summary);
         }
 
-        public async Task<string> UpdateProduct(ProductModel product, Stream? imgStream, string fileName)
+        public async Task<ResultDTO<List<ProductSummaryDTO>>?> UpdateProduct(ProductModel product, Stream? imgStream, string fileName)
         {
             await ValidateProduct(product);
 
-            var result = await SendImg(imgStream, fileName);
+            if (imgStream != null && imgStream.Length != 0)
+            {
+                var result = await SendImg(imgStream, fileName);
 
-            product.StoredImageName = result?.StoredFileName;
+                if (result != null)
+                {
+                    product.StoredImageName = result.StoredFileName;
+                }
+            }
 
-            return await SendPostAysnc(product, "URL:update-product");
+            var summary = await SendPostAysnc(product, "URL:update-product");
+            return JsonConvert.DeserializeObject<ResultDTO<List<ProductSummaryDTO>>>(summary);
         }
 
-        public async Task<RequestModel<ProductSummaryDTO>?> GetProductSummary(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<ProductSummaryDTO>>?> GetProductSummary(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-product/summary");
-            return JsonConvert.DeserializeObject<RequestModel<ProductSummaryDTO>>(result);
+            return JsonConvert.DeserializeObject<ResultDTO<RequestModel<ProductSummaryDTO>>>(result);
         }
 
-        public async Task<string> DeleteProduct(ProductModel model)
+        public async Task<ResultDTO<ProductSummaryDTO>?> DeleteProduct(ProductModel model)
         {
-            return await SendPostAysnc(model, "URL:delete-product");
+            var result = await SendPostAysnc(model, "URL:delete-product");
+            return JsonConvert.DeserializeObject<ResultDTO<ProductSummaryDTO>>(result);
         }
 
         private async Task ValidateProduct(ProductModel product)

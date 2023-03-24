@@ -2,6 +2,8 @@
 @inject CategoryEndpoint CategoryEndpoint
 @inject SubCategoryEndpoint SubCategoryEndpoint
 @inject ProductEndpoint ProductEndpoint
+@inject IJSRuntime JSRuntime
+
 
 <div class="container-fluid">
 
@@ -13,7 +15,7 @@
             <div class="card-header">
                 <div class="row">
                     <div class="col">
-                        <h4 class="col card-title">Add Product</h4>
+                        <h4 class="col card-title">@Mode Product</h4>
                     </div>
 
                     <div class="col">
@@ -36,11 +38,8 @@
                     </p>
                     <div class="col-4">
 
-                        <button type="button" class="btn btn-success import-btn" data-bs-toggle="modal"
-                                data-bs-target="#productModal">
-                            <i class="fa-regular fa-file-spreadsheet"></i>
-                            Import File
-                        </button>
+                        @*IMPORT BUTTON HERE*@
+
                     </div>
                 </div>
 
@@ -49,7 +48,11 @@
                     <div class="col-md">
 
                         <div class="col-sm">
-                            <UploadImage OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@imgSourceEdit" />
+
+                    <UploadImage @ref="uploadImageComponentRef"
+                                         OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@ImageSourceUrl" />
+
+
                         </div>
 
                         <div class="col-sm">
@@ -124,7 +127,6 @@
                                     disabled = false;
                                 }
                             }
-
 
                             <label for="product-subcategory" class="form-label">Sub Category</label>
                             <InputSelect class="form-select" id="product-subcategory"
@@ -234,23 +236,25 @@
 @code {
     private RequestModel<BrandSummaryDTO>? brandSummary;
     private RequestModel<CategorySummaryDTO>? categorySummary;
-    private List<SubCategoryModel>? subCategoryModels;
+    private List<SubCategorySummaryDTO>? subCategoryModels;
     private RequestPageDTO brandRequestDTO = new();
     private RequestPageDTO categoryRequestDTO = new();
     private RequestPageDTO subCategoryRequestDTO = new();
     private ProductModel newProduct = new();
-    long maxFileSize = 1024 * 1024;
-    private string? imgSourceEdit;
+
+    private UploadImage? uploadImageComponentRef;
+    long maxFileSize = 1024 * 1024; // 1 MB in bytes
     private Stream? imgStream;
     private string? imgName;
-
-    private string errorMessage;
 
     [Parameter]
     public EventCallback OnBack { get; set; }
 
     [Parameter]
     public string Mode { get; set; }
+
+    [Parameter]
+    public string ImageSourceUrl { get; set; } 
 
 
     protected override async Task OnInitializedAsync()
@@ -262,74 +266,61 @@
 
         //Request to get all items in brand
         brandRequestDTO.ItemPerPage = await BrandEndpoint.CountBrandItems();
-        brandSummary = await BrandEndpoint.GetBrandSummary(brandRequestDTO);
+        brandSummary = (await BrandEndpoint.GetBrandSummary(brandRequestDTO))?.Data;
 
         //Request to get all items in Category
         brandRequestDTO.ItemPerPage = await CategoryEndpoint.CountCategoryItems();
-        categorySummary = await CategoryEndpoint.GetCategorySummary(categoryRequestDTO);
+        categorySummary = (await CategoryEndpoint.GetCategorySummary(categoryRequestDTO))?.Data;
     }
 
     private async Task OnCategoryValueChanged(int categoryId)
     {
         newProduct.CategoryId = categoryId;
-        subCategoryModels = await SubCategoryEndpoint
-        .GetSubCategorySummaryByCategoryId(categoryId);
+        subCategoryModels = (await SubCategoryEndpoint
+        .GetSubCategorySummaryByCategoryId(categoryId))?.Data;
     }
 
     private async Task OnHandleFileChange(InputFileChangeEventArgs e)
     {
-
+        try
+        {
+            imgName = e.File.Name;
+            imgStream = e.File.OpenReadStream(maxFileSize);
+        }
+        catch (Exception)
+        {
+            await uploadImageComponentRef.RemoveActiveImage();
+            StateHasChanged();
+        }
     }
 
     private async Task OnSaveForm()
     {
-        if (Mode == "add")
+        if (Mode == "Add")
         {
             await AddProduct();
         }
-        else if (Mode == "edit")
+        else if (Mode == "Edit")
         {
             await EditProduct();
         }
     }
 
 
-
     private async Task AddProduct()
     {
-        try
+        bool validated =await ValidateProduct(newProduct);
+        if (!validated) return;
+
+        var result = await ProductEndpoint.AddProductAsync(newProduct, imgStream, imgName);
+
+        if (result.IsSuccessStatusCode)
         {
-            if (string.IsNullOrEmpty(newProduct.ProductName))
-            {
-                errorMessage = "Product name is required.";
-                return;
-            }
-
-            if (string.IsNullOrEmpty(newProduct.Sku))
-            {
-                errorMessage = "Product sku is required.";
-                return;
-            }
-
-            if (newProduct.CategoryId <= 0)
-            {
-                errorMessage = "Please select a category.";
-                return;
-            }
-
-            if (string.IsNullOrEmpty(newProduct.Size))
-            {
-                errorMessage = "Product size is required.";
-                return;
-            }
-
-            await ProductEndpoint.AddProductAsync(newProduct, imgStream, imgName);
-            ShowToast("Successfully added new product.", "success");
+            await JSRuntime.InvokeVoidAsync("SavedAlert", "Product", newProduct.ProductName);
+            ClearData();
         }
-        catch (HttpRequestException ex)
-        {
-            errorMessage = $"Failed to add new product: {ex.Message}";
-        }
+
+        HandleErrors(result.ErrorCode);
     }
 
     private async Task EditProduct()
@@ -337,15 +328,80 @@
 
     }
 
-    private void ShowToast(string message, string type)
+    private void ClearData()
     {
+        newProduct.ProductName = "";
+        newProduct.Sku = "";
+        newProduct.BrandId = 0;
+        newProduct.CategoryId = 0;
+        newProduct.SubcategoryId = 0;
+        newProduct.Size = "";
+        newProduct.Color = "";
+        newProduct.IsAvailable = false;
+        newProduct.IsTaxable = false;
+        newProduct.Description = "";
 
+        //TODO: Clear Image
+        StateHasChanged();
     }
-
 
     public async Task BackClicked()
     {
+        ClearData();
         await OnBack.InvokeAsync(null);
+    }
+
+    private async Task HandleErrors(int errorCode, string message = "")
+    {
+        if (errorCode > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
+        }
+
+        if (errorCode == 401)
+        {
+            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
+        }
+
+        if (errorCode == 3)
+        {
+            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
+        }
+    }
+
+
+    public async Task<bool> ValidateProduct(ProductModel product)
+    {
+        string errorMessage;
+        if (string.IsNullOrEmpty(product.ProductName))
+        {
+            errorMessage = "Product name is required.";
+            await JSRuntime.InvokeVoidAsync("WarningToast",errorMessage);
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(product.Sku))
+        {
+            errorMessage = "Product sku is required.";
+            await JSRuntime.InvokeVoidAsync("WarningToast",errorMessage);
+            return false;
+        }
+
+        if (newProduct.CategoryId <= 0)
+        {
+            errorMessage = "Please select a category.";
+            await JSRuntime.InvokeVoidAsync("WarningToast",errorMessage);
+            return false;
+        }
+        
+        if (string.IsNullOrEmpty(product.Size))
+        {
+            errorMessage = "Product size is required.";
+            await JSRuntime.InvokeVoidAsync("WarningToast",errorMessage);
+            return false;
+        }
+
+        return true;
     }
 
 }

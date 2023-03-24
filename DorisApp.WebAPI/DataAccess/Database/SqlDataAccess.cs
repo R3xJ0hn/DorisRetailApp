@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
+using System.Xml.Linq;
 
 namespace DorisApp.WebAPI.DataAccess.Database
 {
@@ -41,18 +43,17 @@ namespace DorisApp.WebAPI.DataAccess.Database
             return result;
         }
 
-
-        public async Task SaveDataAsync<T>(string storeProcedure, T parameters)
+        public async Task<int> SaveDataAsync<T>(string storeProcedure, T parameters)
         {
             using IDbConnection connection = new SqlConnection(_connectionString);
-            await connection.ExecuteAsync(storeProcedure, parameters,
-                 commandType: CommandType.StoredProcedure);
+            return await connection.ExecuteAsync(storeProcedure, parameters,
+                  commandType: CommandType.StoredProcedure);
         }
 
-        public async Task UpdateDataAsync<T>(string storeProcedure, T parameters)
+        public async Task<int> UpdateDataAsync<T>(string storeProcedure, T parameters)
         {
             using IDbConnection connection = new SqlConnection(_connectionString);
-            await connection.ExecuteAsync(storeProcedure, parameters,
+            return await connection.ExecuteAsync(storeProcedure, parameters,
                  commandType: CommandType.StoredProcedure);
         }
 

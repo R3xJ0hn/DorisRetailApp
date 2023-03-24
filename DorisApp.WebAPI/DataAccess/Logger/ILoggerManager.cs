@@ -4,15 +4,15 @@ namespace DorisApp.WebAPI.DataAccess.Logger
 {
     public interface ILoggerManager
     {
-        void FailDelete(ClaimsIdentity identity, string propertyName, string tableName, string errrorMessage);
-        void FailInsert(ClaimsIdentity identity, string propertyName, string tableName, string errorMessage);
-        void FailRead(ClaimsIdentity identity, string tableName, int count, string errrorMessage);
-        void FailUpdate(ClaimsIdentity identity, string propertyName, string tableName, string oldName, string errorMessage);
-        void LogError(string message);
-        void LogInfo(string message);
-        void SuccessDelete(ClaimsIdentity identity, string propertyName, string tableName);
-        void SuccessInsert(ClaimsIdentity identity, string propertyName, string tableName);
-        void SuccessRead(ClaimsIdentity identity, string tableName, int count);
-        void SuccessUpdate(ClaimsIdentity identity, string propertyName, string tableName, string oldName);
+        Task FailDelete(ClaimsIdentity? identity, string propertyName, string tableName, string errrorMessage);
+        Task FailInsert(ClaimsIdentity? identity, string propertyName, string tableName, string errorMessage);
+        Task FailRead(ClaimsIdentity? identity, string tableName, int count, string errrorMessage);
+        Task FailUpdate(ClaimsIdentity? identity, string propertyName, string tableName, string oldName, string errorMessage);
+        Task LogError(string message);
+        Task LogInfo(string message);
+        Task SuccessDelete(ClaimsIdentity? identity, string propertyName, string tableName);
+        Task SuccessInsert(ClaimsIdentity? identity, string propertyName, string tableName);
+        Task SuccessRead(ClaimsIdentity? identity, string tableName, int count);
+        Task SuccessUpdate(ClaimsIdentity? identity, string propertyName, string tableName, string oldName);
     }
 }

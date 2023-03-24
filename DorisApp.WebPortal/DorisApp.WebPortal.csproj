@@ -8,6 +8,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="wwwroot\img\brands\**" />
+	  <Content Remove="wwwroot\img\brands\**" />
+	  <EmbeddedResource Remove="wwwroot\img\brands\**" />
+	  <None Remove="wwwroot\img\brands\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Remove="Pages\Product.razor~RF4ee5be1.TMP" />
 	</ItemGroup>
 
@@ -24,10 +31,6 @@
 
 	<ItemGroup>
 		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="wwwroot\img\brands\" />
 	</ItemGroup>
 
 </Project>

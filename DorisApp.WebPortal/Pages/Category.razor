@@ -142,27 +142,21 @@
 
 </div>
 
-<Modal modalId="categoryModal"
-       Title="@modalTitle"
-       SaveButtonText="Save"
-       modalMode="@modalMode"
-       OnSave="OnSaveModal">
+
+<Modal @ref="modalComponentRef"
+        modalId="categoryModal"
+        Title="@modalTitle"
+        SaveButtonText="Save"
+        modalMode="@modalMode"
+        OnSave="OnSaveModal"
+        OnClose="OnCloseModal">
 
     @if (modalMode != "delete")
     {
-        @if (string.IsNullOrEmpty(errorMessage))
-        {
-            <p class="card-description text-justify">
-                This is where you can modify your category list for your website.
-                Just fill out the form with the category name.
-            </p>
-        }
-        else
-        {
-            <p class="card-description text-justify text-danger">
-                @errorMessage
-            </p>
-        }
+        <p class="card-description text-justify">
+            This is where you can modify your category list for your website.
+            Just fill out the form with the category name.
+        </p>
 
         <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
             <DataAnnotationsValidator />
@@ -186,33 +180,26 @@
 
 </Modal>
 
-<div class="toast-container position-fixed top-0 end-0 p-3">
-    <Toast ToastId="categoryToast" Message="@toastMessage" ToastMode="@toastMode" />
-</div>
 
 @code {
     private RequestModel<CategorySummaryDTO>? categorySummary;
     private RequestPageDTO categoryRequestDTO = new();
+    private CategoryModel modalModel = new();
 
     private bool isLoading = true;
     private int totalPages = 1;
     private int currentPage = 1;
 
-    private CategoryModel modalModel = new();
+    private Modal modalComponentRef;
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
-
-    private string errorMessage = string.Empty;
-    private string toastMessage = string.Empty;
-    private string toastMode = string.Empty;
-
 
     private OrderCategorySummaryBy selectedSortValue;
 
     protected override async Task OnInitializedAsync()
     {
         categoryRequestDTO.PageNo = 1;
-        categoryRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"]);
+        categoryRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"] ?? "10");
         await RequestItems(currentPage, selectedSortValue);
     }
 
@@ -222,8 +209,8 @@
         categoryRequestDTO.OrderBy = (int)orderBy;
         isLoading = true;
 
-        categorySummary = await CategoryEndpoint
-        .GetCategorySummary(categoryRequestDTO);
+        categorySummary = (await CategoryEndpoint
+        .GetCategorySummary(categoryRequestDTO))?.Data;
 
         if (categorySummary != null)
         {
@@ -273,6 +260,12 @@
         }
     }
 
+    private async Task OnCloseModal()
+    {
+        modalModel.CategoryName = null;
+        await RequestItems(currentPage, selectedSortValue);
+    }
+
     private void OpenAddCategoryModal()
     {
         modalTitle = "Add New Category";
@@ -297,101 +290,70 @@
 
     private async Task AddCategory()
     {
-        try
-        {
-            if (string.IsNullOrEmpty(modalModel.CategoryName))
-            {
-                errorMessage = "Category name is required.";
-                await JSRuntime.InvokeVoidAsync("enableButtons");
-                return;
-            }
-
-            var category = new CategoryModel
+        var category = new CategoryModel
             {
                 CategoryName = modalModel.CategoryName
             };
 
-            await CategoryEndpoint.AddCategoryAsync(category);
-            await CloseModal("Successfully added new category.", "success");
-        }
-        catch (HttpRequestException ex)
-        {
-            await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to add category: {ex.Message}";
-        }
+        var result = await CategoryEndpoint.AddCategoryAsync(category);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
 
     private async Task EditCategory()
     {
-        try
-        {
-            if (string.IsNullOrEmpty(modalModel.CategoryName))
-            {
-                errorMessage = "Category name is required.";
-                return;
-            }
-
-            var categoryToUpdate = new CategoryModel
+        var categoryToUpdate = new CategoryModel
             {
                 Id = modalModel.Id,
                 CategoryName = modalModel.CategoryName
             };
 
-            await CategoryEndpoint.UpdateCategory(categoryToUpdate);
-            await CloseModal("Successfully updated category.", "success");
-        }
-        catch (HttpRequestException ex)
-        {
-            await JSRuntime.InvokeVoidAsync("enableButtons");
-            errorMessage = $"Failed to update category: {ex.Message}";
-        }
+        var result = await CategoryEndpoint.UpdateCategory(categoryToUpdate);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
 
     private async Task DeleteCategory()
     {
-        try
-        {
-            var category = new CategoryModel
+        var category = new CategoryModel
             {
                 Id = modalModel.Id,
                 CategoryName = modalModel.CategoryName
             };
 
-            await CategoryEndpoint.DeleteCategory(category);
-            await CloseModal($"{category.CategoryName} remove from category.", "danger");
-        }
-        catch (HttpRequestException ex)
-        {
-            await CloseModal($"Error request: {ex.Message}", "danger");
-            errorMessage = $"Failed to remove category: {ex.Message}";
-        }
-    }
-
-
-    private async Task CloseModal(string toastmsg, string mode)
-    {
-        toastMessage = toastmsg;
-        toastMode = mode;
-        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#categoryModal");
-
-        if (toastmsg != null)
-        {
-            await JSRuntime.InvokeVoidAsync("showToast", "#categoryToast");
-        }
-
-        //Request for Update
-        await RequestItems(currentPage, selectedSortValue);
+        var result = await CategoryEndpoint.DeleteCategory(category);
+        HandleErrors(result.ErrorCode);
+        modalComponentRef.Close();
     }
 
     private void SetModalModel(int categoryId)
     {
-        var categoryToEdit = categorySummary.Models
+        var category = categorySummary.Models
         .FirstOrDefault(x => x.Id == categoryId);
 
-        if (categoryToEdit != null)
+        if (category != null)
         {
             modalModel.Id = categoryId;
-            modalModel.CategoryName = categoryToEdit.CategoryName;
+            modalModel.CategoryName = category.CategoryName;
+        }
+    }
+
+    private async Task HandleErrors(int errorCode, string message = "")
+    {
+        if (errorCode > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
+            modalComponentRef.Close();
+        }
+
+        if (errorCode == 401)
+        {
+            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
+        }
+
+        if (errorCode == 3)
+        {
+            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
         }
     }
 

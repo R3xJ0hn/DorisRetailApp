@@ -1,5 +1,19 @@
 ﻿IF NOT EXISTS (SELECT 1 FROM [dbo].Roles)
 BEGIN
+
+	INSERT INTO dbo.Roles(
+		[RoleName],	
+		[CreatedByUserId],	
+		[UpdatedByUserId],	
+		[CreatedAt],		
+		[UpdatedAt]) 
+	VALUES(
+		'anonymous',				
+		1,		
+		1,		
+		GETUTCDATE(),				
+		GETUTCDATE())
+
 	INSERT INTO dbo.Roles(
 		[RoleName],	
 		[CreatedByUserId],	
@@ -77,13 +91,15 @@ BEGIN
 		[CreatedByUserId],	
 		[UpdatedByUserId],	
 		[CreatedAt],		
-		[UpdatedAt]) 
+		[UpdatedAt],
+		[MarkAsDeleted]) 	
 	VALUES(
-		'undefined',				
+		'not set',				
 		1,		
 		1,		
 		GETUTCDATE(),				
-		GETUTCDATE())
+		GETUTCDATE(),
+		1)
 END
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].SubCategories)
@@ -94,12 +110,34 @@ BEGIN
 		[CreatedByUserId],	
 		[UpdatedByUserId],	
 		[CreatedAt],		
-		[UpdatedAt]) 
+		[UpdatedAt],
+		[MarkAsDeleted]) 	
 	VALUES(
-		'undefined',
+		'not set',
 		@@IDENTITY,
 		1,		
 		1,		
 		GETUTCDATE(),				
-		GETUTCDATE())
+		GETUTCDATE(),
+		1)
+END
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].Brands)
+BEGIN
+	INSERT INTO dbo.Brands(
+		[BrandName],
+		[StoredImageName],
+		[CreatedByUserId],
+		[UpdatedByUserId],
+		[CreatedAt],
+		[UpdatedAt],
+		[MarkAsDeleted]) 	
+	VALUES(
+		'not set',
+		@@IDENTITY,
+		1,		
+		1,		
+		GETUTCDATE(),				
+		GETUTCDATE(),
+		1)
 END

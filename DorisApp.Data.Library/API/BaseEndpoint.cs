@@ -20,34 +20,34 @@ namespace DorisApp.Data.Library.API
         {
             var json = JsonConvert.SerializeObject(model);
             var data = new StringContent(json, Encoding.UTF8, "application/json");
+            var url = _apiHelper.Config[urlKey];
 
-            using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config[urlKey], data);
-            if (response.IsSuccessStatusCode)
+            using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(url, data);
+
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(result))
             {
-                return await response.Content.ReadAsStringAsync();
+                var x = new ResultDTO<string>
+                {
+                    Data = result,
+                    ReasonPhrase = response.ReasonPhrase,
+                    ErrorCode = (int)response.StatusCode,
+                };
+
+                return JsonConvert.SerializeObject(x);
             }
-            else
-            {
-                throw new HttpRequestException(response.ReasonPhrase);
-            }
+            return result ;
         }
 
         protected async Task<string> SendPostByIdAysnc(int id, string urlKey)
         {
             using HttpResponseMessage response = await _apiHelper
                 .ApiCleint.GetAsync(_apiHelper.Config[urlKey] + "/" + id);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                throw new HttpRequestException(response.ReasonPhrase);
-            }
+            return await response.Content.ReadAsStringAsync();
         }
 
-        protected async Task<UploadResultDTO?> SendImg(Stream? stream, string fileName)
+        protected async Task<UploadResultDTO?> SendImg(Stream? stream, string? fileName)
         {
             if (stream != null && stream.Length > 0)
             {
@@ -59,23 +59,23 @@ namespace DorisApp.Data.Library.API
                 };
 
                 var uploadResult = await SendFilePostAysnc(newcontent);
-                return JsonConvert.DeserializeObject<UploadResultDTO>(uploadResult);
-            }
 
+                try
+                {
+                    return JsonConvert.DeserializeObject<UploadResultDTO>(uploadResult);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
             return null;
         }
 
         protected async Task<string> SendFilePostAysnc(HttpContent content)
         {
             using HttpResponseMessage response = await _apiHelper.ApiCleint.PostAsync(_apiHelper.Config["URL:upload-file"], content);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                throw new HttpRequestException(response.ReasonPhrase);
-            }
+            return await response.Content.ReadAsStringAsync();
         }
 
     }

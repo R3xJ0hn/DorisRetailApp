@@ -10,73 +10,134 @@ namespace DorisApp.WebAPI.DataAccess
 {
     public class SubCategoryData : BaseDataProcessor
     {
+        private readonly CategoryData _categoryData;
+
         public override string TableName => "SubCategories";
 
-        public SubCategoryData(ISqlDataAccess sql, ILoggerManager logger) : base(sql, logger)
+        public SubCategoryData(ISqlDataAccess sql, ILoggerManager logger, CategoryData categoryData) 
+            : base(sql, logger)
         {
+            _categoryData = categoryData;
         }
 
-        public async Task<RequestModel<SubCategorySummaryDTO>?> GetSummaryDataByPageAsync(ClaimsIdentity identity, RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<SubCategorySummaryDTO>?>> GetSummaryDataByPageAsync(ClaimsIdentity? identity, RequestPageDTO request)
         {
             return await GetByPageAsync<SubCategorySummaryDTO>(identity, "dbo.spSubCategoryGetSummaryByPage", request);
         }
 
-        public async Task AddSubCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
+        public async Task<ResultDTO<List<SubCategorySummaryDTO>>> AddSubCategoryAsync(ClaimsIdentity? identity, SubCategoryModel subCategory)
         {
-            ValidateFields(identity, subCategory);
-
-            var userId = int.Parse(identity.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).SingleOrDefault() ?? "0");
-            subCategory.SubCategoryName = AppHelper.CapitalizeFirstWords(subCategory.SubCategoryName);
-            subCategory.CategoryId = subCategory.CategoryId;
-            subCategory.CreatedByUserId = userId;
-            subCategory.UpdatedByUserId = subCategory.CreatedByUserId;
-            subCategory.CreatedAt = DateTime.UtcNow;
-            subCategory.UpdatedAt = subCategory.CreatedAt;
 
             try
             {
+                var userId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+                subCategory.SubCategoryName = AppHelper.CapitalizeFirstWords(subCategory.SubCategoryName);
+                subCategory.CategoryId = subCategory.CategoryId;
+                subCategory.CreatedByUserId = userId;
+                subCategory.UpdatedByUserId = subCategory.CreatedByUserId;
+                subCategory.CreatedAt = DateTime.UtcNow;
+                subCategory.UpdatedAt = DateTime.UtcNow;
+
+                if (subCategory.CategoryId == 0) subCategory.CategoryId = 1;
+
+                var getIdentical = await _sql.LoadDataAsync<SubCategorySummaryDTO, SubCategoryModel>("spSubCategoryGetIdentical", subCategory);
+
+                if (getIdentical.Count > 0)
+                {
+                    return new ResultDTO<List<SubCategorySummaryDTO>>
+                    {
+                        Data = getIdentical,
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"SubCategory not saved: {getIdentical.Count} identical item(s) found."
+                    };
+                }
+
+                await ValidateFields(identity, subCategory);
                 await _sql.SaveDataAsync("dbo.spSubCategoryInsert", subCategory);
-                _logger.SuccessInsert(identity, subCategory.SubCategoryName, TableName);
+                await _logger.SuccessInsert(identity, subCategory.SubCategoryName, TableName);
+
+
+                return new ResultDTO<List<SubCategorySummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully added new sub category."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailInsert(identity, subCategory.SubCategoryName, TableName, ex.Message);
-                throw;
+               await _logger.FailInsert(identity, subCategory.SubCategoryName, TableName, ex.Message);
+                return new ResultDTO<List<SubCategorySummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task UpdateSubCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
+        public async Task<ResultDTO<List<SubCategorySummaryDTO>>> UpdateSubCategoryAsync(ClaimsIdentity? identity, SubCategoryModel subCategory)
         {
-            ValidateFields(identity, subCategory);
-
-            subCategory.UpdatedByUserId = int.Parse(identity.Claims
-                .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .Select(c => c.Value).SingleOrDefault() ?? "-1");
-            subCategory.UpdatedAt = DateTime.UtcNow;
-
-            //This will ignore by the stored procedure.
-            subCategory.CreatedAt = DateTime.UtcNow;
-
-            //Get the old name
-            string oldName = (await GetByIdAsync(identity, subCategory.Id)).SubCategoryName;
+            var oldName = string.Empty;
 
             try
             {
+                var getExistingItem = await GetByIdAsync(identity, subCategory.Id);
+                oldName = (await GetByIdAsync(identity, subCategory.Id))?.SubCategoryName;
+
+                if (getExistingItem == null)
+                {
+                    var msg = $"SubCategory[{subCategory.SubCategoryName}[{subCategory.Id}]] not found.";
+                    await _logger.LogError(msg);
+                    return new ResultDTO<List<SubCategorySummaryDTO>>
+                    {
+                        ErrorCode = 5,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = msg
+                    };
+                }
+
+                subCategory.UpdatedByUserId = int.Parse(identity?.Claims
+                    .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                    .Select(c => c.Value).SingleOrDefault() ?? "1");
+                subCategory.UpdatedAt = DateTime.UtcNow;
+
+                //This will ignore by the stored procedure.
+                subCategory.CreatedAt = DateTime.UtcNow;
+
+                if (subCategory.CategoryId == 0) subCategory.CategoryId = 1;
+
+                await ValidateFields(identity, subCategory);
                 await _sql.UpdateDataAsync("dbo.spSubCategoryUpdate", subCategory);
-                _logger.SuccessUpdate(identity, subCategory.SubCategoryName, TableName, oldName);
+                await _logger.SuccessUpdate(identity, subCategory.SubCategoryName, TableName, oldName ?? "");
+
+                return new ResultDTO<List<SubCategorySummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully update sub category."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName, ex.Message);
-                throw new Exception(ex.Message);
+                await _logger.FailUpdate(identity, subCategory.SubCategoryName, TableName, oldName ?? "", ex.Message);
+                return new ResultDTO<List<SubCategorySummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task DeleteSubCategoryAsync(ClaimsIdentity identity, SubCategoryModel subCategory)
+        public async Task<ResultDTO<SubCategorySummaryDTO>> DeleteSubCategoryAsync(ClaimsIdentity? identity, SubCategoryModel subCategory)
         {
-            subCategory.UpdatedByUserId = int.Parse(identity.Claims
+            subCategory.UpdatedByUserId = int.Parse(identity?.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .Select(c => c.Value).SingleOrDefault() ?? "-1");
+                .Select(c => c.Value).SingleOrDefault() ?? "1");
 
             //This will ignore by the stored procedure.
             subCategory.CreatedAt = DateTime.UtcNow;
@@ -85,37 +146,70 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync("dbo.spSubCategoryDelete", subCategory);
-                _logger.SuccessDelete(identity, subCategory.SubCategoryName, TableName);
+                await _logger.SuccessDelete(identity, subCategory.SubCategoryName, TableName);
+
+                return new ResultDTO<SubCategorySummaryDTO>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully deleted sub category."
+                };
+
             }
             catch (Exception ex)
             {
-                _logger.FailDelete(identity, subCategory.SubCategoryName, TableName, ex.Message);
-                throw new Exception(ex.Message);
+                await _logger.FailDelete(identity, subCategory.SubCategoryName, TableName, ex.Message);
+                return new ResultDTO<SubCategorySummaryDTO>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
             }
         }
 
-        public async Task<SubCategoryModel> GetByIdAsync(ClaimsIdentity identity, int id)
+        public async Task<ResultDTO<List<SubCategorySummaryDTO>?>> GetByCategoryIdAsync(ClaimsIdentity? identity, int id)
+        {
+            try
+            {
+                var p = new { CategoryId = id };
+                var output = await _sql.LoadDataAsync<SubCategorySummaryDTO, dynamic>("dbo.spSubCategoryGetByCategoryId", p);
+                await _logger.SuccessRead(identity, TableName, output.Count());
+
+                return new ResultDTO<List<SubCategorySummaryDTO>?>
+                {
+                    Data = output,
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = $"SubCategory: {output?.Count()} item(s) found."
+                };
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogError($"Data Access [Get]: {ex.Message}");
+                return new ResultDTO<List<SubCategorySummaryDTO>?>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
+            }
+        }
+
+        public async Task<SubCategoryModel?> GetByIdAsync(ClaimsIdentity? identity, int id)
         {
             return await GetByIdAsync<SubCategoryModel>(identity, "dbo.spSubCategoryGetById", id);
         }
 
-        public async Task<List<SubCategoryModel>> GetByCategoryIdAsync(ClaimsIdentity identity, int id)
-        {
-            var p = new { CategoryId = id };
-            var output = await _sql.LoadDataAsync<SubCategoryModel, dynamic>("dbo.spSubCategoryGetByCategoryId", p);
-            _logger.SuccessRead(identity, TableName, output.Count);
-            return output;
-        }
-
-        public async Task<bool> IsExist(int id)
+        public async Task<bool> IsExistAsync(int id)
         {
             return await IsItemExistAsync<SubCategoryModel>("dbo.spSubCategoryGetById", id);
         }
 
-        private void ValidateFields(ClaimsIdentity identity, SubCategoryModel subCategory)
+        private async Task ValidateFields(ClaimsIdentity? identity, SubCategoryModel subCategory)
         {
             string Name = AppHelper.GetFirstWord(
-                identity.Claims.Where(c => c.Type == ClaimTypes.Name)
+                identity?.Claims.Where(c => c.Type == ClaimTypes.Name)
                 .Select(c => c.Value).SingleOrDefault() ?? "");
 
             string? msg = null;
@@ -125,9 +219,11 @@ namespace DorisApp.WebAPI.DataAccess
                 msg = $"Unauthorized to modify the sub category.";
             }
 
-            if (subCategory.CategoryId == 0)
+            var getCategoryIfExist = await _categoryData.IsExistAsync(subCategory.CategoryId);
+
+            if (!getCategoryIfExist)
             {
-                msg = $"The Category ID in {subCategory.SubCategoryName} Subcategory is zero.";
+                msg = $"Category[{subCategory.CategoryId}] not exist.";
             }
 
             if (string.IsNullOrWhiteSpace(subCategory.SubCategoryName))
@@ -137,7 +233,7 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!string.IsNullOrWhiteSpace(msg))
             {
-                _logger.LogError($"{Name}: {msg}");
+                await _logger.LogError($"Data Access {Name}: {msg}");
                 throw new NullReferenceException(msg);
             }
         }

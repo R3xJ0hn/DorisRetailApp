@@ -27,66 +27,129 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                await _data.AddCategoryAsync(GetUserIdentity(),
-                    new CategoryModel { CategoryName = category.CategoryName });
+                var result = await _data.AddCategoryAsync(GetUserIdentity(), new CategoryModel
+                {
+                    CategoryName = category.CategoryName
+                });
 
-                return Ok($"Successfully added {category.CategoryName} category");
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
             }
             catch (Exception ex)
             {
-                _log.LogError("CategoryController[Add]: " + ex.Message);
-                return BadRequest("Unable to add new category.");
-            }
-        }
-
-        [HttpPost("get-category/summary")]
-        public async Task<IActionResult> GetCategorySummary(RequestPageDTO request)
-        {
-            try
-            {
-                var categoryItems = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
-                return Ok(categoryItems);
-            }
-            catch (Exception ex)
-            {
-                _log.LogError("CategoryController[Get]: " + ex.Message);
-                return BadRequest("Unable to get categories.");
+                await _log.LogError("CategoryController[Add]: " + ex.Message);
+                return BadRequest(
+                new ResultDTO<CategorySummaryDTO>
+                {
+                    ErrorCode = 5,
+                    ReasonPhrase = "Unable to add new category.",
+                    IsSuccessStatusCode = false
+                });
             }
         }
 
         [HttpPost("update-category"), Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateCategories(CategoryModel category)
         {
+            var getExisting = await _data.GetByIdAsync(GetUserIdentity(), category.Id);
+
+            if (getExisting == null)
+            {
+                await _log.LogError("CategoryController[Add]: " + GetUserIdentity()?.Name +
+                    $"trying to update category[{category.Id}]");
+                return BadRequest(
+                   new ResultDTO<BrandSummaryDTO>
+                   {
+                       ErrorCode = 4,
+                       ReasonPhrase = "Unable to update category.",
+                       IsSuccessStatusCode = false
+                   });
+            }
+
             try
             {
-                if (!await _data.IsExist(category.Id))
-                { return BadRequest($"Unable to get category [{category.Id}]"); }
+                CategoryModel justChangeName = new()
+                {
+                    Id = category.Id,
+                    CategoryName = category.CategoryName
+                };
 
-                await _data.UpdateCategoryAsync(GetUserIdentity(), category);
-                return Ok($"Successfully update {category.CategoryName}");
+                var result = await _data.UpdateCategoryAsync(GetUserIdentity(), justChangeName);
+
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
             }
             catch (Exception ex)
             {
-                _log.LogError("CategoryController[Update]: " + ex.Message);
-                return BadRequest("Unable to update category.");
+                await _log.LogError("CategoryController[Update]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to update brand.",
+                        IsSuccessStatusCode = false
+                    });
             }
         }
+
+
+        [HttpPost("get-category/summary")]
+        public async Task<IActionResult> GetCategorySummary(RequestPageDTO request)
+        {
+            try
+            {
+                var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                await _log.LogError("CategoryController[Get]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to get categories.",
+                        IsSuccessStatusCode = false
+                    });
+            }
+        }
+
 
         [HttpPost("delete-category"), Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategories(CategoryModel category)
         {
+            var getExisting = await _data.GetByIdAsync(GetUserIdentity(), category.Id);
+
+            if (getExisting == null)
+            {
+                await _log.LogError("CategoryController[Add]: " + GetUserIdentity()?.Name +
+                    $"trying to delete category[{category.Id}]");
+                return BadRequest(
+                   new ResultDTO<BrandSummaryDTO>
+                   {
+                       ErrorCode = 4,
+                       ReasonPhrase = "Unable to delete category.",
+                       IsSuccessStatusCode = false
+                   });
+            }
+
             try
             {
-                if (!await _data.IsExist(category.Id))
-                { return BadRequest($"Unable to get category [{category.Id}]"); }
-
-                await _data.DeleteCategoryAsync(GetUserIdentity(), category);
-                return Ok($"Successfully remove {category.CategoryName}");
+                var result = await _data.DeleteCategoryAsync(GetUserIdentity(), category);
+                if (result.IsSuccessStatusCode) return Ok(result);
+                else return BadRequest(result);
             }
             catch (Exception ex)
             {
-                _log.LogError("CategoryController[Delete]: " + ex.Message);
-                return BadRequest("Unable to delete category.");
+                await _log.LogError("CategoryController[Delete]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to delete category.",
+                        IsSuccessStatusCode = false
+                    });
             }
         }
 
@@ -96,12 +159,25 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var categoryItem = await _data.GetByIdAsync(GetUserIdentity(), id);
-                return Ok(categoryItem);
+                return Ok(
+                 new ResultDTO<CategoryModel?>
+                 {
+                     Data = categoryItem,
+                     ErrorCode = 0,
+                     ReasonPhrase = "Unable to delete category.",
+                     IsSuccessStatusCode = false
+                 });
             }
             catch (Exception ex)
             {
-                _log.LogError("CategoryController[GetById]: " + ex.Message);
-                return BadRequest($"Unable to get [{id}] category.");
+                await _log.LogError("CategoryController[GetById]: " + ex.Message);
+                return BadRequest(
+                  new ResultDTO<ProductSummaryDTO>
+                  {
+                      ErrorCode = 5,
+                      ReasonPhrase = "Unable to delete category.",
+                      IsSuccessStatusCode = false
+                  });
             }
         }
 
