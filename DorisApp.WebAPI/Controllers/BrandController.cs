@@ -33,18 +33,24 @@ namespace DorisApp.WebAPI.Controllers
         {
             var fileName = brand.StoredImageName;
 
-            AppHelper.MoveTempToDestPath(rootFolder, fileName, "brand");
-
             try
             {
-                var result = await _data.AddBrandAsync(GetUserIdentity(), new BrandModel
-                {
-                    BrandName = brand.BrandName,
-                    StoredImageName = fileName,
-                });
+                var result = await _data.AddBrandAsync(GetUserIdentity(), brand);
 
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                if (result.IsSuccessStatusCode)
+                {
+                    AppHelper.MoveTempToDestPath(rootFolder, fileName, "brand");
+                    return Ok(result);
+                }
+                else
+                {
+                    var tempImg = Path.Combine(rootFolder, "uploads", "temp",
+                        brand.StoredImageName ?? "");
+
+                    AppHelper.DeleteFile(tempImg);
+                    return BadRequest(result);
+                }
+
             }
 
             catch (Exception ex)
@@ -69,7 +75,7 @@ namespace DorisApp.WebAPI.Controllers
             if (getExisting == null)
             {
                 await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
-                    $"trying to update brand[{brand.Id}]");
+                    $" trying to update brandID[{brand.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<BrandSummaryDTO>
                    {
@@ -93,10 +99,7 @@ namespace DorisApp.WebAPI.Controllers
                     }
 
                     var result = await _data.UpdateBrandAsync(GetUserIdentity(), brand);
-
-                    if (result.IsSuccessStatusCode) return Ok(result);
-                    else return BadRequest(result);
-
+                    return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
                 }
                 else
                 {
@@ -107,9 +110,7 @@ namespace DorisApp.WebAPI.Controllers
                     };
 
                     var result = await _data.UpdateBrandAsync(GetUserIdentity(), justChangeName);
-
-                    if (result.IsSuccessStatusCode) return Ok(result);
-                    else return BadRequest(result);
+                    return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
                 }
 
             }
@@ -132,8 +133,7 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -159,9 +159,9 @@ namespace DorisApp.WebAPI.Controllers
                 if (getExisting == null)
                 {
                     await _log.LogError("BrandController[Add]: " + GetUserIdentity()?.Name +
-                        $"trying to delete brand[{brand.Id}]");
+                        $" trying to delete brand[{brand.Id}] not exist.");
                     return BadRequest(
-                       new ResultDTO<ProductSummaryDTO>
+                       new ResultDTO<BrandSummaryDTO>
                        {
                            ErrorCode = 4,
                            ReasonPhrase = "Unable to delete brand.",
@@ -189,7 +189,7 @@ namespace DorisApp.WebAPI.Controllers
                 await _log.LogError("BrandController[Delete]: " + ex.Message);
 
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<BrandSummaryDTO>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to delete brand.",
@@ -210,7 +210,7 @@ namespace DorisApp.WebAPI.Controllers
                     {
                         Data = brandItem,
                         ErrorCode = 0,
-                        ReasonPhrase = "Unable to delete brand.",
+                        ReasonPhrase = "Successfully get brand.",
                         IsSuccessStatusCode = false
                     }
                 );

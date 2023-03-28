@@ -26,25 +26,50 @@ namespace DorisApp.WebAPI.DataAccess
 
             try
             {
-                int createdByUserId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+                int createdByUserId = int.Parse(identity?.Claims.FirstOrDefault(c => 
+                        c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+
                 brand.BrandName = AppHelper.CapitalizeFirstWords(brand.BrandName);
                 brand.CreatedByUserId = createdByUserId;
                 brand.UpdatedByUserId = createdByUserId;
                 brand.CreatedAt = DateTime.UtcNow;
                 brand.UpdatedAt = brand.CreatedAt;
 
-
-                var getIdentical = await _sql.LoadDataAsync<BrandSummaryDTO, BrandModel>("spBrandGetIdentical", brand);
+                var getIdentical = await _sql.LoadDataAsync<BrandModel,
+                    BrandModel>("spBrandGetIdentical", brand);
 
                 if (getIdentical.Count > 0)
                 {
-                    return new ResultDTO<List<BrandSummaryDTO>>
+                    var brandModel = getIdentical.FirstOrDefault();
+
+                    //If it is Just mark as deleted
+                    if (brandModel != null && brandModel.BrandName == "*")
                     {
-                        Data = getIdentical,
-                        ErrorCode = 3,
-                        IsSuccessStatusCode = false,
-                        ReasonPhrase = $"Brand not saved: {getIdentical.Count} identical item(s) found."
-                    };
+                        brandModel.BrandName = brand.BrandName;
+                        brandModel.UpdatedByUserId = createdByUserId;
+                        brandModel.UpdatedAt = DateTime.UtcNow;
+                        brandModel.StoredImageName = brand.StoredImageName;
+
+                        await _sql.UpdateDataAsync("dbo.spBrandRestore", brandModel);
+                        return new ResultDTO<List<BrandSummaryDTO>>
+                        {
+                            ErrorCode = 0,
+                            IsSuccessStatusCode = true,
+                            ReasonPhrase = "Successfully restore brand."
+                        };
+                    }
+
+                    //If it is not deleted
+                    if (brandModel != null && brandModel.BrandName != "*")
+                    {
+                        return new ResultDTO<List<BrandSummaryDTO>>
+                        {
+                            ErrorCode = 3,
+                            IsSuccessStatusCode = false,
+                            ReasonPhrase = $"Brand not saved: {getIdentical.Count} identical item(s) found."
+                        };
+                    }
+      
                 }
 
                 await ValidateFields(identity, brand);

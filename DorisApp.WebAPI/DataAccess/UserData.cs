@@ -32,13 +32,12 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!ValidateEmail(user.Email))
             {
-                _logger.LogError($"Invalid email: {user.Email}");
                 throw new Exception($"Invalid email: {user.Email}");
             }
 
             if (getRole <= 0)
             {
-                _logger.LogError("Role id not found.");
+                await _logger.LogError("Role id not found.");
                 throw new Exception("Role id not found.");
             }
 
@@ -72,12 +71,13 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.SaveDataAsync("dbo.spUserInsert", newUser);
-                _logger.LogInfo($"Welcome {AppHelper.GetFullName(newUser)}");
+                //TODO: Log
+                //_logger.LogInfo($"Welcome {AppHelper.GetFullName(newUser)}");
                 return newUser;
             }
             catch (Exception ex)
             {
-                _logger.LogError("Unable to register User:" + Environment.NewLine + ex.Message);
+                await _logger.LogError("Unable to register User:" + Environment.NewLine + ex.Message);
                 throw new Exception(ex.Message);
             }
         }
@@ -117,11 +117,12 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.UpdateDataAsync<UserModel>("dbo.spUserUpdateToken", user);
-                _logger.LogInfo($"Seccessfully request {AppHelper.GetFullName(user)} for new request token.");
+                //TODO: LOG
+                //_logger.LogInfo($"Seccessfully request {AppHelper.GetFullName(user)} for new request token.");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Fail {AppHelper.GetFullName(user)} " +
+              await  _logger.LogError($"Fail {AppHelper.GetFullName(user)} " +
                     $"to for new request token." +
                     Environment.NewLine + ex.Message);
                 throw new Exception(ex.Message);

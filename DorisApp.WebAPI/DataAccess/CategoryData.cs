@@ -23,24 +23,51 @@ namespace DorisApp.WebAPI.DataAccess
         {
             try
             {
-                var userId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+                var userId = int.Parse(identity?.Claims.FirstOrDefault(c => 
+                c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+
                 category.CategoryName = AppHelper.CapitalizeFirstWords(category.CategoryName);
                 category.CreatedByUserId = userId;
                 category.UpdatedByUserId = category.CreatedByUserId;
                 category.CreatedAt = DateTime.UtcNow;
                 category.UpdatedAt = category.CreatedAt;
 
-                var getIdentical = await _sql.LoadDataAsync<CategorySummaryDTO, CategoryModel>("spCategoryGetIdentical", category);
+                var getIdentical = await _sql.LoadDataAsync<CategoryModel,
+                    CategoryModel>("spCategoryGetIdentical", category);
+
 
                 if (getIdentical.Count > 0)
                 {
-                    return new ResultDTO<List<CategorySummaryDTO>>
+                    var categoryModel = getIdentical.FirstOrDefault();
+                    await _sql.UpdateDataAsync("dbo.spCategoryRestore", categoryModel);
+
+                    //If it is just mark as deleted
+                    if (categoryModel != null && categoryModel.CategoryName == "*")
                     {
-                        Data = getIdentical,
-                        ErrorCode = 3,
-                        IsSuccessStatusCode = false,
-                        ReasonPhrase = $"Category not saved: {getIdentical.Count} identical item(s) found."
-                    };
+                        categoryModel.CategoryName = category.CategoryName;
+                        categoryModel.UpdatedByUserId = userId;
+                        categoryModel.UpdatedAt = DateTime.UtcNow;
+
+                        await _sql.UpdateDataAsync("dbo.spCategoryRestore", categoryModel);
+                        return new ResultDTO<List<CategorySummaryDTO>>
+                        {
+                            ErrorCode = 0,
+                            IsSuccessStatusCode = true,
+                            ReasonPhrase = "Successfully restore category."
+                        };
+                    }
+
+                    //If it is not deleted
+                    if (categoryModel != null && categoryModel.CategoryName != "*")
+                    {
+                        return new ResultDTO<List<CategorySummaryDTO>>
+                        {
+                            ErrorCode = 3,
+                            IsSuccessStatusCode = false,
+                            ReasonPhrase = $"Category not saved: {getIdentical.Count} identical item(s) found."
+                        };
+                    }
+
                 }
 
                 await ValidateFields(identity, category);

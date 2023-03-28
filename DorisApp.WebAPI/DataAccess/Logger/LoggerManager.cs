@@ -71,7 +71,7 @@ namespace DorisApp.WebAPI.DataAccess.Logger
                 message += $"count[{count}]";
             }
 
-            if (status == 1 || status == 3 || status == 5 )
+            if (status == 1 || status == 3 || status == 5)
             {
 
                 ActivityLogModel log = new()
@@ -142,7 +142,7 @@ namespace DorisApp.WebAPI.DataAccess.Logger
             await Log(identity, "Fail to get", "e29h2oeks2#%wdw79yiuh6ada^&^57", tableName, null, null, count, errrorMessage, 8);
         }
 
-        public async Task LogInfo(string message)
+        public async Task LogSaveInfo(string message)
         {
             ActivityLogModel log = new()
             {

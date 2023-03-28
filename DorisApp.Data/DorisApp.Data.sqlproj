@@ -104,6 +104,15 @@
     <Build Include="dbo\Tables\ActivityLog.sql" />
     <Build Include="dbo\StoredProcedures\Category\spCategoryGetIdentical.sql" />
     <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryGetIdentical.sql" />
+    <Build Include="dbo\StoredProcedures\Brand\spBrandRestore.sql" />
+    <Build Include="dbo\StoredProcedures\Category\spCategoryRestore.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductDelete.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductGetById.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductGetSummaryByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductRestore.sql" />
+    <Build Include="dbo\StoredProcedures\Product\spProductUpdate.sql" />
+    <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryRestore.sql" />
+    <Build Include="dbo\Tables\Inventory.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

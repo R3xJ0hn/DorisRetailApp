@@ -30,7 +30,9 @@ namespace DorisApp.WebAPI.DataAccess
 
             try
             {
-                var userId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+                var userId = int.Parse(identity?.Claims.FirstOrDefault(c =>
+                c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+
                 subCategory.SubCategoryName = AppHelper.CapitalizeFirstWords(subCategory.SubCategoryName);
                 subCategory.CategoryId = subCategory.CategoryId;
                 subCategory.CreatedByUserId = userId;
@@ -40,23 +42,44 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (subCategory.CategoryId == 0) subCategory.CategoryId = 1;
 
-                var getIdentical = await _sql.LoadDataAsync<SubCategorySummaryDTO, SubCategoryModel>("spSubCategoryGetIdentical", subCategory);
+                var getIdentical = await _sql.LoadDataAsync<SubCategoryModel,
+                    SubCategoryModel>("spSubCategoryGetIdentical", subCategory);
 
                 if (getIdentical.Count > 0)
                 {
-                    return new ResultDTO<List<SubCategorySummaryDTO>>
+                    var subCategoryModel = getIdentical.FirstOrDefault();
+
+                    //If it is just mark as deleted
+                    if (subCategoryModel != null && subCategoryModel.SubCategoryName == "*")
                     {
-                        Data = getIdentical,
-                        ErrorCode = 3,
-                        IsSuccessStatusCode = false,
-                        ReasonPhrase = $"SubCategory not saved: {getIdentical.Count} identical item(s) found."
-                    };
+                        subCategoryModel.SubCategoryName = subCategoryModel.SubCategoryName;
+                        subCategoryModel.UpdatedByUserId = userId;
+                        subCategoryModel.UpdatedAt = DateTime.UtcNow;
+
+                        await _sql.UpdateDataAsync("dbo.spSubCategoryRestore", subCategoryModel);
+                        return new ResultDTO<List<SubCategorySummaryDTO>>
+                        {
+                            ErrorCode = 0,
+                            IsSuccessStatusCode = true,
+                            ReasonPhrase = "Successfully restore category."
+                        };
+                    }
+
+                    //If it is not deleted
+                    if (subCategoryModel != null && subCategoryModel.SubCategoryName != "*")
+                    {
+                        return new ResultDTO<List<SubCategorySummaryDTO>>
+                        {
+                            ErrorCode = 3,
+                            IsSuccessStatusCode = false,
+                            ReasonPhrase = $"Sub Category not saved: {getIdentical.Count} identical item(s) found."
+                        };
+                    }
                 }
 
                 await ValidateFields(identity, subCategory);
                 await _sql.SaveDataAsync("dbo.spSubCategoryInsert", subCategory);
                 await _logger.SuccessInsert(identity, subCategory.SubCategoryName, TableName);
-
 
                 return new ResultDTO<List<SubCategorySummaryDTO>>
                 {
@@ -107,7 +130,8 @@ namespace DorisApp.WebAPI.DataAccess
                 //This will ignore by the stored procedure.
                 subCategory.CreatedAt = DateTime.UtcNow;
 
-                if (subCategory.CategoryId == 0) subCategory.CategoryId = 1;
+                if (subCategory.CategoryId == 0 && getExistingItem.CategoryId > 0)
+                    subCategory.CategoryId = getExistingItem.CategoryId;
 
                 await ValidateFields(identity, subCategory);
                 await _sql.UpdateDataAsync("dbo.spSubCategoryUpdate", subCategory);

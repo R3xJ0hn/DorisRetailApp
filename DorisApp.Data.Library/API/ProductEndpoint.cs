@@ -10,13 +10,15 @@ namespace DorisApp.Data.Library.API
 {
     public class ProductEndpoint : BaseEndpoint
     {
-        public ProductEndpoint(IAPIHelper apiHelper, CategoryEndpoint categoryEndpoint)
+        public ProductEndpoint(IAPIHelper apiHelper)
             : base(apiHelper)
         {
         }
 
         public async Task<int> CountProductItems()
         {
+            var countedResult = 0;
+
             var request = new RequestPageDTO
             {
                 PageNo = 1,
@@ -25,20 +27,25 @@ namespace DorisApp.Data.Library.API
 
             var sent = await GetProductSummary(request);
 
-            var newRequest = new RequestPageDTO
+            if (sent?.Data != null)
             {
-                PageNo = 1,
-                ItemPerPage = sent.Data.TotalItems
-            };
+                var newRequest = new RequestPageDTO
+                {
+                    PageNo = 1,
+                    ItemPerPage = sent.Data.TotalItems
+                };
 
-            var result = await GetProductSummary(newRequest);
+                var getNewRequest = await GetProductSummary(newRequest);
+                countedResult = getNewRequest?.Data.Models.Count ?? 0;
+            }
 
-            return result?.Data.Models.Count ?? 0;
+            return countedResult;
         }
+
 
         public async Task<ResultDTO<List<ProductSummaryDTO>>?> AddProductAsync(ProductModel product, Stream? imgStream, string fileName)
         {
-           await ValidateProduct(product);
+            await ValidateProduct(product);
 
             if (imgStream != null && imgStream.Length != 0)
             {
@@ -50,11 +57,25 @@ namespace DorisApp.Data.Library.API
                 }
             }
 
-            var summary  = await SendPostAysnc(product, "URL:add-product");
-            return JsonConvert.DeserializeObject<ResultDTO<List<ProductSummaryDTO>>>(summary);
+            var summary = await SendPostAysnc(product, "URL:add-product");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <List<ProductSummaryDTO>>>(summary);
+            }
+            catch
+            {
+                return new ResultDTO<List<ProductSummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = summary
+                };
+            }
         }
 
-        public async Task<ResultDTO<List<ProductSummaryDTO>>?> UpdateProduct(ProductModel product, Stream? imgStream, string fileName)
+        public async Task<ResultDTO<List<ProductSummaryDTO>>?> UpdateProduct(ProductModel product, Stream? imgStream, string? fileName)
         {
             await ValidateProduct(product);
 
@@ -69,19 +90,82 @@ namespace DorisApp.Data.Library.API
             }
 
             var summary = await SendPostAysnc(product, "URL:update-product");
-            return JsonConvert.DeserializeObject<ResultDTO<List<ProductSummaryDTO>>>(summary);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <List<ProductSummaryDTO>>>(summary);
+            }
+            catch
+            {
+                return new ResultDTO<List<ProductSummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = summary
+                };
+            }
         }
 
         public async Task<ResultDTO<RequestModel<ProductSummaryDTO>>?> GetProductSummary(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-product/summary");
-            return JsonConvert.DeserializeObject<ResultDTO<RequestModel<ProductSummaryDTO>>>(result);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <RequestModel<ProductSummaryDTO>>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<RequestModel<ProductSummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
         }
 
         public async Task<ResultDTO<ProductSummaryDTO>?> DeleteProduct(ProductModel model)
         {
             var result = await SendPostAysnc(model, "URL:delete-product");
-            return JsonConvert.DeserializeObject<ResultDTO<ProductSummaryDTO>>(result);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <ProductSummaryDTO>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<ProductSummaryDTO>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
+
+        }
+
+        public async Task<ResultDTO<ProductModel>?> GetById(int Id)
+        {
+            var result = await SendPostByIdAysnc(Id, "URL:get-product/id");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <ProductModel>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<ProductModel>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
         }
 
         private async Task ValidateProduct(ProductModel product)

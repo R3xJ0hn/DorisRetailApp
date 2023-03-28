@@ -10,7 +10,7 @@ namespace DorisApp.Data.Library.Model
 
         [Required]
         [DisplayName("Category Name")]
-        public string SubCategoryName { get; set; }
+        public string SubCategoryName { get; set; } = string.Empty;
         public int CategoryId { get; set; }
         public int CreatedByUserId { get; set; }
         public int UpdatedByUserId { get; set; }

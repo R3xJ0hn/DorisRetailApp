@@ -8,8 +8,13 @@
 	@UpdatedAt			DATETIME2
 AS
 	
-	SELECT *
+	SELECT *,
+		--The Dappper will overide the name.
+		CASE 
+			WHEN MarkAsDeleted = 1 THEN '*' 
+			ELSE '' 
+		END AS SubCategoryName
 	FROM dbo.SubCategories
-	WHERE SubCategoryName = @SubCategoryName AND Id != 1
+	WHERE LOWER(SubCategoryName) = LOWER(@SubCategoryName) 
 
 RETURN 0

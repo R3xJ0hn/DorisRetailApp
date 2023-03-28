@@ -27,13 +27,8 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                var result = await _data.AddCategoryAsync(GetUserIdentity(), new CategoryModel
-                {
-                    CategoryName = category.CategoryName
-                });
-
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                var result = await _data.AddCategoryAsync(GetUserIdentity(), category);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -56,7 +51,7 @@ namespace DorisApp.WebAPI.Controllers
             if (getExisting == null)
             {
                 await _log.LogError("CategoryController[Add]: " + GetUserIdentity()?.Name +
-                    $"trying to update category[{category.Id}]");
+                    $"trying to update categoryID[{category.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<BrandSummaryDTO>
                    {
@@ -68,16 +63,8 @@ namespace DorisApp.WebAPI.Controllers
 
             try
             {
-                CategoryModel justChangeName = new()
-                {
-                    Id = category.Id,
-                    CategoryName = category.CategoryName
-                };
-
-                var result = await _data.UpdateCategoryAsync(GetUserIdentity(), justChangeName);
-
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                var result = await _data.UpdateCategoryAsync(GetUserIdentity(), category);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -99,8 +86,7 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -124,7 +110,7 @@ namespace DorisApp.WebAPI.Controllers
             if (getExisting == null)
             {
                 await _log.LogError("CategoryController[Add]: " + GetUserIdentity()?.Name +
-                    $"trying to delete category[{category.Id}]");
+                    $" trying to delete category[{category.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<BrandSummaryDTO>
                    {
@@ -137,8 +123,7 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var result = await _data.DeleteCategoryAsync(GetUserIdentity(), category);
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {

@@ -130,8 +130,6 @@
 
                 </div>
 
-
-
                 <Pagination CurrentPage="@currentPage"
                             PageCount="@totalPages"
                             OnPageChanged="OnHandlePageChange" />
@@ -164,7 +162,7 @@
                 <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
 
                     <UploadImage @ref="uploadImageComponentRef"
-                             OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@imgSourceUrl" />
+                             OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" />
 
                     <div class="mb-3 p-2">
                         <label for="brandName" class="form-label">Brand Name</label>
@@ -188,14 +186,16 @@
 
 </div>
 
+<HttpErrorPopUp @ref="HttpErrorHandler" />
+
 @code {
+    private HttpErrorPopUp? HttpErrorHandler = new();
     private RequestModel<BrandSummaryDTO>? brandSummary;
     private RequestPageDTO brandRequestDTO = new();
     private BrandModel modalModel = new();
 
-    private UploadImage? uploadImageComponentRef;
+    private UploadImage? uploadImageComponentRef = new();
     long maxFileSize = 1024 * 1024; // 1 MB in bytes
-    private string? imgSourceUrl;
     private Stream? imgStream;
     private string? imgName;
 
@@ -203,12 +203,11 @@
     private int currentPage = 1;
     private bool isLoading = true;
 
-    private Modal modalComponentRef;
+    private Modal? modalComponentRef = new();
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
 
     private OrderBrandSummaryBy selectedSortValue;
-
 
     protected async override Task OnInitializedAsync()
     {
@@ -237,7 +236,7 @@
     private async Task OnSearchItem(ChangeEventArgs e)
     {
         currentPage = 1;
-        string? searchFor = e.Value.ToString();
+        string? searchFor = e?.Value?.ToString();
         brandRequestDTO.LookFor = VerifySearchBar(searchFor);
         await RequestItems(currentPage, selectedSortValue);
     }
@@ -245,7 +244,7 @@
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderBrandSummaryBy)Enum
-        .Parse(typeof(OrderBrandSummaryBy), e.Value.ToString());
+        .Parse(typeof(OrderBrandSummaryBy), e?.Value?.ToString() ?? "0");
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);
@@ -264,8 +263,9 @@
             imgName = e.File.Name;
             imgStream = e.File.OpenReadStream(maxFileSize);
         }
-        catch (Exception)
+        catch
         {
+            if (uploadImageComponentRef != null)
             await uploadImageComponentRef.RemoveActiveImage();
             StateHasChanged();
         }
@@ -291,12 +291,11 @@
     {
         imgStream = null;
         imgName = null;
-        imgSourceUrl = null;
         modalModel.BrandName = "";
 
-        if (modalMode != "delete")
-        { await uploadImageComponentRef.RemoveActiveImage(); }
-       
+        if (uploadImageComponentRef != null && modalMode != "delete")
+        await uploadImageComponentRef.RemoveActiveImage(); 
+
         await RequestItems(currentPage, selectedSortValue);
     }
 
@@ -310,93 +309,132 @@
 
     private async Task OpenEditBrandModal(int id, string url)
     {
-        modalTitle = "Edit Modal";
+        modalTitle = "Edit Brand";
         modalMode = "edit";
-        imgSourceUrl = url;
+
+        if (uploadImageComponentRef != null)
         await uploadImageComponentRef.SetActiveImage(url);
+
         SetModalModel(id);
     }
 
     private void OpenDeleteBrandModal(int id)
     {
-        modalTitle = "Delete Modal";
+        modalTitle = "Delete Branddal";
         modalMode = "delete";
         SetModalModel(id);
     }
 
     private async Task AddBrand()
     {
-        var brand = new BrandModel
+        try
         {
-            BrandName = modalModel.BrandName
-        };
+            var brand = new BrandModel
+            {
+                BrandName = modalModel.BrandName
+            };
 
-        var result = await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
 
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully added {modalModel.BrandName}");
+            }
+
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<BrandSummaryDTO>>(result);
+
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+        modalComponentRef?.Close();
     }
 
     private async Task EditBrand()
     {
-        var brand = new BrandModel
+        try
         {
-            Id = modalModel.Id,
-            BrandName = modalModel.BrandName,
-        };
+            var brand = new BrandModel
+                {
+                    Id = modalModel.Id,
+                    BrandName = modalModel.BrandName
+                };
 
-        var result = await BrandEndpoint.UpdateBrand(brand, imgStream, imgName);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await BrandEndpoint.UpdateBrand(brand, imgStream, imgName);
 
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully update {modalModel.BrandName}");
+            }
+
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<BrandSummaryDTO>>(result);
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        modalComponentRef?.Close();
     }
 
     private async Task DeleteBrand()
     {
-        var brand = new BrandModel
+        try
         {
-            Id = modalModel.Id,
-            BrandName = modalModel.BrandName
-        };
+            var brand = new BrandModel
+                {
+                    Id = modalModel.Id,
+                    BrandName = modalModel.BrandName
+                };
 
-        var result = await BrandEndpoint.DeleteBrand(brand);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await BrandEndpoint.DeleteBrand(brand);
+
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("WarningToast",
+               $"Successfully remove {modalModel.BrandName}");
+            }
+
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result);
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        modalComponentRef?.Close();
     }
 
 
     private void SetModalModel(int brandId)
     {
-        var brand = brandSummary.Models
+        var brand = brandSummary?.Models
         .FirstOrDefault(x => x.Id == brandId);
 
         if (brand != null)
         {
             modalModel.Id = brandId;
-            modalModel.BrandName = brand.BrandName;
+            modalModel.BrandName = brand.BrandName ?? "";
         }
         StateHasChanged();
     }
 
-    private async Task HandleErrors(int errorCode, string message = "")
+    private async Task CatchError(string exMessage)
     {
-        if (errorCode > 0)
-        {
-            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
-            modalComponentRef.Close();
-        }
+        var result = new ResultDTO<BrandSummaryDTO>
+            {
+                ErrorCode = 1
+            };
 
-        if (errorCode == 401)
-        {
-            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
-        }
-
-        if (errorCode == 3)
-        {
-            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
-        }
+        if (HttpErrorHandler != null)
+            await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);
     }
-
 
     private string? VerifySearchBar(string? str) =>
     string.IsNullOrWhiteSpace(str) ? null : str;

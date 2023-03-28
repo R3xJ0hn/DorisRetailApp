@@ -43,19 +43,43 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (product.BrandId == 0) product.BrandId = 1;
                 if (product.CategoryId == 0) product.CategoryId = 1;
-                if (product.SubcategoryId == 0) product.SubcategoryId = 1;
+                if (product.SubCategoryId == 0) product.SubCategoryId = 1;
 
-                var getIdentical = await _sql.LoadDataAsync<ProductSummaryDTO, ProductModel>("spProductGetIdentical", product);
+                var getIdentical = await _sql.LoadDataAsync<ProductModel,
+                    ProductModel>("spProductGetIdentical", product);
 
                 if (getIdentical.Count > 0)
                 {
-                    return new ResultDTO<List<ProductSummaryDTO>>
+                    var productModel = getIdentical.FirstOrDefault();
+
+                    //If it is Just mark as deleted
+                    if (productModel != null && productModel.ProductName == "*")
                     {
-                        Data = getIdentical,
-                        ErrorCode = 3,
-                        IsSuccessStatusCode= false,
-                        ReasonPhrase = $"Product not saved: {getIdentical.Count} identical item(s) found."
-                    };
+                        productModel.ProductName = product.ProductName;
+                        productModel.UpdatedByUserId = userId;
+                        productModel.UpdatedAt = DateTime.UtcNow;
+                        productModel.StoredImageName = product.StoredImageName;
+
+                        await _sql.UpdateDataAsync("dbo.spProductRestore", productModel);
+                        return new ResultDTO<List<ProductSummaryDTO>>
+                        {
+                            ErrorCode = 0,
+                            IsSuccessStatusCode = true,
+                            ReasonPhrase = "Successfully restore product."
+                        };
+                    }
+
+                    //If it is not deleted
+                    if (productModel != null && productModel.ProductName != "*")
+                    {
+                        return new ResultDTO<List<ProductSummaryDTO>>
+                        {
+                            ErrorCode = 3,
+                            IsSuccessStatusCode = false,
+                            ReasonPhrase = $"Product not saved: {getIdentical.Count} identical item(s) found."
+                        };
+                    }
+
                 }
 
                 await _sql.SaveDataAsync("dbo.spProductInsert", product);
@@ -88,7 +112,6 @@ namespace DorisApp.WebAPI.DataAccess
 
             try
             {
-
                 var getExistingItem = await GetByIdAsync(identity, product.Id);
                 oldName = (await GetByIdAsync(identity, product.Id))?.ProductName;
 
@@ -118,9 +141,14 @@ namespace DorisApp.WebAPI.DataAccess
                 //This will ignore by the stored procedure.
                 product.CreatedAt = DateTime.UtcNow;
 
-                if (product.BrandId == 0) product.BrandId = 1;
-                if (product.CategoryId == 0) product.CategoryId = 1;
-                if (product.SubcategoryId == 0) product.SubcategoryId = 1;
+                if (product.BrandId == 0 && getExistingItem.BrandId > 0)
+                    product.BrandId = getExistingItem.BrandId;
+
+                if (product.CategoryId == 0 && getExistingItem.CategoryId > 0)
+                    product.CategoryId = getExistingItem.CategoryId;
+
+                if (product.SubCategoryId == 0 && getExistingItem.SubCategoryId > 0)
+                    product.SubCategoryId = getExistingItem.SubCategoryId;
 
                 await _sql.UpdateDataAsync("dbo.spProductUpdate", product);
                 await _logger.SuccessUpdate(identity, product.ProductName, TableName, oldName ?? "");
@@ -186,7 +214,7 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task<bool> IsExistAsync(int id)
         {
-            return await IsItemExistAsync<BrandModel>("dbo.spProductGetById", id);
+            return await IsItemExistAsync<ProductModel>("dbo.spProductGetById", id);
         }
 
         public async Task ValidateFields(ClaimsIdentity? identity, ProductModel product)
@@ -240,13 +268,13 @@ namespace DorisApp.WebAPI.DataAccess
                 msg = $"Category[{product.CategoryId}] not exist.";
             }
 
-            if (product.SubcategoryId != 0)
+            if (product.SubCategoryId != 0)
             {
-                var getSubCategoryIfExist = await _subCategoryData.IsExistAsync(product.SubcategoryId);
+                var getSubCategoryIfExist = await _subCategoryData.IsExistAsync(product.SubCategoryId);
 
                 if (!getSubCategoryIfExist)
                 {
-                    msg = $"SubCategory[{product.SubcategoryId}] not exist.";
+                    msg = $"SubCategory[{product.SubCategoryId}] not exist.";
                 }
             }
 

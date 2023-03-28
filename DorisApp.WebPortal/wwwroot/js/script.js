@@ -1,6 +1,9 @@
 ﻿window.registerSidebarToggleHandler = function () {
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
     const sidebarToggleXBtn = document.getElementById('sidebar-toggle-x-btn');
+
+    const sidebarToggleBackdrop = document.querySelector('.sidebar-backdrop');
+
     const sidebar = window.parent.document.getElementById('sidebar');
 
     sidebarToggleBtn.addEventListener('click', function (event) {
@@ -11,30 +14,41 @@
         toggleSidebar();
     });
 
+    sidebarToggleBackdrop.addEventListener('click', function (event) {
+        toggleSidebar();
+    });
+
     function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
     }
 };
 
-function OpenPanel1(event) {
+function OpenPanel1() {
     const panel1 = document.getElementById('panel1');
     const panel2 = document.getElementById('panel2');
-    handleClick(event, panel1, panel2);
+    handleClick(panel1, panel2);
 }
 
-function OpenPanel2(event) {
+function OpenPanel2() {
     const panel1 = document.getElementById('panel1');
     const panel2 = document.getElementById('panel2');
-    handleClick(event, panel2, panel1);
+    handleClick(panel2, panel1);
 }
 
-function handleClick(event, panelToShow, panelToHide) {
+function handleClick(panelToShow, panelToHide) {
     let timeoutId = null;
+    const btn1 = document.getElementById('openPanel1Btn');
+    const btn2 = document.getElementById('openPanel2Btn');
 
     if (timeoutId !== null) {
-        event.preventDefault();
+        btn1.preventDefault();
+        btn2.preventDefault();
         return false;
     }
+
+    let appContainer = document.querySelector(".app-container");
+    appContainer.style.height = '150vh';
+    window.scrollTo(0, 0);
 
     panelToHide.classList.remove('in');
     panelToHide.classList.add('out');
@@ -46,6 +60,7 @@ function handleClick(event, panelToShow, panelToHide) {
 
     timeoutId = setTimeout(function () {
         panelToHide.style.display = 'none';
+        appContainer.style.height = 'auto';
         timeoutId = null;
     }, 500);
 }
@@ -136,10 +151,10 @@ function clearUploadValue() {
 
     if (fileInput.value !== "") {
         fileInput.value = "";
+        img.src = "";
+        wrapper.classList.remove("active");
     }
 
-    img.src = "";
-    wrapper.classList.remove("active");
 }
 
 function SavedAlert(type, name) {
@@ -180,8 +195,20 @@ const Toast = Swal.mixin({
     }
 })
 
+const ToastSuccess = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+})
+
 function SuccessToast(msg) {
-    Toast.fire({
+    ToastSuccess.fire({
         icon: 'success',
         title: msg
     })

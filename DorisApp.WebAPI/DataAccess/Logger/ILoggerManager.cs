@@ -9,7 +9,7 @@ namespace DorisApp.WebAPI.DataAccess.Logger
         Task FailRead(ClaimsIdentity? identity, string tableName, int count, string errrorMessage);
         Task FailUpdate(ClaimsIdentity? identity, string propertyName, string tableName, string oldName, string errorMessage);
         Task LogError(string message);
-        Task LogInfo(string message);
+        Task LogSaveInfo(string message);
         Task SuccessDelete(ClaimsIdentity? identity, string propertyName, string tableName);
         Task SuccessInsert(ClaimsIdentity? identity, string propertyName, string tableName);
         Task SuccessRead(ClaimsIdentity? identity, string tableName, int count);

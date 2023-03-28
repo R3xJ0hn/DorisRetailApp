@@ -126,8 +126,6 @@
                 <Pagination CurrentPage="@currentPage"
                             PageCount="@totalPages"
                             OnPageChanged="OnHandlePageChange" />
-
-
             </div>
         </div>
 
@@ -180,8 +178,10 @@
 
 </Modal>
 
+<HttpErrorPopUp @ref="HttpErrorHandler" />
 
 @code {
+    private HttpErrorPopUp? HttpErrorHandler = new();
     private RequestModel<CategorySummaryDTO>? categorySummary;
     private RequestPageDTO categoryRequestDTO = new();
     private CategoryModel modalModel = new();
@@ -190,7 +190,7 @@
     private int totalPages = 1;
     private int currentPage = 1;
 
-    private Modal modalComponentRef;
+    private Modal? modalComponentRef;
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
 
@@ -224,7 +224,7 @@
     private async Task OnSearchItem(ChangeEventArgs e)
     {
         currentPage = 1;
-        string? searchFor = e.Value.ToString();
+        string? searchFor = e?.Value?.ToString();
         categoryRequestDTO.LookFor = VerifySearchBar(searchFor);
         await RequestItems(currentPage, selectedSortValue);
     }
@@ -232,7 +232,7 @@
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderCategorySummaryBy)Enum
-        .Parse(typeof(OrderCategorySummaryBy), e.Value.ToString());
+        .Parse(typeof(OrderCategorySummaryBy), e?.Value?.ToString() ?? "0");
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);
@@ -262,7 +262,7 @@
 
     private async Task OnCloseModal()
     {
-        modalModel.CategoryName = null;
+        modalModel.CategoryName = string.Empty;
         await RequestItems(currentPage, selectedSortValue);
     }
 
@@ -290,71 +290,93 @@
 
     private async Task AddCategory()
     {
-        var category = new CategoryModel
+        try
+        {
+            var category = new CategoryModel
             {
                 CategoryName = modalModel.CategoryName
             };
 
-        var result = await CategoryEndpoint.AddCategoryAsync(category);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await CategoryEndpoint.AddCategoryAsync(category);
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<CategorySummaryDTO>>(result);
+
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        modalComponentRef?.Close();
     }
 
     private async Task EditCategory()
     {
-        var categoryToUpdate = new CategoryModel
-            {
-                Id = modalModel.Id,
-                CategoryName = modalModel.CategoryName
-            };
+        try
+        {
+            var category = new CategoryModel
+                {
+                    Id = modalModel.Id,
+                    CategoryName = modalModel.CategoryName
+                };
 
-        var result = await CategoryEndpoint.UpdateCategory(categoryToUpdate);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await CategoryEndpoint.UpdateCategory(category);
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<CategorySummaryDTO>>(result);
+
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        modalComponentRef?.Close();
     }
 
     private async Task DeleteCategory()
     {
-        var category = new CategoryModel
+        try
+        {
+            var category = new CategoryModel
             {
                 Id = modalModel.Id,
                 CategoryName = modalModel.CategoryName
             };
 
-        var result = await CategoryEndpoint.DeleteCategory(category);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await CategoryEndpoint.DeleteCategory(category);
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<CategorySummaryDTO>(result);
+
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        modalComponentRef?.Close();
     }
 
     private void SetModalModel(int categoryId)
     {
-        var category = categorySummary.Models
+        var category = categorySummary?.Models
         .FirstOrDefault(x => x.Id == categoryId);
 
         if (category != null)
         {
             modalModel.Id = categoryId;
-            modalModel.CategoryName = category.CategoryName;
+            modalModel.CategoryName = category.CategoryName ?? "";
         }
     }
 
-    private async Task HandleErrors(int errorCode, string message = "")
+    private async Task CatchError(string exMessage)
     {
-        if (errorCode > 0)
-        {
-            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
-            modalComponentRef.Close();
-        }
+        var result = new ResultDTO<BrandSummaryDTO>
+            {
+                ErrorCode = 1
+            };
 
-        if (errorCode == 401)
-        {
-            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
-        }
-
-        if (errorCode == 3)
-        {
-            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
-        }
+        if (HttpErrorHandler != null)
+            await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);
     }
 
     private string? VerifySearchBar(string? str) =>

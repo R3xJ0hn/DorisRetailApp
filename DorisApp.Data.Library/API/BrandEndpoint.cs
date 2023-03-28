@@ -1,7 +1,6 @@
 ﻿using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Schema;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,6 +17,8 @@ namespace DorisApp.Data.Library.API
 
         public async Task<int> CountBrandItems()
         {
+            var countedResult = 0;
+
             var request = new RequestPageDTO
             {
                 PageNo = 1,
@@ -26,15 +27,19 @@ namespace DorisApp.Data.Library.API
 
             var sent = await GetBrandSummary(request);
 
-            var newRequest = new RequestPageDTO
+            if (sent?.Data != null)
             {
-                PageNo = 1,
-                ItemPerPage = sent.Data.TotalItems 
-            };
+                var newRequest = new RequestPageDTO
+                {
+                    PageNo = 1,
+                    ItemPerPage = sent.Data.TotalItems
+                };
 
-            var result = await GetBrandSummary(newRequest);
+                var getNewRequest = await GetBrandSummary(newRequest);
+                countedResult = getNewRequest?.Data.Models.Count ?? 0;
+            }
 
-            return result?.Data.Models.Count ?? 0;
+            return countedResult;
         }
 
         public async Task<ResultDTO<List<BrandSummaryDTO>>?> AddBrandAsync(BrandModel brand, Stream? imgStream, string? fileName)
@@ -58,7 +63,7 @@ namespace DorisApp.Data.Library.API
                 return JsonConvert.DeserializeObject<ResultDTO
                     <List<BrandSummaryDTO>>>(summary);
             }
-            catch 
+            catch
             {
                 return new ResultDTO<List<BrandSummaryDTO>>
                 {
@@ -67,9 +72,6 @@ namespace DorisApp.Data.Library.API
                     ReasonPhrase = summary
                 };
             }
-
-           
-
         }
 
         public async Task<ResultDTO<List<BrandSummaryDTO>>?> UpdateBrand(BrandModel brand, Stream? imgStream, string? fileName)
@@ -87,19 +89,80 @@ namespace DorisApp.Data.Library.API
             }
 
             var summary = await SendPostAysnc(brand, "URL:update-brand");
-            return JsonConvert.DeserializeObject<ResultDTO<List<BrandSummaryDTO>>>(summary);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <List<BrandSummaryDTO>>>(summary);
+            }
+            catch
+            {
+                return new ResultDTO<List<BrandSummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = summary
+                };
+            }
         }
 
         public async Task<ResultDTO<RequestModel<BrandSummaryDTO>>?> GetBrandSummary(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-brand/summary");
-            return JsonConvert.DeserializeObject<ResultDTO<RequestModel<BrandSummaryDTO>>>(result);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <RequestModel<BrandSummaryDTO>>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<RequestModel<BrandSummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
         }
 
         public async Task<ResultDTO<BrandSummaryDTO>?> DeleteBrand(BrandModel model)
         {
             var result = await SendPostAysnc(model, "URL:delete-brand");
-            return JsonConvert.DeserializeObject<ResultDTO<BrandSummaryDTO>>(result);
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <BrandSummaryDTO>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<BrandSummaryDTO>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
+        }
+
+        public async Task<ResultDTO<BrandModel>?> GetById(int Id)
+        {
+            var result = await SendPostByIdAysnc(Id, "URL:get-brand/id");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <BrandModel>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<BrandModel>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
         }
 
         private void ValidateBrand(BrandModel brand)

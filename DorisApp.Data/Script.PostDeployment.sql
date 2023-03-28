@@ -70,7 +70,7 @@ BEGIN
 			[CreatedAt],			
 			[UpdatedAt]) 
 	VALUES(			
-			1,				
+			2,				
 			'super',			
 			'admin',			
 			'admin@gmail.com',		

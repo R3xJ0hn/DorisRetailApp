@@ -11829,6 +11829,7 @@ textarea.form-control-lg {
 }
 .app-panel.out {
   animation: panel-out 500ms ease;
+  position: absolute;
 }
 .app-panel.in {
   animation: panel-in 700ms ease;
@@ -11836,12 +11837,10 @@ textarea.form-control-lg {
 
 @keyframes panel-out {
   from {
-    position: absolute;
     transform: scale(1);
     opacity: 0.9;
   }
   to {
-    position: absolute;
     transform: scale(0.7);
     opacity: 0;
   }
@@ -11889,6 +11888,8 @@ textarea.form-control-lg {
   width: 1.2rem;
   height: 1.2rem;
   border-color: #d582fc;
+  cursor: pointer;
+  user-select: none;
 }
 
 .form-check-label {
@@ -12008,6 +12009,8 @@ textarea.form-control-lg {
   position: sticky;
   top: 0;
   z-index: 3;
+  cursor: pointer;
+  user-select: none;
 }
 .table-wrapper .table tbody tr {
   color: #343a40;
@@ -12024,25 +12027,6 @@ textarea.form-control-lg {
 }
 .table-wrapper .table tbody tr td > img {
   width: calc(1rem *2);
-}
-.table-wrapper .table tbody tr td > a {
-  display: block;
-  text-decoration: none;
-  border-radius: 1rem;
-  font-weight: 500;
-  color: #343a40;
-  padding-bottom: 0.2rem;
-  transition: background-color 0.25s ease-out;
-}
-.table-wrapper .table tbody tr td > a:hover {
-  background-color: #d582fc;
-  color: #fff;
-  transition: transform 0.1s ease-out;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-}
-.table-wrapper .table tbody tr td > a:hover:active {
-  transform: scale(0.8);
-  box-shadow: none;
 }
 .table-wrapper .table tbody tr td .table-icons {
   display: flex;
@@ -12719,7 +12703,7 @@ textarea.form-control-lg {
   }
 }
 .colored-toast.swal2-icon-success {
-  background-color: #d582fc !important;
+  background-color: #87ee79 !important;
 }
 
 .colored-toast.swal2-icon-error {
@@ -12915,6 +12899,8 @@ textarea.form-control-lg {
   font-weight: bold;
   margin: 0;
   font-weight: 500;
+  outline: none;
+  border: none;
 }
 .sidebar .sidebar-top .info .tagline {
   font-size: 11px;
@@ -13176,6 +13162,35 @@ textarea.form-control-lg {
 .product-page-content .app-panel .taxable-check p {
   font-size: 12px;
   margin-top: 0.3rem;
+}
+.product-page-content .app-panel tbody tr td a {
+  display: block;
+  text-decoration: none;
+  border-radius: 1rem;
+  font-weight: 500;
+  color: #343a40;
+  padding-bottom: 0.2rem;
+  transition: background-color 0.25s ease-out;
+  cursor: pointer;
+  user-select: none;
+}
+.product-page-content .app-panel tbody tr td a:hover {
+  background-color: #d582fc;
+  color: #fff;
+  transition: transform 0.1s ease-out;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+.product-page-content .app-panel tbody tr td a:hover:active {
+  transform: scale(0.8);
+  box-shadow: none;
+}
+.product-page-content .app-panel .stock-warning {
+  color: #fa6d93;
+  text-shadow: 1px black;
+}
+.product-page-content .app-panel .stock-warning:hover {
+  background-color: #fa6d93;
+  color: #fff;
 }
 .product-page-content .app-panel .btn-back {
   float: right;

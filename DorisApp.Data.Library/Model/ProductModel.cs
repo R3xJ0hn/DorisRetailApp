@@ -10,24 +10,24 @@ namespace DorisApp.Data.Library.Model
 
         [Required]
         [DisplayName("Product Name")]
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
         public int BrandId { get; set; }
 
         [Required]
         [RegularExpression(@"^[1-9]\d*(\.\d+)?$",
             ErrorMessage = "Please select a category.")]
         public int CategoryId { get; set; }
-        public int SubcategoryId { get; set; }
+        public int SubCategoryId { get; set; }
         public bool IsTaxable { get; set; }
         public bool IsAvailable { get; set; }
 
         [Required]
-        public string Size { get; set; }
-        public string Color { get; set; }
+        public string Size { get; set; } = string.Empty;
+        public string? Color { get; set; }
 
         [Required]
         [DisplayName("Product SKU")]
-        public string Sku { get; set; }
+        public string Sku { get; set; } = string.Empty;
         public string? StoredImageName { get; set; }
         public string? Description { get; set; }
         public int CreatedByUserId { get; set; }

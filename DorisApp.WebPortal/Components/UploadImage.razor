@@ -3,7 +3,7 @@
 <div class="upload-image-container mb-3">
     <div class="upload-image-wrapper">
 
-        <img class="upload-image" src="@ImgSource" alt="">
+        <img class="upload-image" alt="">
 
         <button class="openFileBtn" @onclick="OpenFileBtn">
             <i class="fa-regular fa-circle-plus"></i>
@@ -15,7 +15,7 @@
             <i class="fas fa-times"></i>
         </div>
         <div class="file-name">
-            File name here
+           
         </div>
 
     </div>
@@ -31,15 +31,15 @@
 @code {
 
     long fileSize = 0;
+    private bool rendered;
 
     [Parameter]
-    public long MaxFileSize { get; set; }
-
-    [Parameter]
-    public string? ImgSource { get; set; }         
+    public long MaxFileSize { get; set; }   
 
     [Parameter]
     public EventCallback<InputFileChangeEventArgs> OnFileChange { get; set; }
+
+    protected override void OnAfterRender(bool firstRender) => rendered = true;
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -50,7 +50,7 @@
 
     public async Task SetActiveImage(string url)
     {
-        if (!string.IsNullOrWhiteSpace(url))
+        if (!string.IsNullOrWhiteSpace(url) && rendered)
         {
             await JSRuntime.InvokeVoidAsync("setUploadImageToActive", url);
         }

@@ -3,23 +3,23 @@
 @inject SubCategoryEndpoint SubCategoryEndpoint
 @inject ProductEndpoint ProductEndpoint
 @inject IJSRuntime JSRuntime
+@inject IConfiguration Config
 
 
 <div class="container-fluid">
 
     <div class="card">
 
-        <EditForm Model="@newProduct" OnInvalidSubmit="@OnSaveForm">
-            <DataAnnotationsValidator />
-
+        <EditForm Model="@productModel" OnInvalidSubmit="@OnSaveForm">
+  
             <div class="card-header">
                 <div class="row">
                     <div class="col">
-                        <h4 class="col card-title">@Mode Product</h4>
+                        <h4 class="col card-title">@mode Product</h4>
                     </div>
 
                     <div class="col">
-                        <button id="openPanel1" class="btn btn-back" @onclick="BackClicked">
+                        <button type="button" id="openPanel1Btn" class="btn btn-back" @onclick="BackClicked">
                             <i class="fa-solid fa-chevron-left"></i>
                             Back
                         </button>
@@ -50,24 +50,23 @@
                         <div class="col-sm">
 
                     <UploadImage @ref="uploadImageComponentRef"
-                                         OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" ImgSource="@ImageSourceUrl" />
-
-
+                                         OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize"/>
+                  
                         </div>
 
                         <div class="col-sm">
                             <div class="mb-3">
                                 <label for="product-name" class="form-label has-validation">Product Name</label>
                                 <InputText id="product-name" class="form-control" placeholder="Product Name"
-                                           @bind-Value="newProduct.ProductName" required />
-                                <ValidationMessage For="@(()=> newProduct.ProductName)" class="form-validation" />
+                                           @bind-Value="productModel.ProductName"/>
+                                <ValidationMessage For="@(()=> productModel.ProductName)" class="form-validation" />
                             </div>
 
                             <div class="mb-3">
                                 <label for="product-sku" class="form-label">SKU</label>
                                 <InputText id="product-sku" class="form-control" placeholder="SKU"
-                                           @bind-Value="newProduct.Sku" required />
-                                <ValidationMessage For="@(()=> newProduct.Sku)" class="form-validation" />
+                                           @bind-Value="productModel.Sku" />
+                                <ValidationMessage For="@(()=> productModel.Sku)" class="form-validation" />
                             </div>
                         </div>
 
@@ -77,7 +76,7 @@
                         <div class="mb-3">
                             <label for="brand" class="form-label">Brand</label>
                             <InputSelect class="form-select"
-                                         @bind-Value="newProduct.BrandId">
+                                         @bind-Value="productModel.BrandId">
 
                                 <option value="">-- Select Brand --</option>
 
@@ -91,16 +90,16 @@
 
                             </InputSelect>
 
-                            <ValidationMessage For="@(()=> newProduct.BrandId)" class="form-validation" />
+                            <ValidationMessage For="@(()=> productModel.BrandId)" class="form-validation" />
 
                         </div>
 
                         <div class="mb-3">
                             <label for="product-category" class="form-label">Category</label>
-                            <InputSelect class="form-select" required
-                                         Value="@newProduct.CategoryId"
+                            <InputSelect class="form-select"
+                                         Value="@productModel.CategoryId"
                                          ValueChanged="@((int x) => OnCategoryValueChanged(x))"
-                                         ValueExpression="@(() => newProduct.CategoryId)">
+                                         ValueExpression="@(() => productModel.CategoryId)">
 
                                 <option value="">-- Select Category --</option>
 
@@ -114,7 +113,7 @@
 
                             </InputSelect>
 
-                            <ValidationMessage For="@(()=> newProduct.CategoryId)" class="form-validation" />
+                            <ValidationMessage For="@(()=> productModel.CategoryId)" class="form-validation" />
 
                         </div>
 
@@ -131,7 +130,7 @@
                             <label for="product-subcategory" class="form-label">Sub Category</label>
                             <InputSelect class="form-select" id="product-subcategory"
                                          disabled="@disabled"
-                                         @bind-Value="newProduct.SubcategoryId">
+                                         @bind-Value="productModel.SubCategoryId">
 
                                 @if (subCategoryModels != null)
                                 {
@@ -143,7 +142,7 @@
                                     }
                                     else
                                     {
-                                        <option value="">-- Select Sub Category --</option>
+                                        <option value="1">-- Select Sub Category --</option>
                                     }
 
                                     @foreach (var subCategory in subCategoryModels)
@@ -167,21 +166,21 @@
                         <div class="mb-3">
                             <label for="product-size" class="form-label">Size</label>
                             <InputText id="product-size" class="form-control"
-                                       placeholder="Size" @bind-Value="newProduct.Size" required />
-                            <ValidationMessage For="@(()=> newProduct.Size)" />
+                                       placeholder="Size" @bind-Value="productModel.Size" />
+                            <ValidationMessage For="@(()=> productModel.Size)" />
                         </div>
 
                         <div class="mb-3">
                             <label for="product-color" class="form-label">Color</label>
                             <InputText id="product-color" class="form-control"
-                                       placeholder="Color" @bind-Value="newProduct.Color" />
-                            <ValidationMessage For="@(()=> newProduct.Color)" />
+                                       placeholder="Color" @bind-Value="productModel.Color" />
+                            <ValidationMessage For="@(()=> productModel.Color)" />
                         </div>
 
-                        @if (Mode == "edit")
+                        @if (mode == "Edit")
                         {
                             <div class="form-check taxable-check">
-                                <InputCheckbox id="isAvailable" class="form-check-input" @bind-Value="newProduct.IsAvailable" />
+                                <InputCheckbox id="isAvailable" class="form-check-input" @bind-Value="productModel.IsAvailable" />
                                 <label class="form-check-label" for="isAvailable">
                                     Set as Available
                                 </label>
@@ -193,7 +192,7 @@
                         }
 
                         <div class="form-check taxable-check">
-                            <InputCheckbox id="isTaxable" class="form-check-input" @bind-Value="newProduct.IsTaxable" />
+                            <InputCheckbox id="isTaxable" class="form-check-input" @bind-Value="productModel.IsTaxable" />
                             <label class="form-check-label" for="isTaxable">
                                 Set as <b class="text-danger">Taxable</b> product
                             </label>
@@ -210,7 +209,7 @@
                         <label for="exampleFormControlTextarea1" class="form-label">
                             Description
                         </label>
-                        <InputTextArea class="form-control" @bind-Value="newProduct.Description" />
+                        <InputTextArea class="form-control" @bind-Value="productModel.Description" />
                     </div>
 
                 </div>
@@ -218,10 +217,10 @@
             </div>
 
             <div class="card-footer text-end">
-                <button class="btn btn-secondary">
+                <button class="btn btn-secondary" @onclick="BackClicked">
                     Cancel
                 </button>
-                <button class="btn btn-primary" @onclick="OnSaveForm">
+                <button type="submit" class="btn btn-primary" @onclick="OnSaveForm">
                     Save
                 </button>
             </div>
@@ -231,31 +230,29 @@
 
 </div>
 
-
+<HttpErrorPopUp @ref="HttpErrorHandler" />
 
 @code {
+    private HttpErrorPopUp? HttpErrorHandler = new();
     private RequestModel<BrandSummaryDTO>? brandSummary;
     private RequestModel<CategorySummaryDTO>? categorySummary;
     private List<SubCategorySummaryDTO>? subCategoryModels;
     private RequestPageDTO brandRequestDTO = new();
     private RequestPageDTO categoryRequestDTO = new();
     private RequestPageDTO subCategoryRequestDTO = new();
-    private ProductModel newProduct = new();
+    private ProductModel productModel = new();
 
-    private UploadImage? uploadImageComponentRef;
+    private UploadImage? uploadImageComponentRef = new();
     long maxFileSize = 1024 * 1024; // 1 MB in bytes
     private Stream? imgStream;
     private string? imgName;
 
+
+    private string mode = string.Empty;
+    private int productId;
+
     [Parameter]
     public EventCallback OnBack { get; set; }
-
-    [Parameter]
-    public string Mode { get; set; }
-
-    [Parameter]
-    public string ImageSourceUrl { get; set; } 
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -275,9 +272,15 @@
 
     private async Task OnCategoryValueChanged(int categoryId)
     {
-        newProduct.CategoryId = categoryId;
+        productModel.CategoryId = categoryId;
+        await UpdateSubCategory(categoryId);
+    }
+
+    private async Task UpdateSubCategory(int categoryId)
+    {
         subCategoryModels = (await SubCategoryEndpoint
-        .GetSubCategorySummaryByCategoryId(categoryId))?.Data;
+       .GetSubCategorySummaryByCategoryId(categoryId))?.Data;
+        StateHasChanged();
     }
 
     private async Task OnHandleFileChange(InputFileChangeEventArgs e)
@@ -289,59 +292,89 @@
         }
         catch (Exception)
         {
-            await uploadImageComponentRef.RemoveActiveImage();
+            if (uploadImageComponentRef != null)
+            { await uploadImageComponentRef.RemoveActiveImage(); }
             StateHasChanged();
+        }
+    }
+
+    public void AddNewProduct()
+    {
+        mode = "Add";
+    }
+
+    public async Task EditProduct(int Id)
+    {
+        mode = "Edit";
+        productId = Id;
+
+        var getModel = (await ProductEndpoint.GetById(productId))?.Data;
+
+        if (getModel != null)
+        {
+            productModel = getModel;
+            await UpdateSubCategory(getModel.CategoryId);
+            StateHasChanged();
+
+            var url = Config["URL:apiUrl"]
+             + "/api/file/get/product/" + getModel.StoredImageName;
+            if (uploadImageComponentRef != null)
+            {await uploadImageComponentRef.SetActiveImage(url);}
         }
     }
 
     private async Task OnSaveForm()
     {
-        if (Mode == "Add")
-        {
-            await AddProduct();
-        }
-        else if (Mode == "Edit")
-        {
-            await EditProduct();
-        }
-    }
-
-
-    private async Task AddProduct()
-    {
-        bool validated =await ValidateProduct(newProduct);
+        bool validated = await ValidateProduct(productModel);
         if (!validated) return;
 
-        var result = await ProductEndpoint.AddProductAsync(newProduct, imgStream, imgName);
-
-        if (result.IsSuccessStatusCode)
+        if (mode == "Add")
         {
-            await JSRuntime.InvokeVoidAsync("SavedAlert", "Product", newProduct.ProductName);
-            ClearData();
+            var result = await ProductEndpoint.AddProductAsync(productModel, imgStream, imgName);
+
+            if (result.IsSuccessStatusCode)
+            {
+                StateHasChanged();
+                await JSRuntime.InvokeVoidAsync("SavedAlert", "Product", productModel.ProductName);
+                ClearData();
+            }
+
+            if (HttpErrorHandler != null)
+            await HttpErrorHandler.HandleHttpErrors<List<ProductSummaryDTO>>(result);
+
         }
 
-        HandleErrors(result.ErrorCode);
-    }
+        if (mode == "Edit")
+        {
+            var result = await ProductEndpoint.UpdateProduct(productModel, imgStream, imgName);
 
-    private async Task EditProduct()
-    {
+            if (result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",$"Succesfully update {productModel.ProductName}");
+                await BackClicked();
+            }
 
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<ProductSummaryDTO>>(result);
+        }
     }
 
     private void ClearData()
     {
-        newProduct.ProductName = "";
-        newProduct.Sku = "";
-        newProduct.BrandId = 0;
-        newProduct.CategoryId = 0;
-        newProduct.SubcategoryId = 0;
-        newProduct.Size = "";
-        newProduct.Color = "";
-        newProduct.IsAvailable = false;
-        newProduct.IsTaxable = false;
-        newProduct.Description = "";
+        productModel.ProductName = "";
+        productModel.Sku = "";
+        productModel.BrandId = 0;
+        productModel.CategoryId = 0;
+        productModel.SubCategoryId = 0;
+        productModel.Size = "";
+        productModel.Color = "";
+        productModel.IsAvailable = false;
+        productModel.IsTaxable = false;
+        productModel.Description = "";
 
-        //TODO: Clear Image
+        if (uploadImageComponentRef != null)
+        Task.Run(() => uploadImageComponentRef.RemoveActiveImage());
+       
         StateHasChanged();
     }
 
@@ -350,25 +383,6 @@
         ClearData();
         await OnBack.InvokeAsync(null);
     }
-
-    private async Task HandleErrors(int errorCode, string message = "")
-    {
-        if (errorCode > 0)
-        {
-            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
-        }
-
-        if (errorCode == 401)
-        {
-            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
-        }
-
-        if (errorCode == 3)
-        {
-            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
-        }
-    }
-
 
     public async Task<bool> ValidateProduct(ProductModel product)
     {
@@ -387,7 +401,7 @@
             return false;
         }
 
-        if (newProduct.CategoryId <= 0)
+        if (productModel.CategoryId <= 0)
         {
             errorMessage = "Please select a category.";
             await JSRuntime.InvokeVoidAsync("WarningToast",errorMessage);

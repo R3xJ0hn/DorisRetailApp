@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [dbo].[spProductGetIdentical]
+﻿CREATE PROCEDURE [dbo].[spProductDelete]
 	@Id					INT,
 	@ProductName		NVARCHAR(256),
 	@BrandID			INT,  
@@ -16,28 +16,14 @@
 	@CreatedAt			DATETIME2,
 	@UpdatedAt			DATETIME2
 AS
-begin	
 
+BEGIN
 	SET NOCOUNT ON;
-	   SELECT *,
-			--The Dappper will overide the name.
-	   		CASE 
-				WHEN MarkAsDeleted = 1 THEN '*' 
-				ELSE '' 
-			END AS ProductName
-       FROM Products
-       WHERE ((LOWER(CONCAT(ProductName, Size)) = LOWER(CONCAT(@ProductName, @Size)) 
-       AND (BrandID = @BrandID Or BrandID = '0') ) OR sku = @Sku) AND Id != 1;
 
-end		
+		UPDATE dbo.Products SET
+			[MarkAsDeleted] = 1
 
+	WHERE [Id] = @Id
 
-
-
-
-
-
-
-
-
-
+	SELECT @Id =  SCOPE_IDENTITY()
+END  

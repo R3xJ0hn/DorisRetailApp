@@ -27,15 +27,8 @@ namespace DorisApp.WebAPI.Controllers
         {
             try
             {
-                var result = await _data.AddSubCategoryAsync(GetUserIdentity(),
-                    new SubCategoryModel
-                    {
-                        SubCategoryName = subcategory.SubCategoryName,
-                        CategoryId = subcategory.CategoryId
-                    });
-
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                var result = await _data.AddSubCategoryAsync(GetUserIdentity(),subcategory);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
 
             }
             catch (Exception ex)
@@ -59,7 +52,7 @@ namespace DorisApp.WebAPI.Controllers
             if (getExisting == null)
             {
                 await _log.LogError("SubCategoryController[Add]: " + GetUserIdentity()?.Name +
-                    $"trying to update sub category[{subCategory.Id}]");
+                    $" trying to update sub category[{subCategory.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<BrandSummaryDTO>
                    {
@@ -71,28 +64,8 @@ namespace DorisApp.WebAPI.Controllers
 
             try
             {
-                var categoryId = 0;
-
-                if (subCategory.CategoryId == 0 && getExisting.CategoryId > 0)
-                {
-                    categoryId = getExisting.CategoryId;
-                }
-                else{
-                    categoryId = subCategory.CategoryId;
-                }
-
-                SubCategoryModel newSubCategory = new()
-                {
-                    Id = subCategory.Id,
-                    SubCategoryName = subCategory.SubCategoryName,
-                    CategoryId = categoryId
-                };
-
-                var result = await _data.UpdateSubCategoryAsync(GetUserIdentity(), newSubCategory);
-
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
-
+                var result = await _data.UpdateSubCategoryAsync(GetUserIdentity(), subCategory);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -113,8 +86,7 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -150,8 +122,7 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var result = await _data.DeleteSubCategoryAsync(GetUserIdentity(), subcategory);
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result); 
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result); 
             }
             catch (Exception ex)
             {

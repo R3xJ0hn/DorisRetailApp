@@ -1,0 +1,92 @@
+﻿@inject IJSRuntime JSRuntime
+
+@code {
+
+    public async Task HandleHttpErrors<T>(ResultDTO<T>? result, string message = "")
+    {
+        if (result.ErrorCode > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
+        }
+
+        if (result.ErrorCode == 4)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", "Server recieved invalid fiels.");
+        }
+
+        if (result.ErrorCode == 401)
+        {
+            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
+        }
+
+        if (result.ErrorCode == 403)
+        {
+            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
+        }
+
+
+        if (result.ErrorCode == 3)
+        {
+            var name = GetClassName<T>();
+            await JSRuntime.InvokeVoidAsync("ExistAlert", name, message);
+        }
+
+    }
+
+
+
+    private string GetClassName<T>()
+    {
+        string name = typeof(T).Name;
+
+        if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
+        {
+            // The type is a List<T>
+            Type[] typeArgs = typeof(T).GetGenericArguments();
+
+            if (typeArgs.Length == 1)
+            {
+                // Get the name of the type argument
+                string argName = typeArgs[0].Name;
+
+                // Find the index of the first capital letter in the type argument name
+                int index = 0;
+                for (int i = 1; i < argName.Length; i++)
+                {
+                    if (char.IsUpper(argName[i]))
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                // Get the substring from the start of the type argument name up to the first capital letter
+                string prefix = argName.Substring(0, index);
+
+                // Remove the "Model" suffix, if present
+                if (prefix.EndsWith("Model"))
+                {
+                    prefix = prefix.Substring(0, prefix.Length - 5);
+                }
+
+                name = prefix;
+            }
+
+            // Remove the "Model" suffix, if present
+            if (name.EndsWith("Model"))
+            {
+                name = name.Substring(0, name.Length - 5);
+            }
+
+            if (typeof(T) == typeof(List<SubCategorySummaryDTO>) || typeof(T) == typeof(SubCategoryModel))
+            {
+                // Special case for SubCategory
+                name = "Sub Category";
+            }
+
+        }
+
+        return name;
+    }
+
+}

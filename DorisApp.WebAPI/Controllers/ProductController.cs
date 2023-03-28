@@ -34,26 +34,23 @@ namespace DorisApp.WebAPI.Controllers
         {
             var fileName = product.StoredImageName;
 
-            AppHelper.MoveTempToDestPath(rootFolder, fileName, "product");
-
             try
             {
-                var result = await _data.AddProductAsync(GetUserIdentity(), new ProductModel
-                {
-                    ProductName = product.ProductName,
-                    Sku = product.Sku,
-                    BrandId = product.BrandId,
-                    CategoryId = product.CategoryId,
-                    SubcategoryId = product.SubcategoryId,
-                    IsTaxable = product.IsTaxable,
-                    Size = product.Size,
-                    Color = product.Color,
-                    StoredImageName = product.StoredImageName,
-                    Description = product.Description,
-                });
+                var result = await _data.AddProductAsync(GetUserIdentity(), product);
 
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                if (result.IsSuccessStatusCode)
+                {
+                    AppHelper.MoveTempToDestPath(rootFolder, fileName, "product");
+                    return Ok(result);
+                }
+                else
+                {
+                    var tempImg = Path.Combine(rootFolder, "uploads", "temp", 
+                        product.StoredImageName ?? "");
+
+                    AppHelper.DeleteFile(tempImg);
+                    return BadRequest(result);
+                }
 
             }
 
@@ -79,7 +76,7 @@ namespace DorisApp.WebAPI.Controllers
             if (getExisting == null)
             {
                 await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
-                    $"trying to update brand[{product.Id}]");
+                    $" trying to update brand[{product.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<ProductSummaryDTO>
                    {
@@ -101,26 +98,10 @@ namespace DorisApp.WebAPI.Controllers
                         "product", getExisting.StoredImageName);
                         AppHelper.DeleteFile(oldImg);
                     }
-
-                    var result = await _data.UpdateProductAsync(GetUserIdentity(), product);
-
-                    if (result.IsSuccessStatusCode) return Ok(result);
-                    else return BadRequest(result);
-
                 }
-                else
-                {
-                    ProductModel justChangeName = new()
-                    {
-                        Id = product.Id,
-                        ProductName = product.ProductName
-                    };
 
-                    var result = await _data.UpdateProductAsync(GetUserIdentity(), justChangeName);
-
-                    if (result.IsSuccessStatusCode) return Ok(result);
-                    else return BadRequest(result);
-                }
+                var result = await _data.UpdateProductAsync(GetUserIdentity(), product);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
 
             }
             catch (Exception ex)
@@ -143,8 +124,7 @@ namespace DorisApp.WebAPI.Controllers
             try
             {
                 var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
-                if (result.IsSuccessStatusCode) return Ok(result);
-                else return BadRequest(result);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -221,7 +201,7 @@ namespace DorisApp.WebAPI.Controllers
                     {
                         Data = productItem,
                         ErrorCode = 0,
-                        ReasonPhrase = "Unable to delete product.",
+                        ReasonPhrase = "Successfully get product.",
                         IsSuccessStatusCode = false
                     }
                 );

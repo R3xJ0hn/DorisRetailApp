@@ -4,7 +4,6 @@
 @inject CategoryEndpoint CategoryEndpoint
 @inject SubCategoryEndpoint SubCategoryEndpoint
 
-
 <div class="subcategory-page-content">
 
     <div class="row">
@@ -88,9 +87,12 @@
                                             <span></span>
                                         </td>
                                         <td>@item.SubCategoryName</td>
+
                                         <td class="@((@item.CategoryName.Contains("*")) ? "text-danger" : "")">
                                             @item.CategoryName.Replace("*", "")
                                         </td>
+
+
                                         <td>@item.ProductCount</td>
                                         <td>
                                             <div class="table-icons">
@@ -204,8 +206,10 @@
 
 </div>
 
-@code
-{
+<HttpErrorPopUp @ref="HttpErrorHandler" />
+
+@code {
+    private HttpErrorPopUp? HttpErrorHandler = new();
     private RequestModel<SubCategorySummaryDTO>? subCategorySummary;
     private RequestModel<CategorySummaryDTO>? categorySummary;
     private RequestPageDTO categoryRequestDTO = new();
@@ -216,7 +220,7 @@
     private int currentPage = 1;
     private bool isLoading = true;
 
-    private Modal modalComponentRef;
+    private Modal? modalComponentRef;
     private string modalTitle = string.Empty;
     private string modalMode = string.Empty;
 
@@ -257,7 +261,7 @@
     private async Task OnSearchItem(ChangeEventArgs e)
     {
         currentPage = 1;
-        string? searchFor = e.Value.ToString();
+        string? searchFor = e?.Value?.ToString();
         subCategoryRequestDTO.LookFor = VerifySearchBar(searchFor);
         await RequestItems(currentPage, selectedSortValue);
     }
@@ -265,7 +269,7 @@
     private async Task OnSelectSortChange(ChangeEventArgs e)
     {
         selectedSortValue = (OrderSubCategorySummaryBy)Enum
-        .Parse(typeof(OrderSubCategorySummaryBy), e.Value.ToString());
+        .Parse(typeof(OrderSubCategorySummaryBy), e?.Value?.ToString());
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);
@@ -295,7 +299,7 @@
 
     private async Task OnCloseModal()
     {
-        modalModel.SubCategoryName = null;
+        modalModel.SubCategoryName = string.Empty;
         modalModel.CategoryId = 0;
         await RequestItems(currentPage, selectedSortValue);
     }
@@ -324,73 +328,91 @@
 
     private async Task AddSubCategory()
     {
-        var subCategory = new SubCategoryModel
+        try
+        {
+
+            var subCategory = new SubCategoryModel
             {
                 SubCategoryName = modalModel.SubCategoryName,
                 CategoryId = modalModel.CategoryId
             };
 
-        var result = await SubCategoryEndpoint.AddSubCategoryAsync(subCategory);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+            var result = await SubCategoryEndpoint.AddSubCategoryAsync(subCategory);
+
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<SubCategorySummaryDTO>>(result);
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+
+        }
+
+        modalComponentRef?.Close();
     }
 
     private async Task EditSubCategory()
     {
-        var subCategory = new SubCategoryModel
+        try
+        {
+
+            var subCategory = new SubCategoryModel
+            {
+                Id = modalModel.Id,
+                SubCategoryName = modalModel.SubCategoryName,
+                CategoryId = modalModel.CategoryId,
+            };
+
+            var result = await SubCategoryEndpoint.UpdateCategory(subCategory);
+
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<SubCategorySummaryDTO>>(result);
+
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        modalComponentRef?.Close();
+    }
+
+    private async Task DeleteSubCategory()
+    {
+        try
+        {
+
+            var subCategory = new SubCategoryModel
             {
                 Id = modalModel.Id,
                 SubCategoryName = modalModel.SubCategoryName,
                 CategoryId = modalModel.CategoryId
             };
 
-        var result = await SubCategoryEndpoint.UpdateCategory(subCategory);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
-    }
+            var result = await SubCategoryEndpoint.DeleteCategory(subCategory);
 
-    private async Task DeleteSubCategory()
-    {
-        var subCategory = new SubCategoryModel
-            {
-                Id = modalModel.Id,
-                SubCategoryName = modalModel.SubCategoryName
-            };
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<SubCategorySummaryDTO>(result);
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
 
-        var result = await SubCategoryEndpoint.DeleteCategory(subCategory);
-        HandleErrors(result.ErrorCode);
-        modalComponentRef.Close();
+        }
+
+        modalComponentRef?.Close();
     }
 
     private void SetModalModel(int subCategoryId)
     {
-        var subCategoryToEdit = subCategorySummary.Models
+        var subCategoryToEdit = subCategorySummary?.Models
         .FirstOrDefault(x => x.Id == subCategoryId);
 
         if (subCategoryToEdit != null)
         {
             modalModel.Id = subCategoryId;
-            modalModel.SubCategoryName = subCategoryToEdit.SubCategoryName;
             modalModel.CategoryId = subCategoryToEdit.CategoryId;
-        }
-    }
-
-    private async Task HandleErrors(int errorCode, string message = "")
-    {
-        if (errorCode > 0)
-        {
-            await JSRuntime.InvokeVoidAsync("ErrorToast", message);
-            modalComponentRef.Close();
-        }
-
-        if (errorCode == 401)
-        {
-            await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
-        }
-
-        if (errorCode == 3)
-        {
-            await JSRuntime.InvokeVoidAsync("ExistAlert", "Brand", message);
+            modalModel.SubCategoryName = subCategoryToEdit.SubCategoryName ?? "";
         }
     }
 
@@ -404,6 +426,17 @@
             data = data.Replace("*", "");
         }
         return data;
+    }
+
+    private async Task CatchError(string exMessage)
+    {
+        var result = new ResultDTO<BrandSummaryDTO>
+            {
+                ErrorCode = 1
+            };
+
+        if (HttpErrorHandler != null)
+            await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);
     }
 
 }

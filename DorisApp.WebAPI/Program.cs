@@ -1,4 +1,3 @@
-using AutoMapper;
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.DataAccess.Database;
 using DorisApp.WebAPI.DataAccess.Logger;
@@ -12,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 //App Services
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();

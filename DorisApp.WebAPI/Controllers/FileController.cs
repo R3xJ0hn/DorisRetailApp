@@ -21,7 +21,7 @@ namespace DorisApp.WebAPI.Controllers
             _env = env;
             _log = log;
         }
-        private ClaimsIdentity GetUserIdentity() => (ClaimsIdentity)User.Identity;
+        private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
         [HttpPost("upload-file")]
         public async Task<ActionResult<UploadResultDTO>> UploadFile(IFormFile file)
@@ -30,7 +30,7 @@ namespace DorisApp.WebAPI.Controllers
             string trustedFileNameForFileStorage;
             var untrustedFileName = file.FileName;
             long maxFileSize = 1024 * 1024; // 1 MB in bytes
-            var userName = GetUserIdentity().Claims.Where(c => c.Type == ClaimTypes.Name)
+            var userName = GetUserIdentity()?.Claims.Where(c => c.Type == ClaimTypes.Name)
                 .Select(c => c.Value).SingleOrDefault() ?? "anonymous";
             var firstName = AppHelper.GetFirstWord(userName);
 
@@ -38,7 +38,7 @@ namespace DorisApp.WebAPI.Controllers
             if (file.Length == 0)
             {
                 var msg = $"{untrustedFileName} length is 0";
-                _log.LogError($"{firstName} sent" + msg);
+                await _log.LogError($"{firstName} sent" + msg);
                 return BadRequest(msg);
             }
 
@@ -46,7 +46,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 var msg = $"{untrustedFileName} of {file.Length} bytes is " +
                     $"larger than the limit of {maxFileSize} bytes";
-                _log.LogError($"{firstName} sent" + msg);
+                await _log.LogError($"{firstName} sent" + msg);
                 return BadRequest(msg);
             }
 
@@ -74,7 +74,7 @@ namespace DorisApp.WebAPI.Controllers
             }
             catch (IOException ex)
             {
-                _log.LogError($"{uploadResult.FileName} error on upload: {ex.Message}");
+                await _log.LogError($"{uploadResult.FileName} error on upload: {ex.Message}");
                 return BadRequest($"{uploadResult.FileName} error on upload.");
             }
 

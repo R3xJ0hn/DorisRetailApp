@@ -9,7 +9,13 @@ AS
 begin	
 	SET NOCOUNT ON;
 
-	SELECT *
+	SELECT *,
+		--The Dappper will overide the name.
+		CASE 
+			WHEN MarkAsDeleted = 1 THEN '*' 
+			ELSE '' 
+		END AS CategoryName
 	FROM dbo.Categories
-	WHERE CategoryName = @CategoryName AND Id != 1
+	WHERE LOWER(CategoryName) = LOWER(@CategoryName) 
+
 end		

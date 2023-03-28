@@ -6,12 +6,17 @@
 	@UpdatedByUserId	INT, 
 	@CreatedAt			DATETIME2,
 	@UpdatedAt			DATETIME2
-
 AS
 begin	
 	SET NOCOUNT ON;
 
-	SELECT *
+	SELECT *,
+		--The Dappper will overide the name.
+	    CASE 
+			WHEN MarkAsDeleted = 1 THEN '*' 
+			ELSE '' 
+		END AS BrandName
 	FROM dbo.Brands
-	WHERE BrandName = @BrandName AND Id != 1
+	WHERE LOWER(BrandName) = LOWER(@BrandName) 
+
 end		
