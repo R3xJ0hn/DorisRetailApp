@@ -1,7 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using DorisApp.WebPortal.Model;
 using Microsoft.AspNetCore.Components.Authorization;
-using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace DorisApp.WebPortal.Authentication
@@ -22,7 +21,7 @@ namespace DorisApp.WebPortal.Authentication
             _config = config;
         }
 
-        public async Task<AuthenticatedUserModel> Login(AuthenticationUserModel userAuth)
+        public async Task<AuthenticatedUserModel> Login(AuthenticationUserModel userAuth, bool saveToken)
         {
             var data = new FormUrlEncodedContent(new[]
 {
@@ -42,7 +41,7 @@ namespace DorisApp.WebPortal.Authentication
             var result = JsonSerializer.Deserialize<AuthenticatedUserModel>(
                 authContent, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            await ((AuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.Access_Token);
+            await ((AuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.Access_Token, saveToken);
 
             return result;
         }

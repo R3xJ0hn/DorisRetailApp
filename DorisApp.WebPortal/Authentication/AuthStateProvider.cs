@@ -48,7 +48,7 @@ namespace DorisApp.WebPortal.Authentication
                     authenticationType: "jwtAuthType")));
         }
 
-        public async Task NotifyUserAuthentication(string token)
+        public async Task NotifyUserAuthentication(string token, bool saveToken)
         {
             Task<AuthenticationState> authState;
 
@@ -59,7 +59,11 @@ namespace DorisApp.WebPortal.Authentication
                         identity: new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(token),
                         authenticationType: "jwtAuthType"));
                 authState = Task.FromResult(new AuthenticationState(authenticatedUser));
-                await _localStorage.SetItemAsync(key: _autLocalKey, token);
+
+                if (saveToken)
+                {
+                    await _localStorage.SetItemAsync(key: _autLocalKey, token);
+                }
             }
             catch (Exception ex)
             {

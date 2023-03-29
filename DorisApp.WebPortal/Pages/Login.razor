@@ -1,64 +1,92 @@
-﻿@page "/login"
+﻿@layout LoginLayout
+@page "/login"
 @inject IAuthenticationServices AuthService
 @inject NavigationManager NavManager
 
-<h3>Login</h3>
 
-@if (showAuthenticationError)
-{
-    <div class="alert alert-danger" role="alert">
-        <p>@authenticationErrorText</p>
+
+
+<div class="row">
+    <div class="col-md-7">
+        <h1 class="title">Welcome to DorisApp Portal</h1>
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Laborum, dolore ipsa maiores ab itaque alias omnis. Tempore officiis illo recusandae praesentium eaque totam cupiditate, odit reprehenderit omnis dolores alias aspernatur!</p>
     </div>
-}
+    <div class="col-md-5">
 
-<EditForm Model="model" OnValidSubmit="ExecuteLogin" class="card card-body bg-light mt-5">
-    <DataAnnotationsValidator />
+        <div class="login-wrap">
+            <h3 class="mb-4 text-center">Have an account?</h3>
 
-    <div class="form-outline row">
-        <label class="col-md-2 col-form-label" for="email">Email:</label>
-        <div class="col-md-10">
-            <InputText id="email" @bind-Value="model.Email" class="form-control" />
-            <ValidationMessage For="@(() => model.Email)"/>
+            <EditForm Model="model" OnValidSubmit="ExecuteLogin" class="signin-form">
+                <DataAnnotationsValidator />
+    
+                <div class="mb-3 mx-2">
+                    <input type="email" id="email-field" @bind="model.Email" class="form-control" placeholder="Email" />
+                    <ValidationMessage For="@(() => model.Email)" class="form-validation" />
+                </div>
+
+                <div class="mb-3 mx-2">
+                    <input type="password" id="password-field" @bind="model.Password" class="form-control" placeholder="Password" />
+                    <ValidationMessage For="@(() => model.Password)" class="form-validation" />
+                </div>
+
+                @if (showAuthenticationError)
+                {
+                    <p class="text-danger text-center"> Invalid username or password! </p>
+                }
+
+                <div class="form-group">
+
+                    <button type="submit" class="form-control btn btn-primary submit px-3">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm mx-3"
+                            role="status" aria-hidden="true"></span>
+                        }
+                        Sign In
+                    </button>
+                </div>
+
+                <div class="form-group d-md-flex">
+                    <div class="w-50">
+                        <label class="checkbox-wrap checkbox-primary">
+                            <input type="checkbox" @bind-value="saveToken">
+                            Remember Me
+                        </label>
+                    </div>
+                    <div class="w-50 text-end px-3">
+                        <a href="#">Forgot Password</a>
+                    </div>
+                </div>
+            </EditForm>
+
         </div>
-    </div>
 
-    <div class="form-outline row">
-        <label class="col-md-2 col-form-label" for="password">Password:</label>
-        <div class="col-md-10">
-            <InputText id="password" @bind-Value="model.Password" class="form-control" />
-            <ValidationMessage For="@(() => model.Password)" />
-        </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-12 text-right">
-            <button type="submit" class="btn btn-success">Log In</button>
-        </div>
-    </div>
-
-</EditForm>
+</div>
 
 
 @code {
     private AuthenticationUserModel model = new();
     private bool showAuthenticationError = false;
-    private string authenticationErrorText = "";
+    private bool isLoading = false;
+    private bool saveToken = false;
 
     private async Task ExecuteLogin()
     {
         showAuthenticationError = false;
+        isLoading = true;
 
-        AuthenticatedUserModel result = await AuthService.Login(model);
+        AuthenticatedUserModel result = await AuthService.Login(model, saveToken);
 
         if (result is not null)
         {
+            isLoading = false;
             NavManager.NavigateTo("/");
-
         }
         else
         {
-            authenticationErrorText = "Unable to log in.";
             showAuthenticationError = true;
+            isLoading = false;
         }
 
     }

@@ -1,27 +1,28 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavManager
 
-<div class="app-container">
+<AuthorizeView>
+    <Authorized>
+        <div class="app-container">
 
-    <div class="sidebar" id="sidebar">
-        <NavMenu />
-    </div>
-
-    <main class="main-content">
-        <header class="row header">
-
-            <div class="col header-left">
-                <i class="menu-bar fa-regular fa-bars" id="sidebar-toggle-btn"></i>
-                <h1 class="page-title">Page Name</h1>
+            <div class="sidebar" id="sidebar">
+                <NavMenu />
             </div>
 
-            <div class="col">
-                <div class="header-account">
+            <main class="main-content">
+                <header class="row header">
 
-                    <AuthorizeView>
-                        <Authorized>
+                    <div class="col header-left">
+                        <i class="menu-bar fa-regular fa-bars" id="sidebar-toggle-btn"></i>
+                        <h1 class="page-title">Page Name</h1>
+                    </div>
+
+                    <div class="col">
+                        <div class="header-account">
 
                             <div class="accout-info">
-                                <p>Hi, 
+                                <p>
+                                    Hi,
                                     <b>@context.User.FindFirst(ClaimTypes.Name)?.Value</b>
                                 </p>
                                 <p class="account-role">
@@ -40,22 +41,25 @@
                                 </div>
                             </div>
 
-                        </Authorized>
-                        <NotAuthorized>
-                            <h6 class="text-danger">You are not authorized to view this content.</h6>
-                        </NotAuthorized>
-                    </AuthorizeView>
 
-                </div>
-            </div>
+                        </div>
+                    </div>
 
-        </header>
+                </header>
 
 
-        @Body
-    </main>
+                @Body
+            </main>
 
-</div>
+        </div>
+
+    </Authorized>
+    <NotAuthorized>
+        @{
+            NavManager.NavigateTo("/login");
+        }
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
 

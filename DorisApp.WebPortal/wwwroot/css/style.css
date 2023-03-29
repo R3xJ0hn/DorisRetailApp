@@ -764,6 +764,7 @@ progress {
 
 .container,
 .container-fluid,
+.login-container,
 .category-page-content,
 .brand-page-content,
 .product-page-content,
@@ -4052,6 +4053,7 @@ textarea.form-control-lg {
 }
 .navbar > .container,
 .navbar > .container-fluid,
+.navbar > .login-container,
 .navbar > .category-page-content,
 .navbar > .brand-page-content,
 .navbar > .product-page-content,
@@ -12703,7 +12705,7 @@ textarea.form-control-lg {
   }
 }
 .colored-toast.swal2-icon-success {
-  background-color: #87ee79 !important;
+  background-color: #88e07c !important;
 }
 
 .colored-toast.swal2-icon-error {
@@ -13327,6 +13329,98 @@ textarea.form-control-lg {
 
 .category-page-content {
   position: relative;
+}
+
+.login-container {
+  background: linear-gradient(47deg, #7b6ceb, #c169c5, #f55995, #ee7752);
+  background-size: 800% 800%;
+  animation: BackgroundGradient 24s ease infinite;
+  height: 100vh;
+  border: none;
+  outline: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+.login-container .row {
+  width: 90%;
+  height: 90%;
+}
+.login-container .col-md-7 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.login-container .col-md-7 .title {
+  color: #fff;
+  font-weight: 600;
+  padding-top: 5rem;
+}
+.login-container .col-md-7 p {
+  font-size: 18px;
+  margin-top: 2rem;
+}
+.login-container .col-md-5 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-container .col-md-5 .login-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  height: 70%;
+  min-width: 320px;
+  background: rgba(255, 255, 255, 0.877);
+  justify-content: center;
+  border-radius: 1rem;
+}
+.login-container .col-md-5 .login-wrap h1 {
+  border: none;
+  outline: none;
+}
+.login-container .col-md-5 .login-wrap h3 {
+  color: #d582fc;
+  font-weight: 600;
+}
+.login-container .col-md-5 .login-wrap .px-3 {
+  padding-left: 0 !important;
+}
+.login-container .col-md-5 .login-wrap .form-group {
+  position: relative;
+  margin: 1rem;
+  display: flex;
+}
+.login-container .col-md-5 .login-wrap .form-group .field-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+@keyframes BackgroundGradient {
+  0% {
+    background-position: 0% 18%;
+  }
+  50% {
+    background-position: 100% 83%;
+  }
+  100% {
+    background-position: 0% 18%;
+  }
+}
+@media screen and (max-width: 750px) {
+  .col-md-7 {
+    display: none !important;
+  }
+  .login-container .col-md-5 .login-wrap {
+    height: 50%;
+  }
 }
 
 /*# sourceMappingURL=style.css.map */
