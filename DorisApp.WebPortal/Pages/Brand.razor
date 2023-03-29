@@ -25,33 +25,22 @@
 
             <div class="table-card">
 
-                <div class="row ">
-                    <div class="col-md  d-flex">
-                        <div class="search-bar">
-                            <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
-                        </div>
-
-                        <div class="sort-select">
-                            <label for="sort-table">Sort by:</label>
-
-                            <select class="form-select form-select-sm"
-                                    @onchange="OnSelectSortChange">
-                                <option value="@OrderBrandSummaryBy.NameAcs">Name A-Z</option>
-                                <option value="@OrderBrandSummaryBy.NameDesc">Name Z-A</option>
-
-                                <option value="@OrderBrandSummaryBy.ProductCountAcs">
-                                    Product &#x2191;&#xFE0E;
-                                </option>
-
-                                <option value="@OrderBrandSummaryBy.ProductCountDesc">
-                                    Product &#x2193;&#xFE0E;
-                                </option>
-
-                            </select>
-
-                        </div>
+                <div class="table-card-header">
+                    <div class="search-bar">
+                        <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
                     </div>
 
+                    @if (brandSummary != null)
+                    {
+                        <div class="count-item">
+                            @{
+                                int startItemIndex = (brandSummary.IsInPage - 1) * brandSummary.ItemPerPage + 1;
+                                int endItemIndex = Math.Min(brandSummary.IsInPage * brandSummary.ItemPerPage, brandSummary.TotalItems);
+                                string displayText = $"Showing {startItemIndex}-{endItemIndex} out of {brandSummary.TotalItems}";
+                            }
+                            @displayText
+                        </div>
+                    }
                 </div>
 
 
@@ -62,12 +51,24 @@
                             <tr>
                                 <th scope="col"></th>
                                 <th scope="col">Image</th>
-                                <th scope="col">Brand Name</th>
-                                <th scope="col">No. of Product</th>
+
+                                <th scope="col" @onclick="(() => OnSortChange('b')) " class="sortable
+                                        @((selectedSortValue == OrderBrandSummaryBy.NameAcs) ? "" : "asc")
+                                        @((selectedSortValue == OrderBrandSummaryBy.NameAcs ||
+                                         selectedSortValue == OrderBrandSummaryBy.NameDesc ) ? "active" : "")  ">
+                                    Brand Name
+                                </th>
+
+                                <th scope="col" @onclick="(() => OnSortChange('c')) " class="sortable
+                                        @((selectedSortValue == OrderBrandSummaryBy.ProductCountAcs) ? "" : "asc")
+                                        @((selectedSortValue == OrderBrandSummaryBy.ProductCountAcs ||
+                                         selectedSortValue == OrderBrandSummaryBy.ProductCountDesc ) ? "active" : "")">
+                                    No. of Product
+                                </th>
+
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
-
                         @if (brandSummary != null)
                         {
                             @foreach (var item in brandSummary.Models)
@@ -241,10 +242,27 @@
         await RequestItems(currentPage, selectedSortValue);
     }
 
-    private async Task OnSelectSortChange(ChangeEventArgs e)
+    private async Task OnSortChange(char sortBy)
     {
-        selectedSortValue = (OrderBrandSummaryBy)Enum
-        .Parse(typeof(OrderBrandSummaryBy), e?.Value?.ToString() ?? "0");
+
+        switch (sortBy)
+        {
+            case 'b':
+                selectedSortValue = selectedSortValue == OrderBrandSummaryBy.NameAcs ?
+                OrderBrandSummaryBy.NameDesc : OrderBrandSummaryBy.NameAcs;
+                break;
+
+            case 'c':
+                selectedSortValue = selectedSortValue == OrderBrandSummaryBy.ProductCountAcs ?
+                OrderBrandSummaryBy.ProductCountDesc : OrderBrandSummaryBy.ProductCountAcs;
+                break;
+
+            default:
+                selectedSortValue = selectedSortValue == OrderBrandSummaryBy.NameAcs ?
+                OrderBrandSummaryBy.NameDesc : OrderBrandSummaryBy.NameAcs;
+                break;
+        }
+
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);
@@ -266,7 +284,7 @@
         catch
         {
             if (uploadImageComponentRef != null)
-            await uploadImageComponentRef.RemoveActiveImage();
+                await uploadImageComponentRef.RemoveActiveImage();
             StateHasChanged();
         }
     }
@@ -294,7 +312,7 @@
         modalModel.BrandName = "";
 
         if (uploadImageComponentRef != null && modalMode != "delete")
-        await uploadImageComponentRef.RemoveActiveImage(); 
+            await uploadImageComponentRef.RemoveActiveImage();
 
         await RequestItems(currentPage, selectedSortValue);
     }
@@ -313,7 +331,7 @@
         modalMode = "edit";
 
         if (uploadImageComponentRef != null)
-        await uploadImageComponentRef.SetActiveImage(url);
+            await uploadImageComponentRef.SetActiveImage(url);
 
         SetModalModel(id);
     }
@@ -330,9 +348,9 @@
         try
         {
             var brand = new BrandModel
-            {
-                BrandName = modalModel.BrandName
-            };
+                {
+                    BrandName = modalModel.BrandName
+                };
 
             var result = await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
 

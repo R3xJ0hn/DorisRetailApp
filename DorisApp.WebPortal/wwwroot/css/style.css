@@ -24,8 +24,8 @@ body::-webkit-scrollbar {
 }
 
 .main-content {
-  padding: 0;
-  margin: 0;
+  padding: 0 !important;
+  margin: 0 !important;
   position: relative;
 }
 
@@ -40,6 +40,11 @@ body::-webkit-scrollbar {
   font-size: 12px;
 }
 
+@media screen and (min-width: 575px) {
+  .main-content {
+    padding: 1rem !important;
+  }
+}
 /*!
  * Bootstrap  v5.3.0-alpha1 (https://getbootstrap.com/)
  * Copyright 2011-2022 The Bootstrap Authors
@@ -11923,6 +11928,8 @@ textarea.form-control-lg {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 300px;
+  max-width: 300px;
 }
 .search-bar input[type=search] {
   width: 100%;
@@ -11959,6 +11966,7 @@ textarea.form-control-lg {
   font-weight: 600;
   color: #343a40;
   float: bottom;
+  white-space: nowrap;
 }
 
 .table-card {
@@ -11968,11 +11976,18 @@ textarea.form-control-lg {
   border-radius: 1rem;
   margin-bottom: 1rem;
 }
-.table-card .search-bar {
-  width: 30%;
+.table-card .table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.table-card .sort-select {
-  margin-left: 1rem;
+.table-card .table-card-header .count-item {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  margin-right: 2rem;
+  color: #6c757d;
+  cursor: default;
 }
 .table-card .table-wrapper {
   height: 58vh;
@@ -11996,6 +12011,7 @@ textarea.form-control-lg {
 .table-wrapper::-webkit-scrollbar {
   width: 8px;
   background-color: transparent;
+  height: 8px;
 }
 .table-wrapper::-webkit-scrollbar-thumb {
   border-radius: 8px;
@@ -12006,13 +12022,36 @@ textarea.form-control-lg {
 }
 .table-wrapper .table thead tr > th {
   font-weight: 500;
-  background: #fff;
+  background: #f8f9fa;
   text-align: center;
   position: sticky;
   top: 0;
   z-index: 3;
   cursor: pointer;
   user-select: none;
+  white-space: nowrap;
+}
+.table-wrapper .table thead .sortable:after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  margin-left: 10px;
+  border-top: 6px solid;
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  color: #ced4da;
+  transition: transform 0.3s;
+}
+.table-wrapper .table thead .sortable.asc:after {
+  transform: rotate(180deg);
+}
+.table-wrapper .table thead .sortable.active {
+  color: #d582fc;
+}
+.table-wrapper .table thead .sortable.active:after {
+  color: #d582fc;
 }
 .table-wrapper .table tbody tr {
   color: #343a40;
@@ -12057,6 +12096,11 @@ textarea.form-control-lg {
   transform: scale(0.8);
   box-shadow: none;
 }
+.table-wrapper .table tbody tr .table-product-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .table-wrapper .no-item {
   display: flex;
   align-items: center;
@@ -12068,6 +12112,11 @@ textarea.form-control-lg {
   color: #d582fc;
 }
 
+@media screen and (max-width: 575px) {
+  .count-item {
+    display: none;
+  }
+}
 .btn, .btn-gradient-dark, .btn-gradient-light, .btn-gradient-danger, .btn-gradient-warning, .btn-gradient-info, .btn-gradient-success, .btn-gradient-secondary, .btn-gradient-primary {
   font-size: 1rem;
   font-weight: 500;
@@ -12454,6 +12503,7 @@ textarea.form-control-lg {
 .product-list-view .product-list-view-body .product-list-view-content ul::-webkit-scrollbar {
   width: 8px;
   background-color: transparent;
+  height: 8px;
 }
 .product-list-view .product-list-view-body .product-list-view-content ul::-webkit-scrollbar-thumb {
   border-radius: 8px;
@@ -12549,6 +12599,7 @@ textarea.form-control-lg {
 .recent-activity .recent-activity-body ul::-webkit-scrollbar {
   width: 8px;
   background-color: transparent;
+  height: 8px;
 }
 .recent-activity .recent-activity-body ul::-webkit-scrollbar-thumb {
   border-radius: 8px;
@@ -13140,6 +13191,8 @@ textarea.form-control-lg {
 }
 .dashboard-page-content {
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .insights {
@@ -13149,6 +13202,8 @@ textarea.form-control-lg {
 
 .product-page-content {
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 .product-page-content #panel1 {
   margin-right: 20px;
@@ -13171,10 +13226,11 @@ textarea.form-control-lg {
   border-radius: 1rem;
   font-weight: 500;
   color: #343a40;
-  padding-bottom: 0.2rem;
+  padding: 0.2rem 0.5rem;
   transition: background-color 0.25s ease-out;
   cursor: pointer;
   user-select: none;
+  white-space: nowrap;
 }
 .product-page-content .app-panel tbody tr td a:hover {
   background-color: #d582fc;
@@ -13325,10 +13381,14 @@ textarea.form-control-lg {
 }
 .brand-page-content {
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .category-page-content {
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .login-container {

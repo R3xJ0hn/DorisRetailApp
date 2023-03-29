@@ -6,7 +6,7 @@
         NameDesc,
         ProductCountAcs,
         ProductCountDesc,
-        CategoryCountAcs,
-        CategoryCountDesc,
+        CategoryNameAcs,
+        CategoryNameDesc,
     }
 }

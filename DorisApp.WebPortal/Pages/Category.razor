@@ -25,40 +25,22 @@
 
             <div class="table-card">
 
-                <div class="row ">
-                    <div class="col-md  d-flex">
-                        <div class="search-bar">
-                            <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
-                        </div>
-
-                        <div class="sort-select">
-                            <label for="sort-table">Sort by:</label>
-
-                            <select class="form-select form-select-sm"
-                                    @onchange="OnSelectSortChange">
-                                <option value="@OrderCategorySummaryBy.NameAcs">Name A-Z</option>
-                                <option value="@OrderCategorySummaryBy.NameDesc">Name Z-A</option>
-
-                                <option value="@OrderCategorySummaryBy.ProductCountAcs">
-                                    Product &#x2191;&#xFE0E;
-                                </option>
-
-                                <option value="@OrderCategorySummaryBy.ProductCountDesc">
-                                    Product &#x2193;&#xFE0E;
-                                </option>
-
-                                <option value="@OrderCategorySummaryBy.SubCategoryCountAcs">
-                                    SubCategory &#x2191;&#xFE0E;
-                                </option>
-
-                                <option value="@OrderCategorySummaryBy.SubCategoryCountDesc">
-                                    SubCategory &#x2193;&#xFE0E;
-                                </option>
-                            </select>
-
-                        </div>
+                <div class="table-card-header">
+                    <div class="search-bar">
+                        <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
                     </div>
 
+                    @if (categorySummary != null)
+                    {
+                        <div class="count-item">
+                            @{
+                                int startItemIndex = (categorySummary.IsInPage - 1) * categorySummary.ItemPerPage + 1;
+                                int endItemIndex = Math.Min(categorySummary.IsInPage * categorySummary.ItemPerPage, categorySummary.TotalItems);
+                                string displayText = $"Showing {startItemIndex}-{endItemIndex} out of {categorySummary.TotalItems}";
+                            }
+                            @displayText
+                        </div>
+                    }
                 </div>
 
                 <div class="table-wrapper">
@@ -67,9 +49,28 @@
                         <thead>
                             <tr>
                                 <th scope="col"></th>
-                                <th scope="col">Category Name</th>
-                                <th scope="col">No. of Sub Categories</th>
-                                <th scope="col">No. of Product</th>
+
+                                <th scope="col" @onclick="(() => OnSortChange('c')) " class="sortable
+                                        @((selectedSortValue == OrderCategorySummaryBy.NameAcs) ? "" : "asc")
+                                        @((selectedSortValue == OrderCategorySummaryBy.NameAcs ||
+                                         selectedSortValue == OrderCategorySummaryBy.NameDesc ) ? "active" : "")  ">
+                                    Category Name
+                                </th>
+
+                                <th scope="col" @onclick="(() => OnSortChange('s')) " class="sortable
+                                        @((selectedSortValue == OrderCategorySummaryBy.SubCategoryCountAcs) ? "" : "asc")
+                                        @((selectedSortValue == OrderCategorySummaryBy.SubCategoryCountAcs ||
+                                         selectedSortValue == OrderCategorySummaryBy.SubCategoryCountDesc ) ? "active" : "")  ">
+                                    No. of Sub Categories
+                                </th>
+
+                                <th scope="col" @onclick="(() => OnSortChange('p')) " class="sortable
+                                        @((selectedSortValue == OrderCategorySummaryBy.ProductCountAcs) ? "" : "asc")
+                                        @((selectedSortValue == OrderCategorySummaryBy.ProductCountAcs ||
+                                         selectedSortValue == OrderCategorySummaryBy.ProductCountDesc ) ? "active" : "")  ">
+                                    No. of Product
+                                </th>
+
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
@@ -229,10 +230,32 @@
         await RequestItems(currentPage, selectedSortValue);
     }
 
-    private async Task OnSelectSortChange(ChangeEventArgs e)
+    private async Task OnSortChange(char sortBy)
     {
-        selectedSortValue = (OrderCategorySummaryBy)Enum
-        .Parse(typeof(OrderCategorySummaryBy), e?.Value?.ToString() ?? "0");
+
+        switch (sortBy)
+        {
+            case 'c':
+                selectedSortValue = selectedSortValue == OrderCategorySummaryBy.NameAcs ?
+                OrderCategorySummaryBy.NameDesc : OrderCategorySummaryBy.NameAcs;
+                break;
+
+            case 's':
+                selectedSortValue = selectedSortValue == OrderCategorySummaryBy.SubCategoryCountAcs ?
+                OrderCategorySummaryBy.SubCategoryCountDesc : OrderCategorySummaryBy.SubCategoryCountAcs;
+                break;
+
+            case 'p':
+                selectedSortValue = selectedSortValue == OrderCategorySummaryBy.ProductCountAcs ?
+                OrderCategorySummaryBy.ProductCountDesc : OrderCategorySummaryBy.ProductCountAcs;
+                break;
+
+            default:
+                selectedSortValue = selectedSortValue == OrderCategorySummaryBy.NameAcs ?
+                OrderCategorySummaryBy.NameDesc : OrderCategorySummaryBy.NameAcs;
+                break;
+        }
+
 
         currentPage = 1;
         await RequestItems(1, selectedSortValue);

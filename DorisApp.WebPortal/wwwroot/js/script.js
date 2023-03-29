@@ -21,6 +21,7 @@
     function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
     }
+
 };
 
 function OpenPanel1() {
