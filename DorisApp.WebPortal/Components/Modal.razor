@@ -52,7 +52,7 @@
     public EventCallback OnClose { get; set; }
 
     [Parameter]
-    public string modalId { get; set; }
+    public string modalId { get; set; } = string.Empty;
 
     [Parameter]
     public string modalMode 
@@ -80,13 +80,16 @@
         {
             await JSRuntime.InvokeVoidAsync("modalProcessing");
             await JSRuntime.InvokeVoidAsync("modalProcessDone");
-            JSRuntime.InvokeAsync<object>("$(document).ready(function() { $().on('hidden.bs.modal', function() { DotNet.invokeMethodAsync('$1', 'CloseModal'); }); })", modalRef, DotNetObjectReference.Create(this));
+            await Task.Run(() => JSRuntime.InvokeAsync<object>(
+                "$(document).ready(function() { $().on('hidden.bs.modal'," +
+                "function() { DotNet.invokeMethodAsync('$1', 'CloseModal'); }); })",
+                modalRef, DotNetObjectReference.Create(this)));
         }
     }
 
     public async Task Close()
     {
-        OnCloseClicked();
+       await OnCloseClicked();
     }
 
     private async Task OnSaveClicked()

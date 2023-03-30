@@ -19,10 +19,9 @@ else
     public Task<AuthenticationState> AuthState { get; set; }
 
     private bool isAuthenticated = false;
-    private string userName;
+    private string? userName;
     private bool isAdmin = false;
     private bool isCashier = false;
-    private bool isManger = false;
 
     protected override async Task OnInitializedAsync()
     {

@@ -14,7 +14,7 @@
 
                     <div class="col header-left">
                         <i class="menu-bar fa-regular fa-bars" id="sidebar-toggle-btn"></i>
-                        <h1 class="page-title">Page Name</h1>
+                        <h1 class="page-title">@PageName</h1>
                     </div>
 
                     <div class="col">
@@ -47,7 +47,6 @@
 
                 </header>
 
-
                 @Body
             </main>
 
@@ -61,6 +60,33 @@
     </NotAuthorized>
 </AuthorizeView>
 
+
 @code {
+    private string? PageName { get; set; }
+
+    protected override void OnInitialized()
+    {
+        NavManager.LocationChanged += OnLocationChanged;
+        OnLocationChanged(this, new LocationChangedEventArgs(NavManager.Uri, true));
+    }
+
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        var segments = NavManager.Uri.Split('/');
+        PageName = segments[segments.Length - 1];
+
+        if (string.IsNullOrEmpty(PageName)) PageName = "Dashboard";
+        if (PageName == "products") PageName = "Product";
+        if (PageName == "brands") PageName = "Brand";
+        if (PageName == "categories") PageName = "Category";
+        if (PageName == "subcategories") PageName = "Sub Category";
+        if (PageName == "inventory") PageName = "Inventory";
+
+        StateHasChanged();
+    }
+
+    public void Dispose() => NavManager.LocationChanged -= OnLocationChanged;
+
 
 }
+
