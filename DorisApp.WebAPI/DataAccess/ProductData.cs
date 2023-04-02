@@ -30,8 +30,7 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task<ResultDTO<List<ProductSummaryDTO>>> AddProductAsync(ClaimsIdentity? identity, ProductModel product)
         {
-            await ValidateFields(identity, product);
-
+ 
             try
             {
                 int userId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
@@ -82,6 +81,18 @@ namespace DorisApp.WebAPI.DataAccess
 
                 }
 
+                var errorMsg = await ValidateFields(identity, product);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<ProductSummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.SaveDataAsync("dbo.spProductInsert", product);
                 await _logger.SuccessInsert(identity, product.ProductName, TableName);
 
@@ -107,7 +118,6 @@ namespace DorisApp.WebAPI.DataAccess
 
         public async Task<ResultDTO<List<ProductSummaryDTO>>> UpdateProductAsync(ClaimsIdentity? identity, ProductModel product)
         {
-            await ValidateFields(identity, product);
             var oldName = string.Empty;
 
             try
@@ -149,6 +159,18 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (product.SubCategoryId == 0 && getExistingItem.SubCategoryId > 0)
                     product.SubCategoryId = getExistingItem.SubCategoryId;
+
+                var errorMsg = await ValidateFields(identity, product);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<ProductSummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
 
                 await _sql.UpdateDataAsync("dbo.spProductUpdate", product);
                 await _logger.SuccessUpdate(identity, product.ProductName, TableName, oldName ?? "");
@@ -217,7 +239,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await IsItemExistAsync<ProductModel>("dbo.spProductGetById", id);
         }
 
-        public async Task ValidateFields(ClaimsIdentity? identity, ProductModel product)
+        public async Task<string?> ValidateFields(ClaimsIdentity? identity, ProductModel product)
         {
             if (identity == null)
             {
@@ -281,8 +303,9 @@ namespace DorisApp.WebAPI.DataAccess
             if (!string.IsNullOrWhiteSpace(msg))
             {
                 await _logger.LogError($"Data Access {Name}: {msg}");
-                throw new NullReferenceException(msg);
             }
+
+            return msg;
         }
 
     }

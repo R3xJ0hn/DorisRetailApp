@@ -70,7 +70,18 @@ namespace DorisApp.WebAPI.DataAccess
 
                 }
 
-                await ValidateFields(identity, category);
+                var errorMsg = await ValidateFields(identity, category);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<CategorySummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.SaveDataAsync("dbo.spCategoryInsert", category);
                 await _logger.SuccessInsert(identity, category.CategoryName, TableName);
 
@@ -124,7 +135,18 @@ namespace DorisApp.WebAPI.DataAccess
                 //This will ignore by the stored procedure.
                 category.CreatedAt = DateTime.UtcNow;
 
-                await ValidateFields(identity, category);
+                var errorMsg = await ValidateFields(identity, category);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<CategorySummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.UpdateDataAsync("dbo.spCategoryUpdate", category);
                 await _logger.SuccessUpdate(identity, category.CategoryName, TableName, oldName ?? "");
 
@@ -194,7 +216,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await IsItemExistAsync<CategoryModel>("dbo.spCategoryGetById", id);
         }
 
-        private async Task ValidateFields(ClaimsIdentity? identity, CategoryModel category)
+        private async Task<string?> ValidateFields(ClaimsIdentity? identity, CategoryModel category)
         {
             string Name = AppHelper.GetFirstWord(
                 identity?.Claims.Where(c => c.Type == ClaimTypes.Name)
@@ -215,8 +237,9 @@ namespace DorisApp.WebAPI.DataAccess
             if (!string.IsNullOrWhiteSpace(msg))
             {
                 await _logger.LogError($"Data Access {Name}: {msg}");
-                throw new NullReferenceException(msg);
             }
+
+            return msg;
         }
 
     }

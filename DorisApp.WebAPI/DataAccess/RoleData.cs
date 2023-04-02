@@ -33,17 +33,17 @@ namespace DorisApp.WebAPI.DataAccess
             try
             {
                 await _sql.SaveDataAsync("dbo.spRoleInsert", role);
-                _logger.SuccessInsert(identity, role.RoleName, TableName);
+                await _logger.SuccessInsert(identity, role.RoleName, TableName);
             }
 
             catch (Exception ex)
             {
-                _logger.FailInsert(identity, role.RoleName, TableName,ex.Message);
+                await _logger.FailInsert(identity, role.RoleName, TableName, ex.Message);
                 throw;
             }
         }
 
-        public async Task<RoleModel> GetByIdAsync(ClaimsIdentity identity, int id)
+        public async Task<RoleModel?> GetByIdAsync(ClaimsIdentity identity, int id)
         {
             return await GetByIdAsync<RoleModel>(identity,"dbo.spRoleGetById", id);
         }
@@ -55,7 +55,6 @@ namespace DorisApp.WebAPI.DataAccess
 
         public int GetIdForNewUser()
         {
-            //TODO: Get the id for Anonymous user.
             return 1;
         }
 

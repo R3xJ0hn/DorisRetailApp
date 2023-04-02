@@ -72,7 +72,18 @@ namespace DorisApp.WebAPI.DataAccess
       
                 }
 
-                await ValidateFields(identity, brand);
+                var errorMsg = await ValidateFields(identity, brand);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<BrandSummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.SaveDataAsync("dbo.spBrandInsert", brand);
                 await _logger.SuccessInsert(identity, brand.BrandName, TableName);
 
@@ -130,7 +141,18 @@ namespace DorisApp.WebAPI.DataAccess
                 //This will ignore by the stored procedure.
                 brand.CreatedAt = DateTime.UtcNow;
 
-                await ValidateFields(identity, brand);
+                var errorMsg = await ValidateFields(identity, brand);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<BrandSummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.UpdateDataAsync("dbo.spBrandUpdate", brand);
                 await _logger.SuccessUpdate(identity, brand.BrandName, TableName, oldName ?? "");
 
@@ -198,7 +220,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await IsItemExistAsync<BrandModel>("dbo.spBrandGetById", id);
         }
 
-        public async Task ValidateFields(ClaimsIdentity? identity, BrandModel brand)
+        public async Task<string?> ValidateFields(ClaimsIdentity? identity, BrandModel brand)
         {
             string Name = AppHelper.GetFirstWord(
                 identity?.Claims.Where(c => c.Type == ClaimTypes.Name)
@@ -219,8 +241,9 @@ namespace DorisApp.WebAPI.DataAccess
             if (!string.IsNullOrWhiteSpace(msg))
             {
                 await _logger.LogError($"Data Access {Name}: {msg}");
-                throw new NullReferenceException(msg);
             }
+
+            return msg;
         }
 
     }

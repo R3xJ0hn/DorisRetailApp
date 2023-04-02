@@ -77,7 +77,18 @@ namespace DorisApp.WebAPI.DataAccess
                     }
                 }
 
-                await ValidateFields(identity, subCategory);
+                var errorMsg = await ValidateFields(identity, subCategory);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<SubCategorySummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.SaveDataAsync("dbo.spSubCategoryInsert", subCategory);
                 await _logger.SuccessInsert(identity, subCategory.SubCategoryName, TableName);
 
@@ -122,6 +133,7 @@ namespace DorisApp.WebAPI.DataAccess
                     };
                 }
 
+                subCategory.SubCategoryName = AppHelper.CapitalizeFirstWords(subCategory.SubCategoryName);
                 subCategory.UpdatedByUserId = int.Parse(identity?.Claims
                     .Where(c => c.Type == ClaimTypes.NameIdentifier)
                     .Select(c => c.Value).SingleOrDefault() ?? "1");
@@ -133,7 +145,18 @@ namespace DorisApp.WebAPI.DataAccess
                 if (subCategory.CategoryId == 0 && getExistingItem.CategoryId > 0)
                     subCategory.CategoryId = getExistingItem.CategoryId;
 
-                await ValidateFields(identity, subCategory);
+                var errorMsg = await ValidateFields(identity, subCategory);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<SubCategorySummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
                 await _sql.UpdateDataAsync("dbo.spSubCategoryUpdate", subCategory);
                 await _logger.SuccessUpdate(identity, subCategory.SubCategoryName, TableName, oldName ?? "");
 
@@ -230,7 +253,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await IsItemExistAsync<SubCategoryModel>("dbo.spSubCategoryGetById", id);
         }
 
-        private async Task ValidateFields(ClaimsIdentity? identity, SubCategoryModel subCategory)
+        private async Task<string?> ValidateFields(ClaimsIdentity? identity, SubCategoryModel subCategory)
         {
             string Name = AppHelper.GetFirstWord(
                 identity?.Claims.Where(c => c.Type == ClaimTypes.Name)
@@ -257,9 +280,10 @@ namespace DorisApp.WebAPI.DataAccess
 
             if (!string.IsNullOrWhiteSpace(msg))
             {
-                await _logger.LogError($"Data Access {Name}: {msg}");
-                throw new NullReferenceException(msg);
+                await _logger.LogError($"Data Access {Name}: {msg}"); 
             }
+
+            return msg;
         }
     }
 }
