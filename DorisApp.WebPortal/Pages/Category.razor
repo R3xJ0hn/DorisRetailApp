@@ -393,13 +393,13 @@
 
     private async Task CatchError(string exMessage)
     {
-        var result = new ResultDTO<BrandSummaryDTO>
+        var result = new ResultDTO<CategoryEndpoint>
             {
                 ErrorCode = 1
             };
 
         if (HttpErrorHandler != null)
-            await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);
+            await HttpErrorHandler.HandleHttpErrors<CategoryEndpoint>(result, exMessage);
     }
 
     private string? VerifySearchBar(string? str) =>

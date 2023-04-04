@@ -213,7 +213,7 @@ namespace DorisApp.WebAPI.Controllers
                     new ResultDTO<ProductSummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to delete product.",
+                        ReasonPhrase = "Unable to get product.",
                         IsSuccessStatusCode = false
                     }
                 );

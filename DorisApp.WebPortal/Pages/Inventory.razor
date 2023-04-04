@@ -3,10 +3,180 @@
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Config
 
+<div class="inventory-page-content">
+
+    <div class="container-fluid">
+
+        <!-- Start Panel 1 -->
+        <div class="app-panel" id="panel1" style="opacity:1; display: flex;">
+            <div class="container-fluid">
+
+                <div class="row align-items-end">
+                    <div class="col ">
+                        <h3 class="table-title">Stock On Hand</h3>
+                    </div>
+
+                    <div class="col">
+                        <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
+                                data-bs-target="#inventoryModal" @onclick="OpenStockEntryModal">
+                            <i class="fa-regular fa-circle-plus"></i>
+                            Add
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="table-card">
+
+                    <div class="row table-card-header">
+
+                        <div class="col-md d-flex">
+                            <div class="col-md search-bar">
+                                <input type="search" class="form-control" placeholder="Search...">
+                            </div>
+
+                            <i class="fa-regular fa-filter-list"
+                               data-bs-toggle="collapse" data-bs-target="#date-filter-collapse"
+                               aria-expanded="false" aria-controls="date-filter-collapse">
+                            </i>
+                        </div>
+
+                        <div class="col-md collapse d-md-block" id="date-filter-collapse">
+                            <div class="date-filter">
+                                <div class="date-picker date-picker-sm">
+                                    <input type="text" class="form-control" name="event_date"
+                                           placeholder="Start Date" autocomplete="off" id="startDate">
+                                </div>
+                                <p>To</p>
+                                <div class="date-picker date-picker-sm">
+                                    <input type="text" class="form-control" name="event_date"
+                                           placeholder="Date End" autocomplete="off" id="expiryDate">
+                                </div>
+                                <button class="btn btn-secondary">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col count-item text-end">
+                            showing items 10 - 20 out of 76
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="table">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col"></th>
+                                    <th scope="col" class="sortable">Location</th>
+                                    <th scope="col" class="sortable active">Product Name</th>
+                                    <th scope="col" class="sortable">SKU</th>
+                                    <th scope="col" class="sortable">Stock Remain</th>
+                                    <th scope="col" class="sortable">Stock In</th>
+                                    <th scope="col" class="sortable">Expiry</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                    <td scope="row">
+                                        <span></span>
+                                    </td>
+                                    <td>
+                                        A10
+                                    </td>
+                                    <td class="td-name">Dove Antibacterial</td>
+                                    <td>#026274562815</td>
+                                    <td>100</td>
+                                    <td class="td-date">
+                                        <i class="fa-regular fa-clock"></i>
+                                        05-03-23
+                                    </td>
+                                    <td class="td-date">
+                                        <i class="fa-regular fa-clock"></i>
+                                        05-03-23
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   id="flexSwitchCheckDefault">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="table-icons">
+                                            <i class="fa-regular fa-eye"></i>
+                                            <i class="fa-solid fa-pencil"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </table>
 
 
+                        @if (inventorySummary == null)
+                        {
+                            <div class="no-item">
 
+                                @if (isLoading)
+                                {
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <h6>No Product has been loaded.</h6>
+                                }
+                            </div>
+                        }
+
+                    </div>
+
+                    <Pagination CurrentPage="@currentPage"
+                                PageCount="@totalPages"
+                                OnPageChanged="OnHandlePageChange" />
+                </div>
+
+            </div>
+        </div>
+        <!-- End Panel 1 -->
+        <!-- Start Panel 2 -->
+        <div class="app-panel" id="panel2" style="display: none;">
+        </div>
+        <!-- End Panel 2 -->
+
+
+    </div>
+</div>
+
+
+<InventoryFormModal/>
 
 @code {
+    private RequestModel<InventorySummaryDTO>? inventorySummary;
+    private RequestPageDTO inventoryRequestDTO = new();
+    private int totalPages = 1;
+    private int currentPage = 1;
+    private bool isLoading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("SetDatePickerSetting");
+    }
+
+    private void OpenStockEntryModal()
+    {
+
+    }
+
+
+    private async Task OnHandlePageChange(int page)
+    {
+
+    }
 
 }

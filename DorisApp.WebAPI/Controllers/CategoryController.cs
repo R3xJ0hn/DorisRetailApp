@@ -160,7 +160,7 @@ namespace DorisApp.WebAPI.Controllers
                   new ResultDTO<ProductSummaryDTO>
                   {
                       ErrorCode = 5,
-                      ReasonPhrase = "Unable to delete category.",
+                      ReasonPhrase = "Unable to get category." + ex.Message,
                       IsSuccessStatusCode = false
                   });
             }

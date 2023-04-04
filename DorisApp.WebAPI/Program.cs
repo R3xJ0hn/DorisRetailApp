@@ -21,10 +21,13 @@ builder.Services.AddTransient<CategoryData>();
 builder.Services.AddTransient<SubCategoryData>();
 builder.Services.AddTransient<BrandData>();
 builder.Services.AddTransient<ProductData>();
+builder.Services.AddTransient<InventoryData>();
 
 //Add Logger Services
 builder.Services.AddLogging(builder =>
 {
+    //builder.AddConsole();
+    builder.ClearProviders();
     builder.AddConsole();
 });
 
@@ -44,6 +47,7 @@ builder.Services.AddScoped<ILogger>(serviceProvider =>
     var factory = serviceProvider.GetRequiredService<ILoggerFactory>();
     return factory.CreateLogger("DorisApp[API]");
 });
+
 
 //JWT Authentication
 builder.Services

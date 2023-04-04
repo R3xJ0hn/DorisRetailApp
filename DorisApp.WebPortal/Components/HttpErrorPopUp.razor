@@ -14,6 +14,11 @@
             await JSRuntime.InvokeVoidAsync("ErrorToast", "Server recieved invalid fiels.");
         }
 
+        if (result.ErrorCode == 1)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", result.ReasonPhrase);
+        }
+
         if (result.ErrorCode == 401)
         {
             await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
@@ -24,6 +29,10 @@
             await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");
         }
 
+        if (result.ErrorCode ==  404)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", "page not found");
+        }
 
         if (result.ErrorCode == 3)
         {

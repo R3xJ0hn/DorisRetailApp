@@ -452,13 +452,13 @@
 
     private async Task CatchError(string exMessage)
     {
-        var result = new ResultDTO<BrandSummaryDTO>
+        var result = new ResultDTO<SubCategorySummaryDTO>
             {
                 ErrorCode = 1
             };
 
         if (HttpErrorHandler != null)
-            await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);
+            await HttpErrorHandler.HandleHttpErrors<SubCategorySummaryDTO>(result, exMessage);
     }
 
 }

@@ -1,0 +1,574 @@
+﻿@using System.Globalization;
+@inject ProductEndpoint ProductEndpoint
+@inject InventoryEndpoint InventoryEndpoint
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IConfiguration Config
+@inject IJSRuntime JSRuntime
+
+
+@{
+    bool notif = bool.Parse(Config["NotifDialog:StockEntry"] ?? "true");
+}
+
+<div class="inventory-modal modal fade" id="inventoryModal" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-primary" id="staticBackdropLabel">Stock Entry</h1>
+                <button type="button" class="btn btn-close" @onclick="OnCloseModal" data-bs-slide-to="0" 
+                data-bs-target="#InventorySlide" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body">
+
+                <div class="carousel slide no-gutters" data-bs-interval="false" id="InventorySlide">
+
+                    <div class="carousel-inner">
+
+                        <div class="carousel-item active">
+
+                            <div class="mb-3">
+                                <label for="location" class="form-label">
+                                    Location
+                                    <small>
+                                        (Shelf Name)
+                                    </small>
+                                </label>
+
+                                <input type="text" id="location"
+                                       class="form-control @(!locationValidated ? "invalid-border-color" : "")"
+                                       placeholder="e.g. 'A01', 'B10'..." @bind="inventoryModel.Location">
+
+                                <div class="form-validation @(locationValidated ? "d-none" : "")">
+                                    Please provide a shelf location.
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+
+                                @{
+                                    var haveSelectedProduct = false;
+                                    var productName = "";
+
+                                    if (selectedProduct != null)
+                                    {
+                                        haveSelectedProduct = true;
+                                        productName = selectedProduct?.ProductName;
+                                    }
+                                }
+
+                                <label for="productName" class="form-label">Select Product</label>
+                                <div class="form-product-input-select">
+                                    <input type="search" placeholder="Type to search..."
+                                           class="form-control @(!productValidated ? "invalid-border-color" : "")"
+                                           @oninput="OnSearchItem" value="@productName"
+                                           disabled="@haveSelectedProduct">
+                                    <i class="fa-solid fa-xmark @(!haveSelectedProduct ? "d-none" : "")"
+                                       @onclick="OnClearSelectedProduct"></i>
+                                </div>
+                                <div class="form-validation @(productValidated ? "d-none" : "")">
+                                    Please select a product.
+                                </div>
+                            </div>
+
+                            <div class="table-wrapper">
+                                <table class="table">
+
+                                    <thead>
+                                        <tr>
+                                            <th scope="col"></th>
+                                            <th scope="col">Image</th>
+                                            <th scope="col" @onclick="(() => OnSortChange('p')) " class="sortable
+                                                @((selectedSortValue == OrderProductSummaryBy.NameAcs) ? "" : "asc")
+                                                @((selectedSortValue == OrderProductSummaryBy.NameAcs ||
+                                                 selectedSortValue == OrderProductSummaryBy.NameDesc ) ? "active" : "")">
+                                                Product Name
+                                            </th>
+                                            <th scope="col">SKU</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        @if (productSummary != null)
+                                        {
+                                            @foreach (var item in productSummary.Models)
+                                            {
+                                                <tr @onclick="(() => OnSelectedProductChange(item.Id))"
+                                            class="@(item.ProductName == productName ? "active" : "")">
+
+                                                    <td scope="row">
+                                                        <span></span>
+                                                    </td>
+
+                                                    @{
+                                                        var url = @Config["URL:apiUrl"]
+                                                        + "/api/file/get/product/"
+                                                        + @item.StoredImageName;
+                                                    }
+
+                                                    <td>
+                                                        <img src="@url" alt="product">
+                                                    </td>
+                                                    <td>@item.ProductName</td>
+                                                    <td>#@item.Sku</td>
+                                                </tr>
+                                            }
+                                        }
+
+                                    </tbody>
+                                </table>
+
+                                @if (productSummary == null)
+                                {
+                                    <div class="no-item">
+
+                                        @if (isLoading)
+                                        {
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <h6>No Product has been loaded.</h6>
+                                        }
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal" @onclick="OnCloseModal">
+                                    Close
+                                </button>
+
+                                <button type="button" class="btn btn-primary proceed-btn" @onclick="OnClickNext">
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="carousel-item inventory-form">
+
+                            <div class="row">
+
+                                <div class="mb-3">
+                                    <label for="purchasePrice" class="form-label">Purchase Price</label>
+                                    <input type="number" @bind="inventoryModel.PurchasePrice"
+                                           class="form-control @(!purchasePriceValidated ? "invalid-border-color" : "")"
+                                           id="purchasePrice" placeholder="Purchase Price" required>
+
+                                    <div class="form-validation @(purchasePriceValidated ? "d-none" : "")">
+                                        Please provide a purchase price.
+                                    </div>
+
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="retailPrice" class="form-label">Retail Price</label>
+                                    <input type="number" @bind="inventoryModel.RetailPrice"
+                                           class="form-control @(!retailPriceValidated ? "invalid-border-color" : "")"
+                                           id="retailPrice" placeholder="Retail Price">
+
+                                    <div class="form-validation @(retailPriceValidated ? "d-none" : "")">
+                                        The retail price must be grater than or equal to the purchased price.
+                                    </div>
+
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm">
+                                        <div class="mb-3">
+                                            <label for="purchaseDate" class="form-label">Purchased Date</label>
+                                            <div class="date-picker">
+                                                <input type="text" id="purchasedDateInput" placeholder="Purchased Date"
+                                                       class="form-control @(!purchaseDateValidated ? "invalid-border-color" : "")" />
+                                            </div>
+
+                                            <div class="form-validation @(purchaseDateValidated ? "d-none" : "")">
+                                                Please provide a valid purchased date.
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm">
+                                        <div class="mb-3">
+                                            <label for="expiryDate" class="form-label">Expiry Date</label>
+                                            <div class="date-picker">
+                                                <input type="text" id="expiryDateInput" placeholder="Expiry Date"
+                                                       class="form-control @(!purchaseDateValidated ? "invalid-border-color" : "")" />
+                                            </div>
+
+                                            <div class="form-validation @(expiryDateValidated ? "d-none" : "")">
+                                                The expiration date should be three days after today's date.
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md">
+                                    <div class="mb-3">
+                                        <label for="quantity" class="form-label">Quantity</label>
+                                        <input type="number" @bind="inventoryModel.Quantity"
+                                               class="form-control @(!quantityValidated ? "invalid-border-color" : "")"
+                                               id="quantity" placeholder="Quantity">
+
+                                        <div class="form-validation @(quantityValidated ? "d-none" : "")">
+                                            Please provide a quantity for the product.
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="col-md">
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="checkbox"
+                                               @bind="inventoryModel.IsAvailable" id="isTaxable">
+                                        <label class="form-check-label" for="isTaxable">
+                                            Set as Available
+                                        </label>
+                                        <p>
+                                            NOTE: If you check the checkbox, it will be set as available now for
+                                            purchase.
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                        data-bs-target="#InventorySlide" data-bs-slide="prev">
+                                    Previous
+                                </button>
+                                <button type="button" class="btn btn-primary proceed-btn" @onclick="OnClickNext">
+                                    Next
+                                </button>
+                            </div>
+
+                        </div>
+
+                        @if (selectedProduct != null)
+                        {
+
+                            <div class="carousel-item inventory-prview">
+
+                                <div class="row">
+
+                                    @{
+                                        var selectedProductImgUrl = @Config["URL:apiUrl"]
+                                        + "/api/file/get/product/"
+                                        + selectedProduct.StoredImageName;
+                                    }
+
+                                    <div class="col-sm product-view-image">
+                                        <img src="@selectedProductImgUrl" alt="product">
+                                    </div>
+
+                                    <div class="col-sm product-view-title">
+                                        <h2>@productName</h2>
+                                    </div>
+
+                                </div>
+
+                                <div class="row descripion">
+
+                                    <h4>Description: </h4>
+
+                                    <div class="row">
+                                        <table class="col-lg">
+                                            <tr>
+                                                <td>SKU:</td>
+                                                <td>@selectedProduct.Sku</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Location:</td>
+                                                <td>@inventoryModel.Location</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Purchase Price:</td>
+                                                <td>@(string.Format("{0:#.00}", inventoryModel.PurchasePrice))</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Retail Price:</td>
+                                                <td>@(string.Format("{0:#.00}", inventoryModel.RetailPrice))</td>
+                                            </tr>
+                                        </table>
+
+                                        <table class="col-lg">
+                                            <tr>
+                                                <td>Purchase Date:</td>
+                                                <td>@inventoryModel.PurchaseDate.ToLocalTime().ToString("MMMM dd, yyyy")</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Expiry Date:</td>
+                                                <td>@inventoryModel.ExpiryDate.ToLocalTime().ToString("MMMM dd, yyyy")</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Created by:</td>
+                                                <td>@UserName</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Date Created:</td>
+                                                <td>@DateTime.Now.ToString("MMMM dd yyyy")</td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-target="#InventorySlide" data-bs-slide="prev">
+                                        Previous
+                                    </button>
+
+                                    <button id="saveButton" type="button" class="btn proceed-btn btn-primary" @onclick="OnSaveClicked">
+                                        <span class="spinner-border spinner-border-sm d-none" role="status"
+                                          aria-hidden="true"></span>
+                                         Save
+                                    </button>
+                                </div>
+
+
+                            </div>
+
+                        }
+
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<HttpErrorPopUp @ref="HttpErrorHandler" />
+
+@code {
+
+    private HttpErrorPopUp? HttpErrorHandler = new();
+    private RequestModel<ProductSummaryDTO>? productSummary;
+    private RequestPageDTO productRequestDTO = new();
+    private InventoryModel inventoryModel = new();
+    private ProductSummaryDTO? selectedProduct;
+
+    private int carouselItem = 1;
+    private int totalPages = 1;
+    private int currentPage = 1;
+    private bool isLoading = true;
+
+    private OrderProductSummaryBy selectedSortValue;
+    private string? UserName;
+
+    private bool locationValidated = true;
+    private bool productValidated = true;
+    private bool purchasePriceValidated = true;
+    private bool retailPriceValidated = true;
+    private bool purchaseDateValidated = true;
+    private bool expiryDateValidated = true;
+    private bool quantityValidated = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        UserName = authenticationState.User.FindFirst(ClaimTypes.Name)?.Value;
+
+        productRequestDTO.PageNo = 1;
+        productRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"] ?? "10");
+        await RequestItems(currentPage, selectedSortValue);
+
+    }
+
+    private async Task RequestItems(int page, OrderProductSummaryBy orderBy)
+    {
+        productRequestDTO.PageNo = page;
+        productRequestDTO.OrderBy = (int)orderBy;
+        isLoading = true;
+
+        productSummary = (await ProductEndpoint.GetProductSummary(productRequestDTO))?.Data;
+
+        if (productSummary != null)
+        {
+            totalPages = productSummary.TotalPages;
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnSearchItem(ChangeEventArgs e)
+    {
+        currentPage = 1;
+        string? searchFor = e?.Value?.ToString();
+        productRequestDTO.LookFor = VerifySearchBar(searchFor);
+        await RequestItems(currentPage, selectedSortValue);
+    }
+
+    private async Task OnSelectedProductChange(int Id)
+    {
+        selectedProduct = productSummary?.Models.Where(p => p.Id == Id).FirstOrDefault();
+        productRequestDTO.LookFor = null;
+        await RequestItems(1, selectedSortValue);
+    }
+
+    private void OnClearSelectedProduct()
+    {
+        selectedProduct = null;
+    }
+
+    private async Task OnClickNext()
+    {
+        if (carouselItem == 2)
+        {
+            string purchasedDateString = await JSRuntime.InvokeAsync<string>("getDateValue", "purchasedDateInput");
+            string expiryDateString = await JSRuntime.InvokeAsync<string>("getDateValue", "expiryDateInput");
+
+            DateTime purchasedDate;
+            DateTime expiryDate;
+
+            if (DateTime.TryParseExact(purchasedDateString, "MMM d, yyyy", 
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out purchasedDate))
+            {
+                inventoryModel.PurchaseDate = purchasedDate.ToUniversalTime();
+                purchaseDateValidated = inventoryModel.PurchaseDate <= DateTime.UtcNow;
+            }
+            else
+            {
+                purchaseDateValidated = false;
+            }
+
+            if (DateTime.TryParseExact(expiryDateString, "MMM d, yyyy",
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out expiryDate))
+            {
+                inventoryModel.ExpiryDate = expiryDate.ToUniversalTime();
+                expiryDateValidated = inventoryModel.ExpiryDate > DateTime.UtcNow.AddDays(3);
+            }
+            else
+            {
+                expiryDateValidated = false;
+            }
+
+            purchasePriceValidated = inventoryModel.PurchasePrice > 0;
+            retailPriceValidated = inventoryModel.RetailPrice > inventoryModel.PurchasePrice;
+            quantityValidated = inventoryModel.Quantity > 0;
+
+            if (purchasePriceValidated && retailPriceValidated &&
+                purchaseDateValidated && expiryDateValidated && quantityValidated)
+            {
+                await JSRuntime.InvokeVoidAsync("InventoryCarouselNext");
+                carouselItem = 1;
+            }
+        }
+
+        if (carouselItem == 1)
+        {
+            locationValidated = !string.IsNullOrEmpty(inventoryModel.Location);
+            productValidated = selectedProduct != null;
+
+            if (locationValidated && productValidated)
+            {
+                await JSRuntime.InvokeVoidAsync("InventoryCarouselNext");
+                carouselItem = 2;
+            }
+        }
+
+    }
+
+
+    private async Task OnSortChange(char sortBy)
+    {
+        switch (sortBy)
+        {
+            case 'p':
+
+                selectedSortValue = selectedSortValue == OrderProductSummaryBy.NameAcs ?
+                OrderProductSummaryBy.NameDesc : OrderProductSummaryBy.NameAcs;
+                break;
+
+            default:
+                selectedSortValue = selectedSortValue == OrderProductSummaryBy.NameAcs ?
+                OrderProductSummaryBy.NameDesc : OrderProductSummaryBy.NameAcs;
+                break;
+        }
+
+        currentPage = 1;
+        await RequestItems(1, selectedSortValue);
+    }
+
+    private void OnCloseModal()
+    {
+        ResetValue();
+    }
+
+    private async Task OnSaveClicked()
+    {
+        await JSRuntime.InvokeVoidAsync("modalProcessing");
+
+        if (true)
+        {
+            await AddInventory();
+        }
+    }
+
+    private async Task AddInventory()
+    {
+        try
+        {
+            inventoryModel.ProductId = selectedProduct?.Id ?? 0;
+            var result = await InventoryEndpoint.AddInventoryAsync(inventoryModel);
+
+            if (result?.ErrorCode == 0)
+                await JSRuntime.InvokeVoidAsync("SuccessToast", 
+                "Successfully added new Inventory for " + selectedProduct?.ProductName);
+                
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler.HandleHttpErrors<List<InventorySummaryDTO>>(result);
+            
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        ResetValue();
+        await JSRuntime.InvokeVoidAsync("InventoryCarouselNext");
+        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#inventoryModal");
+    }
+
+    private async Task CatchError(string exMessage)
+    {
+        var result = new ResultDTO<InventorySummaryDTO>
+        {
+            ErrorCode = 1
+        };
+
+        if (HttpErrorHandler != null)
+            await HttpErrorHandler.HandleHttpErrors<InventorySummaryDTO>(result, exMessage);
+    }
+
+    private void ResetValue()
+    {
+        selectedProduct = null;
+        inventoryModel = new();
+        carouselItem = 1;
+    }
+
+    private string? VerifySearchBar(string? str) =>
+    string.IsNullOrWhiteSpace(str) ? null : str;
+}

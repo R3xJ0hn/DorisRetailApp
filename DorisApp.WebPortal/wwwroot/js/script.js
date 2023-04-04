@@ -228,3 +228,21 @@ function WarningToast(msg) {
         title: msg
     })
 }
+
+function SetDatePickerSetting(){
+    $('.date-picker .form-control').datepicker({
+        'format': 'M d, yyyy',
+        'autoclose': true
+    });
+}
+
+function getDateValue(inputId) {
+    return document.getElementById(inputId).value;
+}
+
+function InventoryCarouselNext() {
+    const myCarousel = document.getElementById('InventorySlide')
+    const carousel = new bootstrap.Carousel(myCarousel)
+    carousel.next()
+    carousel.dispose()
+}
