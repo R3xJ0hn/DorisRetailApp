@@ -115,6 +115,7 @@
     <Build Include="dbo\StoredProcedures\SubCategory\spSubCategoryRestore.sql" />
     <Build Include="dbo\Tables\Inventory.sql" />
     <Build Include="dbo\StoredProcedures\Inventory\spInventoryInsert.sql" />
+    <Build Include="dbo\StoredProcedures\Inventory\spInventoryGetSummaryByPage.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

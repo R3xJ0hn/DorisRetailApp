@@ -9,14 +9,15 @@
             await JSRuntime.InvokeVoidAsync("ErrorToast", message);
         }
 
-        if (result.ErrorCode == 4)
-        {
-            await JSRuntime.InvokeVoidAsync("ErrorToast", "Server recieved invalid fiels.");
-        }
 
         if (result.ErrorCode == 1)
         {
             await JSRuntime.InvokeVoidAsync("ErrorToast", result.ReasonPhrase);
+        }
+
+        if (result.ErrorCode == 4)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", "Server recieved invalid fiels.");
         }
 
         if (result.ErrorCode == 401)
@@ -39,6 +40,17 @@
             var name = GetClassName<T>();
             await JSRuntime.InvokeVoidAsync("ExistAlert", name, message);
         }
+
+        if (result.ErrorCode == 5)
+        {
+            await JSRuntime.InvokeVoidAsync("ServerErrorAlert");
+        }
+
+        if (result.ErrorCode == 500)
+        {
+            await JSRuntime.InvokeVoidAsync("ServerErrorAlert");
+        }
+
 
     }
 

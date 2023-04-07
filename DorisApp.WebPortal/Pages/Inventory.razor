@@ -1,5 +1,6 @@
 ﻿@page "/inventory"
-@inject BrandEndpoint BrandEndpoint
+@using System.Globalization;
+@inject InventoryEndpoint InventoryEndpoint
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Config
 
@@ -18,7 +19,7 @@
 
                     <div class="col">
                         <button type="button" class="add-btn btn btn-gradient-primary " data-bs-toggle="modal"
-                                data-bs-target="#inventoryModal" @onclick="OpenStockEntryModal">
+                                data-bs-target="#inventoryModal">
                             <i class="fa-regular fa-circle-plus"></i>
                             Add
                         </button>
@@ -32,35 +33,55 @@
 
                         <div class="col-md d-flex">
                             <div class="col-md search-bar">
-                                <input type="search" class="form-control" placeholder="Search...">
+                                <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
                             </div>
 
-                            <i class="fa-regular fa-filter-list"
-                               data-bs-toggle="collapse" data-bs-target="#date-filter-collapse"
-                               aria-expanded="false" aria-controls="date-filter-collapse">
+                            <i class="fa-regular fa-filter-list" data-bs-toggle="collapse"
+                               data-bs-target="#filter-collapse" aria-expanded="false"
+                               aria-controls="filter-collapse">
                             </i>
                         </div>
 
-                        <div class="col-md collapse d-md-block" id="date-filter-collapse">
-                            <div class="date-filter">
+                        <div class="col-md collapse d-md-block filter" id="filter-collapse">
+                            <div class="date-filter  @(isDateFilterActive ? "active" : "")">
                                 <div class="date-picker date-picker-sm">
-                                    <input type="text" class="form-control" name="event_date"
-                                           placeholder="Start Date" autocomplete="off" id="startDate">
+                                    <input type="text" class="form-control" @bind="startDateText"
+                                           placeholder="Start Date" autocomplete="off" id="start-date">
                                 </div>
                                 <p>To</p>
                                 <div class="date-picker date-picker-sm">
-                                    <input type="text" class="form-control" name="event_date"
-                                           placeholder="Date End" autocomplete="off" id="expiryDate">
+                                    <input type="text" class="form-control" @bind="endDateText"
+                                           placeholder="Date End" autocomplete="off" id="end-date">
                                 </div>
-                                <button class="btn btn-secondary">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                <button class="btn btn-secondary" @onclick="OnSearchDateFilteredItem">
+
+                                    @if (isDateFilterActive)
+                                    {
+                                        <i class="fa-solid fa-xmark"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    }
+
                                 </button>
                             </div>
                         </div>
 
-                        <div class="col count-item text-end">
-                            showing items 10 - 20 out of 76
-                        </div>
+            
+                        @if (inventorySummary != null)
+                        {
+                            <div class="col count-item text-end">
+                                @{
+                                    int startItemIndex = (inventorySummary.IsInPage - 1) * inventorySummary.ItemPerPage + 1;
+                                    //int endItemIndex = Math.Min(inventorySummary.IsInPage * inventorySummary.ItemPerPage, inventorySummary.TotalItems);
+                                    int endItemIndex = (startItemIndex - 1) + inventorySummary.Models.Count;
+                                    string displayText = $"Showing {startItemIndex}-{endItemIndex} out of {inventorySummary.TotalItems}";
+                                }
+                                @displayText
+                            </div>
+                        }
+
                     </div>
 
                     <div class="table-wrapper">
@@ -69,49 +90,92 @@
                             <thead>
                                 <tr>
                                     <th scope="col"></th>
-                                    <th scope="col" class="sortable">Location</th>
-                                    <th scope="col" class="sortable active">Product Name</th>
-                                    <th scope="col" class="sortable">SKU</th>
-                                    <th scope="col" class="sortable">Stock Remain</th>
-                                    <th scope="col" class="sortable">Stock In</th>
-                                    <th scope="col" class="sortable">Expiry</th>
+
+                                    <th scope="col" @onclick="(() => OnSortChange('l')) " class="sortable
+                                        @((selectedSortValue == OrderInventorySummaryBy.LocationAsc) ? "" : "asc")
+                                        @((selectedSortValue == OrderInventorySummaryBy.LocationAsc ||
+                                         selectedSortValue == OrderInventorySummaryBy.LocationDesc ) ? "active" : "")  ">
+                                        Location
+                                    </th>
+
+                                    <th scope="col" @onclick="(() => OnSortChange('p')) " class="sortable
+                                        @((selectedSortValue == OrderInventorySummaryBy.ProductNameAsc) ? "" : "asc")
+                                        @((selectedSortValue == OrderInventorySummaryBy.ProductNameAsc ||
+                                         selectedSortValue == OrderInventorySummaryBy.ProductNameDesc ) ? "active" : "")  ">
+                                        Product Name
+                                    </th>
+
+                                    <th scope="col">SKU</th>
+
+                                    <th scope="col" @onclick="(() => OnSortChange('r')) " class="sortable
+                                        @((selectedSortValue == OrderInventorySummaryBy.StockRemainAsc) ? "" : "asc")
+                                        @((selectedSortValue == OrderInventorySummaryBy.StockRemainAsc ||
+                                         selectedSortValue == OrderInventorySummaryBy.StockRemainDesc ) ? "active" : "")  ">
+                                        Stock Remain
+                                    </th>
+
+                                    <th scope="col" @onclick="(() => OnSortChange('d')) " class="sortable
+                                        @((selectedSortValue == OrderInventorySummaryBy.PurchasedDateAsc) ? "" : "asc")
+                                        @((selectedSortValue == OrderInventorySummaryBy.PurchasedDateAsc ||
+                                         selectedSortValue == OrderInventorySummaryBy.PurchasedDateDesc ) ? "active" : "")  ">
+                                        Purchased Date
+                                    </th>
+
+                                    <th scope="col" @onclick="(() => OnSortChange('e')) " class="sortable
+                                        @((selectedSortValue == OrderInventorySummaryBy.ExpiryDateAsc) ? "" : "asc")
+                                        @((selectedSortValue == OrderInventorySummaryBy.ExpiryDateAsc ||
+                                         selectedSortValue == OrderInventorySummaryBy.ExpiryDateDesc ) ? "active" : "")  ">
+                                        Expiry Date
+                                    </th>
+
                                     <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
 
                             <tbody>
-                                <tr>
-                                    <td scope="row">
-                                        <span></span>
-                                    </td>
-                                    <td>
-                                        A10
-                                    </td>
-                                    <td class="td-name">Dove Antibacterial</td>
-                                    <td>#026274562815</td>
-                                    <td>100</td>
-                                    <td class="td-date">
-                                        <i class="fa-regular fa-clock"></i>
-                                        05-03-23
-                                    </td>
-                                    <td class="td-date">
-                                        <i class="fa-regular fa-clock"></i>
-                                        05-03-23
-                                    </td>
-                                    <td>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch"
-                                                   id="flexSwitchCheckDefault">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="table-icons">
-                                            <i class="fa-regular fa-eye"></i>
-                                            <i class="fa-solid fa-pencil"></i>
-                                        </div>
-                                    </td>
-                                </tr>
+
+                                @if (inventorySummary != null)
+                                {
+                                    @foreach (var item in inventorySummary.Models)
+                                    {
+                                        <tr>
+                                            <td scope="row">
+                                                <span></span>
+                                            </td>
+
+                                            <td>
+                                                @item.Location
+                                            </td>
+                                            <td class="td-name">@item.ProductName</td>
+                                            <td>#@item.SKU</td>
+                                            <td>@item.StockRemain</td>
+                                            <td class="td-date">
+                                                <i class="fa-regular fa-clock"></i>
+                                                @item.PurchasedDate.ToLocalTime().ToString("MM-dd-yy")
+                                            </td>
+                                            <td class="td-date">
+                                                <i class="fa-regular fa-clock"></i>
+                                                @item.ExpiryDate.ToLocalTime().ToString("MM-dd-yy")
+                                            </td>
+                                            <td>
+
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input"
+                                                   type="checkbox" checked="@(item.IsAvailable)" @onchange="@(() => OnAvailabilityChange(item.Id, item.IsAvailable))">
+                                                </div>
+
+                                            </td>
+                                            <td>
+                                                <div class="table-icons">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                    <i class="fa-solid fa-pencil"></i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
                             </tbody>
 
                         </table>
@@ -154,29 +218,154 @@
 </div>
 
 
-<InventoryFormModal/>
+<InventoryFormModal OnSave="OnSaveModal" />
 
 @code {
     private RequestModel<InventorySummaryDTO>? inventorySummary;
-    private RequestPageDTO inventoryRequestDTO = new();
+    private RequestInventoryPageDTO inventoryRequestDTO = new();
     private int totalPages = 1;
     private int currentPage = 1;
     private bool isLoading = true;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private OrderInventorySummaryBy selectedSortValue;
+    private InventoryModel? activeInventoryModel;
+
+    private bool isDateFilterActive = false;
+    private string startDateText = "";
+    private string endDateText = "";
+
+    protected override async Task OnInitializedAsync()
     {
+        inventoryRequestDTO.PageNo = 1;
+        inventoryRequestDTO.ItemPerPage = int.Parse(Config["AppSettings:itemPerPage"] ?? "10");
+        await RequestItems(currentPage, selectedSortValue);
         await JSRuntime.InvokeVoidAsync("SetDatePickerSetting");
     }
 
-    private void OpenStockEntryModal()
+    private async Task RequestItems(int page, OrderInventorySummaryBy orderBy)
     {
+        inventoryRequestDTO.PageNo = page;
+        inventoryRequestDTO.OrderBy = (int)orderBy;
+        isLoading = true;
+
+        inventorySummary = (await InventoryEndpoint
+        .GetInventorySummary(inventoryRequestDTO))?.Data;
+
+        if (inventorySummary != null)
+        {
+            totalPages = inventorySummary.TotalPages;
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnSearchItem(ChangeEventArgs e)
+    {
+        currentPage = 1;
+        string? searchFor = e?.Value?.ToString();
+        inventoryRequestDTO.LookFor = VerifySearchBar(searchFor);
+        await RequestItems(currentPage, selectedSortValue);
+    }
+
+    private async Task OnSearchDateFilteredItem()
+    {
+        startDateText = await JSRuntime.InvokeAsync<string>("getDateValue", "start-date");
+        endDateText = await JSRuntime.InvokeAsync<string>("getDateValue", "end-date");
+
+        DateTime startDate;
+        DateTime endDate;
+
+        if (DateTime.TryParseExact(startDateText, "MMM d, yyyy",
+        CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate) && 
+        DateTime.TryParseExact(endDateText, "MMM d, yyyy",
+        CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate) 
+        && !isDateFilterActive)
+        {
+            inventoryRequestDTO.StartDate = startDate.ToUniversalTime();
+            inventoryRequestDTO.EndDate = endDate.ToUniversalTime();
+            isDateFilterActive = true;
+
+            currentPage = 1;
+            await RequestItems(currentPage, selectedSortValue);
+        }else
+        {
+            startDateText = "";
+            endDateText = "";
+            isDateFilterActive = false;
+            inventoryRequestDTO.StartDate = null;
+            inventoryRequestDTO.EndDate = null;
+            currentPage = 1;
+            await RequestItems(currentPage, selectedSortValue);
+            StateHasChanged();
+        }
 
     }
+
 
 
     private async Task OnHandlePageChange(int page)
     {
+        currentPage = page;
+        await RequestItems(page, selectedSortValue);
+    }
+
+    private async Task OnSortChange(char sortBy)
+    {
+        switch (sortBy)
+        {
+            case 'l':
+                selectedSortValue = selectedSortValue == OrderInventorySummaryBy.LocationAsc ?
+                OrderInventorySummaryBy.LocationDesc : OrderInventorySummaryBy.LocationAsc;
+                break;
+
+            case 'p':
+                selectedSortValue = selectedSortValue == OrderInventorySummaryBy.ProductNameAsc ?
+                OrderInventorySummaryBy.ProductNameDesc : OrderInventorySummaryBy.ProductNameAsc;
+                break;
+
+            case 'r':
+                selectedSortValue = selectedSortValue == OrderInventorySummaryBy.StockRemainAsc ?
+                OrderInventorySummaryBy.StockRemainDesc : OrderInventorySummaryBy.StockRemainAsc;
+                break;
+
+            case 'd':
+                selectedSortValue = selectedSortValue == OrderInventorySummaryBy.PurchasedDateAsc ?
+                OrderInventorySummaryBy.PurchasedDateDesc : OrderInventorySummaryBy.PurchasedDateAsc;
+                break;
+
+            case 'e':
+                selectedSortValue = selectedSortValue == OrderInventorySummaryBy.ExpiryDateAsc ?
+                OrderInventorySummaryBy.ExpiryDateDesc : OrderInventorySummaryBy.ExpiryDateAsc;
+                break;
+
+            default:
+                selectedSortValue = selectedSortValue == OrderInventorySummaryBy.LocationAsc ?
+                OrderInventorySummaryBy.LocationDesc : OrderInventorySummaryBy.LocationAsc;
+                break;
+        }
+
+
+        currentPage = 1;
+        await RequestItems(1, selectedSortValue);
+    }
+
+    private async Task OnAvailabilityChange(int Id, bool status)
+    {
 
     }
+
+
+    private async Task OnSaveModal()
+    {
+        currentPage = 1;
+        await RequestItems(1, selectedSortValue);
+    }
+
+    private async Task<InventoryModel?> GetProductById(int Id) =>
+    (await InventoryEndpoint.GetById(Id))?.Data;
+
+    private string? VerifySearchBar(string? str) =>
+    string.IsNullOrWhiteSpace(str) ? null : str;
 
 }

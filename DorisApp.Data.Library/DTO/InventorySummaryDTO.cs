@@ -1,13 +1,19 @@
-﻿namespace DorisApp.Data.Library.DTO
+﻿using System;
+
+namespace DorisApp.Data.Library.DTO
 {
     public class InventorySummaryDTO
     {
-        public string Loaction { get; set; } = string.Empty;
+        public int Id { get; set; }
+        public string Location { get; set; } = string.Empty;
         public string ProductName { get; set; } = string.Empty;
+        public string SKU { get; set; } = string.Empty;
         public int StockRemain { get; set; }
+        public int StockAvailable { get; set; }
         public int CreatedAt { get; set; }
-        public int ExpiryDate { get; set; }
-        public bool Availability { get; set; }
+        public DateTime PurchasedDate { get; set; }
+        public DateTime ExpiryDate { get; set; }
+        public bool IsAvailable { get; set; }
     }
 
 }

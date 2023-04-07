@@ -278,7 +278,9 @@
 
                                 <div class="row descripion">
 
-                                    <h4>Description: </h4>
+                                    <div class="description-header">
+                                        <h4>Description: </h4>
+                                    </div>
 
                                     <div class="row">
                                         <table class="col-lg">
@@ -306,7 +308,7 @@
                                         <table class="col-lg">
                                             <tr>
                                                 <td>Purchase Date:</td>
-                                                <td>@inventoryModel.PurchaseDate.ToLocalTime().ToString("MMMM dd, yyyy")</td>
+                                                <td>@inventoryModel.PurchasedDate.ToLocalTime().ToString("MMMM dd, yyyy")</td>
                                             </tr>
 
                                             <tr>
@@ -384,6 +386,10 @@
     private bool expiryDateValidated = true;
     private bool quantityValidated = true;
 
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
     protected async override Task OnInitializedAsync()
     {
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -445,8 +451,8 @@
             if (DateTime.TryParseExact(purchasedDateString, "MMM d, yyyy", 
             CultureInfo.InvariantCulture, DateTimeStyles.None, out purchasedDate))
             {
-                inventoryModel.PurchaseDate = purchasedDate.ToUniversalTime();
-                purchaseDateValidated = inventoryModel.PurchaseDate <= DateTime.UtcNow;
+                inventoryModel.PurchasedDate = purchasedDate.ToUniversalTime();
+                purchaseDateValidated = inventoryModel.PurchasedDate <= DateTime.UtcNow;
             }
             else
             {
@@ -490,7 +496,6 @@
 
     }
 
-
     private async Task OnSortChange(char sortBy)
     {
         switch (sortBy)
@@ -524,6 +529,8 @@
         {
             await AddInventory();
         }
+
+        await OnSave.InvokeAsync(null);
     }
 
     private async Task AddInventory()

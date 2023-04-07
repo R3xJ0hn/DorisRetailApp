@@ -21,7 +21,7 @@ BEGIN
             ELSE b.BrandName 
         END AS BrandName,
         COUNT(i.Id) AS InventoryCount,
-        SUM(i.Quantity) AS TotalStock 
+        SUM(i.StockRemain) AS TotalStock 
     FROM 
         [dbo].[Products] p
         LEFT JOIN [dbo].[Brands] b ON b.Id = p.BrandID

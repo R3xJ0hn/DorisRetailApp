@@ -24,10 +24,14 @@ namespace DorisApp.Data.Library.Model
         [Required]
         public int Quantity { get; set; }
 
+        public int StockRemain { get; set; }
+
+        public int StockAvailable { get; set; }
+
         public bool IsAvailable { get; set; }
 
         [Required]
-        public DateTime PurchaseDate { get; set; }
+        public DateTime PurchasedDate { get; set; }
 
         [Required]
         public DateTime ExpiryDate { get; set; }

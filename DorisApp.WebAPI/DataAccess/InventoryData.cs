@@ -18,6 +18,11 @@ namespace DorisApp.WebAPI.DataAccess
             _productData = productData;
         }
 
+        public async Task<ResultDTO<RequestModel<InventorySummaryDTO>?>> GetSummaryDataByPageAsync(ClaimsIdentity? identity, RequestInventoryPageDTO request)
+        {
+            return await GetByPageAsync<InventorySummaryDTO>(identity, "dbo.spInventoryGetSummaryByPage", request);
+        }
+
         public async Task<ResultDTO<List<InventorySummaryDTO>>> StockEntryAsync(ClaimsIdentity? identity, InventoryModel inventory)
         {
             try
@@ -26,6 +31,8 @@ namespace DorisApp.WebAPI.DataAccess
                         c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
 
                 inventory.Location = AppHelper.CapitalizeFirstWords(inventory.Location);
+                inventory.StockRemain = inventory.Quantity;
+                inventory.StockAvailable = inventory.Quantity;
                 inventory.CreatedByUserId = createdByUserId;
                 inventory.UpdatedByUserId= createdByUserId;
                 inventory.CreatedAt= DateTime.UtcNow;
@@ -65,13 +72,6 @@ namespace DorisApp.WebAPI.DataAccess
             }
         }
 
-
-
-
-
-
-
-
         public async Task<string?> ValidateFields(ClaimsIdentity? identity, InventoryModel inventory)
         {
             string Name = AppHelper.GetFirstWord(
@@ -107,7 +107,7 @@ namespace DorisApp.WebAPI.DataAccess
             if (inventory.ExpiryDate < DateTime.Today.AddDays(3))
                 msg = $"The expiration date should be three days after today's date.";
 
-            if (inventory.PurchaseDate.GetHashCode() == 0 )
+            if (inventory.PurchasedDate.GetHashCode() == 0 )
                 msg = $"The purchase date is unassigned.";
 
             if (!string.IsNullOrWhiteSpace(msg))

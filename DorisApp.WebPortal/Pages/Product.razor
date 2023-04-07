@@ -36,7 +36,7 @@
                         <div class="count-item">
                             @{
                                 int startItemIndex = (productSummary.IsInPage - 1) * productSummary.ItemPerPage + 1;
-                                int endItemIndex = Math.Min(productSummary.IsInPage * productSummary.ItemPerPage, productSummary.TotalItems);
+                                int endItemIndex = (startItemIndex - 1) + productSummary.Models.Count;
                                 string displayText = $"Showing {startItemIndex}-{endItemIndex} out of {productSummary.TotalItems}";
                             }
                             @displayText

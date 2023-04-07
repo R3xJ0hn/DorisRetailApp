@@ -11948,6 +11948,10 @@ textarea.form-control-lg {
   border: 1px solid #fa6d93;
 }
 
+.warning-border-color {
+  border: 1px solid #fcbb5a;
+}
+
 .search-bar {
   margin: 1rem;
   border: 1px solid #c2c4c6;
@@ -13349,9 +13353,7 @@ textarea.form-control-lg {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: fit-content;
   height: 2.5rem;
-  width: 180px;
   min-width: 150px !important;
   padding: 0.5rem;
 }
@@ -14122,22 +14124,53 @@ textarea.form-control-lg {
   margin-left: 0;
   padding-left: 0;
 }
-.inventory-page-content .table-card-header .date-filter {
+.inventory-page-content .table-card-header .filter {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.inventory-page-content .table-card-header .filter .date-filter {
   display: flex;
   margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
   scale: 0.9;
 }
-.inventory-page-content .table-card-header .date-filter p {
+.inventory-page-content .table-card-header .filter .date-filter p {
   margin: 0rem 1rem;
   font-weight: 500;
   font-size: 18px;
   color: #343a40;
 }
-.inventory-page-content .table-card-header .date-filter .btn-secondary {
+.inventory-page-content .table-card-header .filter .date-filter .btn-secondary {
   padding: 0 0.4rem;
   height: 30px;
   margin-left: 0.5rem;
+  min-width: 2rem;
+}
+.inventory-page-content .table-card-header .filter .date-filter.active .date-picker {
+  border: 1px solid #d582fc;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.0745098039), 0 0 8px #d582fc;
+}
+.inventory-page-content .table-card-header .filter .date-filter.active p {
+  color: #d582fc;
+}
+.inventory-page-content .table-card-header .filter .date-filter.active .btn {
+  background: #d582fc;
+  border: none;
+}
+.inventory-page-content .table-card-header .filter .form-check {
+  width: fit-content;
+  margin: 0;
+  margin-top: 0.3rem;
+}
+.inventory-page-content .table-card-header .filter .form-check .form-check-input {
+  padding-left: 0;
+  margin-bottom: 0;
+}
+.inventory-page-content .table-card-header .filter .form-check .form-check-label {
+  font-size: 14px;
+  color: #343a40;
+  margin: 0;
 }
 
 .inventory-modal .carousel-item {
@@ -14171,8 +14204,30 @@ textarea.form-control-lg {
 .inventory-modal .carousel-item .row .col-sm {
   padding-right: 0;
 }
-.inventory-modal .carousel-item .row .date-picker {
-  width: auto;
+.inventory-modal .product-prev {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.inventory-modal .product-prev img {
+  width: 150px;
+  height: 150px;
+  border: 1px solid #d582fc;
+  border-radius: 1rem;
+}
+.inventory-modal .product-prev h2 {
+  width: 70%;
+  color: #343a40;
+  font-weight: 500;
+  font-size: 1.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 0;
+}
+.inventory-modal .product-prev p {
+  font-size: 12px;
 }
 .inventory-modal .form-product-input-select {
   position: relative;
@@ -14208,7 +14263,7 @@ textarea.form-control-lg {
 .inventory-modal .inventory-prview .product-view-title h2 {
   margin-top: 1rem;
   margin-left: 1rem;
-  color: #495057;
+  color: #343a40;
   margin-bottom: 2rem;
   width: 80%;
 }
@@ -14217,15 +14272,19 @@ textarea.form-control-lg {
   display: flex;
   flex-direction: column;
 }
-.inventory-modal .inventory-prview .descripion h4 {
-  color: #495057;
-  margin-left: 1rem;
+.inventory-modal .inventory-prview .descripion .description-header {
+  border-bottom: 1px solid #d582fc;
+  padding: 0;
+}
+.inventory-modal .inventory-prview .descripion .description-header h4 {
+  color: #343a40;
   background: #d582fc;
   width: fit-content;
   padding: 0 0.7rem;
   color: #fff;
   line-height: 2.3rem;
-  border-radius: 1px;
+  border-radius: 5px;
+  margin: 0;
 }
 .inventory-modal .inventory-prview .descripion table {
   margin-left: 1rem;
@@ -14237,7 +14296,12 @@ textarea.form-control-lg {
   height: 35px;
 }
 .inventory-modal .inventory-prview .descripion table tr td:nth-of-type(1) {
+  font-size: 14px;
+  width: 70px;
+}
+.inventory-modal .inventory-prview .descripion table tr td:nth-of-type(2) {
   font-weight: 500;
+  color: #495057;
 }
 .inventory-modal .inventory-prview .modal-footer {
   margin-top: 1.7rem;
@@ -14264,6 +14328,11 @@ textarea.form-control-lg {
 @media screen and (max-width: 767px) {
   .fa-filter-list {
     display: block !important;
+  }
+}
+@media screen and (max-width: 375px) {
+  .date-filter {
+    transform: scale(0.75, 0.8);
   }
 }
 

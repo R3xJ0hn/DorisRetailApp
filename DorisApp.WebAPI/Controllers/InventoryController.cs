@@ -44,7 +44,26 @@ namespace DorisApp.WebAPI.Controllers
             }
         }
 
-
+        [HttpPost("get-inventory/summary")]
+        public async Task<IActionResult> GetInventorySummary(RequestInventoryPageDTO request)
+        {
+            try
+            {
+                var result = await _data.GetSummaryDataByPageAsync(GetUserIdentity(), request);
+                return result.IsSuccessStatusCode ? Ok(result) : BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                await _log.LogError("InventoryController[Get]: " + ex.Message);
+                return BadRequest(
+                    new ResultDTO<ProductSummaryDTO>
+                    {
+                        ErrorCode = 5,
+                        ReasonPhrase = "Unable to get inventories.",
+                        IsSuccessStatusCode = false
+                    });
+            }
+        }
 
 
 

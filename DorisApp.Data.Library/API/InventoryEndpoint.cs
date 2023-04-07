@@ -18,7 +18,7 @@ namespace DorisApp.Data.Library.API
         {
             var countedResult = 0;
 
-            var request = new RequestPageDTO
+            var request = new RequestInventoryPageDTO
             {
                 PageNo = 1,
                 ItemPerPage = 1
@@ -28,7 +28,7 @@ namespace DorisApp.Data.Library.API
 
             if (sent?.Data != null)
             {
-                var newRequest = new RequestPageDTO
+                var newRequest = new RequestInventoryPageDTO
                 {
                     PageNo = 1,
                     ItemPerPage = sent.Data.TotalItems
@@ -63,7 +63,7 @@ namespace DorisApp.Data.Library.API
 
         }
 
-        public async Task<ResultDTO<RequestModel<InventorySummaryDTO>>?> GetInventorySummary(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<InventorySummaryDTO>>?> GetInventorySummary(RequestInventoryPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-inventory/summary");
 
@@ -83,6 +83,25 @@ namespace DorisApp.Data.Library.API
             }
         }
 
+        public async Task<ResultDTO<InventoryModel>?> GetById(int Id)
+        {
+            var result = await SendPostByIdAysnc(Id, "URL:get-inventory/id");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <InventoryModel>>(result);
+            }
+            catch
+            {
+                return new ResultDTO<InventoryModel>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = result
+                };
+            }
+        }
 
         private async Task ValidateInventory(InventoryModel inventory)
         {
@@ -106,7 +125,7 @@ namespace DorisApp.Data.Library.API
             if (inventory.ExpiryDate < DateTime.UtcNow.AddDays(3))
                 throw new Exception("The expiration date should be three days after today's date.");
 
-            if (inventory.PurchaseDate.GetHashCode() == 0)
+            if (inventory.PurchasedDate.GetHashCode() == 0)
                 throw new Exception("The purchase date is unassigned.");
         }
 

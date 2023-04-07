@@ -180,6 +180,13 @@ function UnauthorizedAlert() {
     })
 }
 
+function ServerErrorAlert(){
+    Swal.fire({
+        title: 'Server Error',
+        icon: 'error'
+    })
+}
+
 const Toast = Swal.mixin({
     toast: true,
     position: 'top-right',
