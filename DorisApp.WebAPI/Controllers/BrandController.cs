@@ -74,7 +74,7 @@ namespace DorisApp.WebAPI.Controllers
 
             if (getExisting == null)
             {
-                await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
+                await _log.LogError("ProductController[Update]: " + GetUserIdentity()?.Name +
                     $" trying to update brandID[{brand.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<BrandSummaryDTO>
@@ -118,7 +118,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("BrandController[Update]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<BrandSummaryDTO>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to update brand.",
@@ -139,7 +139,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("BrandController[Get]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<BrandSummaryDTO>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to get brands.",
@@ -219,7 +219,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("BrandController[GetById]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<BrandModel>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to get brand.",

@@ -5,7 +5,6 @@
 @inject IConfiguration Config
 @inject IJSRuntime JSRuntime
 
-
 @{
     bool notif = bool.Parse(Config["NotifDialog:StockEntry"] ?? "true");
 }
@@ -16,8 +15,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5 text-primary" id="staticBackdropLabel">Stock Entry</h1>
-                <button type="button" class="btn btn-close" @onclick="OnCloseModal" data-bs-slide-to="0" 
-                data-bs-target="#InventorySlide" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn btn-close" @onclick="OnCloseModal" data-bs-slide-to="0"
+                        data-bs-target="#InventorySlide" data-bs-dismiss="modal" aria-label="Close"></button>
 
             </div>
             <div class="modal-body">
@@ -296,12 +295,12 @@
 
                                             <tr>
                                                 <td>Purchase Price:</td>
-                                                <td>@(string.Format("{0:#.00}", inventoryModel.PurchasePrice))</td>
+                                                <td>₱ @(string.Format("{0:#.00}", inventoryModel.PurchasePrice))</td>
                                             </tr>
 
                                             <tr>
                                                 <td>Retail Price:</td>
-                                                <td>@(string.Format("{0:#.00}", inventoryModel.RetailPrice))</td>
+                                                <td>₱ @(string.Format("{0:#.00}", inventoryModel.RetailPrice))</td>
                                             </tr>
                                         </table>
 
@@ -340,7 +339,7 @@
                                     <button id="saveButton" type="button" class="btn proceed-btn btn-primary" @onclick="OnSaveClicked">
                                         <span class="spinner-border spinner-border-sm d-none" role="status"
                                           aria-hidden="true"></span>
-                                         Save
+                                        Save
                                     </button>
                                 </div>
 
@@ -385,7 +384,6 @@
     private bool purchaseDateValidated = true;
     private bool expiryDateValidated = true;
     private bool quantityValidated = true;
-
 
     [Parameter]
     public EventCallback OnSave { get; set; }
@@ -448,7 +446,7 @@
             DateTime purchasedDate;
             DateTime expiryDate;
 
-            if (DateTime.TryParseExact(purchasedDateString, "MMM d, yyyy", 
+            if (DateTime.TryParseExact(purchasedDateString, "MMM d, yyyy",
             CultureInfo.InvariantCulture, DateTimeStyles.None, out purchasedDate))
             {
                 inventoryModel.PurchasedDate = purchasedDate.ToUniversalTime();
@@ -525,28 +523,18 @@
     {
         await JSRuntime.InvokeVoidAsync("modalProcessing");
 
-        if (true)
-        {
-            await AddInventory();
-        }
-
-        await OnSave.InvokeAsync(null);
-    }
-
-    private async Task AddInventory()
-    {
         try
         {
             inventoryModel.ProductId = selectedProduct?.Id ?? 0;
             var result = await InventoryEndpoint.AddInventoryAsync(inventoryModel);
 
             if (result?.ErrorCode == 0)
-                await JSRuntime.InvokeVoidAsync("SuccessToast", 
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
                 "Successfully added new Inventory for " + selectedProduct?.ProductName);
-                
+
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<List<InventorySummaryDTO>>(result);
-            
+
         }
         catch (Exception ex)
         {
@@ -556,14 +544,15 @@
         ResetValue();
         await JSRuntime.InvokeVoidAsync("InventoryCarouselNext");
         await JSRuntime.InvokeVoidAsync("modalProcessDone", "#inventoryModal");
+        await OnSave.InvokeAsync(null);
     }
 
     private async Task CatchError(string exMessage)
     {
         var result = new ResultDTO<InventorySummaryDTO>
-        {
-            ErrorCode = 1
-        };
+            {
+                ErrorCode = 1
+            };
 
         if (HttpErrorHandler != null)
             await HttpErrorHandler.HandleHttpErrors<InventorySummaryDTO>(result, exMessage);

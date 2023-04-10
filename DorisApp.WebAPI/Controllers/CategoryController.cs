@@ -50,10 +50,10 @@ namespace DorisApp.WebAPI.Controllers
 
             if (getExisting == null)
             {
-                await _log.LogError("CategoryController[Add]: " + GetUserIdentity()?.Name +
+                await _log.LogError("CategoryController[Update]: " + GetUserIdentity()?.Name +
                     $"trying to update categoryID[{category.Id}] not exist.");
                 return BadRequest(
-                   new ResultDTO<BrandSummaryDTO>
+                   new ResultDTO<CategorySummaryDTO>
                    {
                        ErrorCode = 4,
                        ReasonPhrase = "Unable to update category.",
@@ -70,10 +70,10 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("CategoryController[Update]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<CategorySummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to update brand.",
+                        ReasonPhrase = "Unable to update category.",
                         IsSuccessStatusCode = false
                     });
             }
@@ -92,7 +92,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("CategoryController[Get]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<CategorySummaryDTO>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to get categories.",
@@ -109,10 +109,10 @@ namespace DorisApp.WebAPI.Controllers
 
             if (getExisting == null)
             {
-                await _log.LogError("CategoryController[Add]: " + GetUserIdentity()?.Name +
+                await _log.LogError("CategoryController[Update]: " + GetUserIdentity()?.Name +
                     $" trying to delete category[{category.Id}] not exist.");
                 return BadRequest(
-                   new ResultDTO<BrandSummaryDTO>
+                   new ResultDTO<CategorySummaryDTO>
                    {
                        ErrorCode = 4,
                        ReasonPhrase = "Unable to delete category.",
@@ -129,7 +129,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("CategoryController[Delete]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<CategorySummaryDTO>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to delete category.",
@@ -149,7 +149,7 @@ namespace DorisApp.WebAPI.Controllers
                  {
                      Data = categoryItem,
                      ErrorCode = 0,
-                     ReasonPhrase = "Unable to delete category.",
+                     ReasonPhrase = "Successfully get category.",
                      IsSuccessStatusCode = false
                  });
             }
@@ -157,7 +157,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("CategoryController[GetById]: " + ex.Message);
                 return BadRequest(
-                  new ResultDTO<ProductSummaryDTO>
+                  new ResultDTO<CategoryModel>
                   {
                       ErrorCode = 5,
                       ReasonPhrase = "Unable to get category." + ex.Message,

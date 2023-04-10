@@ -11,9 +11,6 @@ namespace DorisApp.Data.Library.Model
         [Required]
         public int ProductId { get; set; }
 
-        [Required]
-        [DisplayName("Location")]
-        public string Location { get; set; } =string.Empty;
 
         [Required]
         public double PurchasePrice { get; set; }
@@ -36,9 +33,24 @@ namespace DorisApp.Data.Library.Model
         [Required]
         public DateTime ExpiryDate { get; set; }
 
+        public string? ReasonPhrase { get; set; }
+        public string? SecurityStamp { get; set; }
         public int CreatedByUserId { get; set; }
         public int UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+
+        private string location = string.Empty;
+
+
+        [Required]
+        [DisplayName("Location")]
+        public string Location
+        {
+            get { return location; }
+            set { location = value.Trim(); }
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace DorisApp.Data.Library.API
 {
@@ -11,5 +12,6 @@ namespace DorisApp.Data.Library.API
         void Dispose();
         void LogInUser(string tokenBearer);
         void LogOffUser();
+        Task<string?> RequestSecurityStamp(string? password);
     }
 }

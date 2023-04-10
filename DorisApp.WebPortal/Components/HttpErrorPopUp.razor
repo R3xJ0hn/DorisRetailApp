@@ -20,6 +20,11 @@
             await JSRuntime.InvokeVoidAsync("ErrorToast", "Server recieved invalid fiels.");
         }
 
+        if (result.ErrorCode == 41)
+        {
+            await JSRuntime.InvokeVoidAsync("ErrorToast", result.ReasonPhrase);
+        }
+
         if (result.ErrorCode == 401)
         {
             await JSRuntime.InvokeVoidAsync("UnauthorizedAlert");

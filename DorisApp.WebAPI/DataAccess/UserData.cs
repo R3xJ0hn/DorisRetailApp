@@ -149,6 +149,7 @@ namespace DorisApp.WebAPI.DataAccess
             var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, AppHelper.GetFullName(user)),
+                    new Claim(ClaimTypes.Email, user.EmailAddress),
                     new Claim(ClaimTypes.Role, roleName),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),

@@ -30,13 +30,13 @@ namespace DorisApp.WebAPI.DataAccess
                 int createdByUserId = int.Parse(identity?.Claims.FirstOrDefault(c =>
                         c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
 
-                inventory.Location = AppHelper.CapitalizeFirstWords(inventory.Location);
+                inventory.Location = inventory.Location.ToUpper();
                 inventory.StockRemain = inventory.Quantity;
                 inventory.StockAvailable = inventory.Quantity;
                 inventory.CreatedByUserId = createdByUserId;
-                inventory.UpdatedByUserId= createdByUserId;
-                inventory.CreatedAt= DateTime.UtcNow;
-                inventory.UpdatedAt= DateTime.UtcNow;
+                inventory.UpdatedByUserId = createdByUserId;
+                inventory.CreatedAt = DateTime.UtcNow;
+                inventory.UpdatedAt = DateTime.UtcNow;
 
                 var errorMsg = await ValidateFields(identity, inventory);
 
@@ -70,6 +70,121 @@ namespace DorisApp.WebAPI.DataAccess
                     ReasonPhrase = "Server error."
                 };
             }
+        }
+
+        public async Task<ResultDTO<List<InventorySummaryDTO>>> UpdateInventoryAsync(ClaimsIdentity? identity, InventoryModel inventory)
+        {
+            var getProduct = await _productData.GetByIdAsync(identity, inventory.ProductId);
+            var getExistingItem = await GetByIdAsync(identity, inventory.Id);
+
+            try
+            {
+                if (getExistingItem == null)
+                {
+                    var msg = $"Inventory[{inventory.Location}[{getProduct?.ProductName}[{inventory.ProductId}]]] not found.";
+                    await _logger.LogError(msg);
+                    return new ResultDTO<List<InventorySummaryDTO>>
+                    {
+                        ErrorCode = 5,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = msg
+                    };
+                }
+
+                inventory.Location = inventory.Location.ToUpper();
+                inventory.UpdatedByUserId = int.Parse(identity?.Claims
+                    .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                    .Select(c => c.Value).SingleOrDefault() ?? "1");
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                var errorMsg = await ValidateFields(identity, inventory);
+
+                if (errorMsg != null)
+                {
+                    return new ResultDTO<List<InventorySummaryDTO>>
+                    {
+                        ErrorCode = 1,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = errorMsg
+                    };
+                }
+
+                await _sql.UpdateDataAsync("dbo.spInventoryUpdate", inventory);
+                await _logger.SuccessUpdate(identity,
+                    $"{inventory.Location}({getProduct?.ProductName}[QTY[{inventory.Quantity}]])", TableName,
+                    $"{inventory.Location}({getProduct?.ProductName}[QTY[{getExistingItem.Quantity}]])");
+
+                return new ResultDTO<List<InventorySummaryDTO>>
+                {
+                    ErrorCode = 0,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = "Successfully update category."
+                };
+
+            }
+            catch (Exception ex)
+            {
+                await _logger.FailUpdate(identity,
+                      $"{inventory.Location}({getProduct?.ProductName}[QTY[{inventory.Quantity}]])", TableName,
+                      $"{inventory.Location}({getProduct?.ProductName}[QTY[{getExistingItem?.Quantity}]])", ex.Message);
+                return new ResultDTO<List<InventorySummaryDTO>>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
+            }
+        }
+
+        public async Task<ResultDTO<InventoryModel>> ToggleInventory(ClaimsIdentity? identity, InventoryModel inventory)
+        {
+            var getProduct = await _productData.GetByIdAsync(identity, inventory.ProductId);
+            var getExistingItem = await GetByIdAsync(identity, inventory.Id);
+
+            if (getProduct?.IsAvailable == false)
+            {
+                return new ResultDTO<InventoryModel>
+                {
+                    ErrorCode = 41,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Product availability is toggled to false, set it true to proceed."
+                };
+            }
+
+            try
+            {
+                var data = new { inventory.Id, inventory.IsAvailable };
+                var result = await _sql.UpdateDataAsync("dbo.spInventoryToggle", data);
+                await _logger.SuccessUpdate(identity,
+                    $"{inventory.Location}({getProduct?.ProductName}[Available:{inventory.IsAvailable}])", TableName,
+                    $"{inventory.Location}({getProduct?.ProductName}[Available:{getExistingItem?.IsAvailable}])");
+
+                return new ResultDTO<InventoryModel>
+                {
+                    Data = inventory,
+                    IsSuccessStatusCode = true,
+                    ReasonPhrase = $"Successfully toggle to {inventory.IsAvailable}"
+                };
+
+            }
+            catch (Exception ex)
+            {
+                await _logger.FailUpdate(identity,
+                $"{inventory.Location}({getProduct?.ProductName}[Available:{inventory.IsAvailable}])", TableName,
+                $"{inventory.Location}({getProduct?.ProductName}[Available:{getExistingItem?.IsAvailable}])",ex.Message);
+
+                return new ResultDTO<InventoryModel>
+                {
+                    ErrorCode = 5,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = "Server error."
+                };
+            }
+        }
+
+        public async Task<InventoryModel?> GetByIdAsync(ClaimsIdentity? identity, int id)
+        {
+            return await GetByIdAsync<InventoryModel>(identity, "dbo.spInventoryGetById", id);
         }
 
         public async Task<string?> ValidateFields(ClaimsIdentity? identity, InventoryModel inventory)
@@ -107,7 +222,7 @@ namespace DorisApp.WebAPI.DataAccess
             if (inventory.ExpiryDate < DateTime.Today.AddDays(3))
                 msg = $"The expiration date should be three days after today's date.";
 
-            if (inventory.PurchasedDate.GetHashCode() == 0 )
+            if (inventory.PurchasedDate.GetHashCode() == 0)
                 msg = $"The purchase date is unassigned.";
 
             if (!string.IsNullOrWhiteSpace(msg))

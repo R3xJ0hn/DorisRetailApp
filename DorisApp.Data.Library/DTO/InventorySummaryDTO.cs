@@ -7,6 +7,7 @@ namespace DorisApp.Data.Library.DTO
         public int Id { get; set; }
         public string Location { get; set; } = string.Empty;
         public string ProductName { get; set; } = string.Empty;
+        public bool IsProductAvailable { get; set; }
         public string SKU { get; set; } = string.Empty;
         public int StockRemain { get; set; }
         public int StockAvailable { get; set; }

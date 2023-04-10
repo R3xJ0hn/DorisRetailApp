@@ -8,7 +8,7 @@
 AS
 
 BEGIN
-	set nocount on;
+	SET NOCOUNT ON;
 
 		UPDATE dbo.Categories SET
 			[CategoryName] = @CategoryName,

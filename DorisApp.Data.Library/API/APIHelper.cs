@@ -1,7 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using DorisApp.Data.Library.DTO;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace DorisApp.Data.Library.API
 {
@@ -28,6 +32,25 @@ namespace DorisApp.Data.Library.API
             ClearApiDefaultRequestHeaders();
             _apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _apiClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenBearer}");
+        }
+
+        public async Task<string?> RequestSecurityStamp(string? password)
+        {
+            var data = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("password", password?? "")
+            });
+
+            var url = _config[key: "URL:apiUrl"] + _config[key: "URL:request-security-stamp"];
+            using HttpResponseMessage response = await _apiClient.PostAsync(url, data);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var result = await response.Content.ReadAsStringAsync();
+            var obj = JsonConvert.DeserializeObject<ResultDTO<string>>(result);
+
+            return obj?.Data;
         }
 
         public void LogOffUser()

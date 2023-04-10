@@ -238,13 +238,24 @@ function WarningToast(msg) {
 
 function SetDatePickerSetting(){
     $('.date-picker .form-control').datepicker({
-        'format': 'M d, yyyy',
-        'autoclose': true
+        format: 'M d, yyyy',
+        orientation: "bottom left",
+        autoclose: true,
+        todayHighlight: true
+    });
+}
+
+function DateChange(ref) {
+    $('.date-picker .form-control').on('changeDate', function () {
+        ref.invokeMethodAsync('HandleChangeDateEvent');
     });
 }
 
 function getDateValue(inputId) {
-    return document.getElementById(inputId).value;
+    var input = document.getElementById(inputId);
+    input.addEventListener("input", () => { startTimer(1); }, { once: true });
+    return input.value;
+
 }
 
 function InventoryCarouselNext() {
@@ -252,4 +263,36 @@ function InventoryCarouselNext() {
     const carousel = new bootstrap.Carousel(myCarousel)
     carousel.next()
     carousel.dispose()
+}
+
+function ShowPasswordPopup(modal) {
+
+    if (modal !== null) {
+        $(modal).on('shown.bs.modal', function (e) {
+            $(document).off('focusin.modal');
+        })
+    }
+
+    var passwordPopUp = document.querySelector(".password-popup");
+    passwordPopUp.style.display = "block";
+    document.querySelector(".password-popup-backdrop").style.display = "block";
+}
+
+function ClosePasswordPopup() {
+    var passwordPopUp = document.querySelector(".password-popup");
+    passwordPopUp.style.display = "none";
+    document.querySelector(".password-popup-backdrop").style.display = "none";
+}
+
+var stamp = "";
+
+function ConfirmIdentity(ref) {
+    $('#securityStamp').on('click', function () {
+        ref.invokeMethodAsync('HandleConfirmedIdentity', stamp);
+    });
+}
+
+function StampChange(str) {
+    stamp = str;
+    $('#securityStamp').click();
 }

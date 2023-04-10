@@ -35,6 +35,7 @@ namespace DorisApp.WebAPI.DataAccess
             {
                 int userId = int.Parse(identity?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
                 product.ProductName = AppHelper.CapitalizeFirstWords(product.ProductName);
+                product.Size = product.Size.Replace(" ", string.Empty).ToLower();
                 product.CreatedByUserId = userId;
                 product.UpdatedByUserId = userId;
                 product.CreatedAt = DateTime.UtcNow;
@@ -143,6 +144,7 @@ namespace DorisApp.WebAPI.DataAccess
                 }
 
                 product.ProductName = AppHelper.CapitalizeFirstWords(product.ProductName);
+                product.Size = product.Size.Replace(" ", string.Empty).ToLower();
                 product.UpdatedByUserId = int.Parse(identity?.Claims
                     .Where(c => c.Type == ClaimTypes.NameIdentifier)
                     .Select(c => c.Value).SingleOrDefault() ?? "1");

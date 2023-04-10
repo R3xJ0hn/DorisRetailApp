@@ -9,12 +9,13 @@
     @IsAvailable		BIT,
     @Location			NCHAR(256), 
     @ExpiryDate			DATETIME2, 
+    @ReasonPhrase		NVARCHAR(MAX), 
     @PurchasedDate		DATETIME2, 
     @CreatedByUserId	INT,
 	@UpdatedByUserId	INT,
 	@CreatedAt			DATETIME2, 
-	@UpdatedAt			DATETIME2
-
+	@UpdatedAt			DATETIME2,
+	@SecurityStamp		NVARCHAR(MAX)
 AS
 
 BEGIN
@@ -54,7 +55,3 @@ BEGIN
 
 	SELECT @Id =  SCOPE_IDENTITY()
 END
-
-
-
-

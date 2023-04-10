@@ -8,9 +8,7 @@ namespace DorisApp.Data.Library.Model
     {
         public int Id { get; set; }
 
-        [Required]
-        [DisplayName("Product Name")]
-        public string ProductName { get; set; } = string.Empty;
+  
         public int BrandId { get; set; }
 
         [Required]
@@ -21,18 +19,47 @@ namespace DorisApp.Data.Library.Model
         public bool IsTaxable { get; set; }
         public bool IsAvailable { get; set; }
 
-        [Required]
-        public string Size { get; set; } = string.Empty;
-        public string? Color { get; set; }
-
-        [Required]
-        [DisplayName("Product SKU")]
-        public string Sku { get; set; } = string.Empty;
         public string? StoredImageName { get; set; }
         public string? Description { get; set; }
         public int CreatedByUserId { get; set; }
         public int UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        private string productName = string.Empty;
+        private string sku = string.Empty;
+        private string size = string.Empty;
+        private string color = string.Empty;
+
+
+        [Required]
+        [DisplayName("Product Name")]
+        public string ProductName
+        {
+            get { return productName; }
+            set { productName = value.Trim(); }
+        }
+
+        [Required]
+        [DisplayName("Product SKU")]
+        public string Sku
+        {
+            get { return sku; }
+            set { sku = value.Trim(); }
+        }
+
+        [Required]
+        public string Size
+        {
+            get { return size; }
+            set { size = value.Trim(); }
+        }
+
+        public string Color
+        {
+            get { return color; }
+            set { color = value.Trim(); }
+        }
+
     }
 }

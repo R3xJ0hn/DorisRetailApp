@@ -116,6 +116,9 @@
     <Build Include="dbo\Tables\Inventory.sql" />
     <Build Include="dbo\StoredProcedures\Inventory\spInventoryInsert.sql" />
     <Build Include="dbo\StoredProcedures\Inventory\spInventoryGetSummaryByPage.sql" />
+    <Build Include="dbo\StoredProcedures\Inventory\spInventoryGetById.sql" />
+    <Build Include="dbo\StoredProcedures\Inventory\spInventoryUpdate.sql" />
+    <Build Include="dbo\StoredProcedures\Inventory\spInventoryToggle.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

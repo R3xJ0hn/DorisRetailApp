@@ -83,6 +83,48 @@ namespace DorisApp.Data.Library.API
             }
         }
 
+        public async Task<ResultDTO<List<InventorySummaryDTO>>?> UpdateInventory(InventoryModel inventory)
+        {
+           await ValidateInventory(inventory);
+            var summary = await SendPostAysnc(inventory, "URL:update-inventory");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <List<InventorySummaryDTO>>>(summary);
+            }
+            catch
+            {
+                return new ResultDTO<List<InventorySummaryDTO>>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = summary
+                };
+            }
+        }
+
+        public async Task<ResultDTO<InventoryModel>?> ToggleInventory(InventoryModel inventory)
+        {
+            await ValidateInventory(inventory);
+            var summary = await SendPostAysnc(inventory, "URL:toggle-inventory");
+
+            try
+            {
+                return JsonConvert.DeserializeObject<ResultDTO
+                    <InventoryModel>>(summary);
+            }
+            catch
+            {
+                return new ResultDTO<InventoryModel>
+                {
+                    ErrorCode = 4,
+                    IsSuccessStatusCode = false,
+                    ReasonPhrase = summary
+                };
+            }
+        }
+
         public async Task<ResultDTO<InventoryModel>?> GetById(int Id)
         {
             var result = await SendPostByIdAysnc(Id, "URL:get-inventory/id");

@@ -2,6 +2,10 @@
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using System.Runtime.InteropServices;
+using static Dapper.SqlMapper;
+using System.Security.Claims;
+using DorisApp.Data.Library.DTO;
 
 namespace DorisApp.WebAPI.Controllers
 {
@@ -15,6 +19,8 @@ namespace DorisApp.WebAPI.Controllers
         {
             _userData = userData;
         }
+
+        private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
         [HttpPost("register")]
         public async Task<ActionResult<UserModel>> Register(RegisterUserModel user)
@@ -95,6 +101,42 @@ namespace DorisApp.WebAPI.Controllers
             string token = await _userData.RequestToken(user);
             await SetRefreshToken(user);
             return Ok(token);
+        }
+
+
+        [HttpPost("request-stamp")]
+        public async Task<IActionResult> RequestSecurityStamp([FromForm] string password)
+        {
+            int userId = int.Parse(GetUserIdentity()?.Claims.FirstOrDefault(c =>
+                    c.Type == ClaimTypes.NameIdentifier)?.Value ?? "1");
+            var user = await _userData.FindByIdAsync(userId.ToString());
+
+            var hash = "";
+
+            if (!BCrypt.Net.BCrypt.Verify(password, user?.PasswordHash))
+            {
+                return BadRequest(
+                new ResultDTO<string>
+                {
+                    ErrorCode = 4,
+                    ReasonPhrase = "Invalid Password.",
+                    IsSuccessStatusCode = false
+                });
+            }
+            else
+            {
+                int minute = (DateTime.Now.Minute / 10) * 10;
+                var stamp = DateTime.UtcNow.ToString("MddyyyH") + minute + userId.ToString();
+                hash = BCrypt.Net.BCrypt.HashPassword(stamp);
+            }
+
+            return Ok(
+            new ResultDTO<string>
+            {
+                Data = hash,
+                ReasonPhrase = "Successfully request new stamp",
+                IsSuccessStatusCode = true
+            });
         }
 
         private async Task SetRefreshToken(UserModel user)

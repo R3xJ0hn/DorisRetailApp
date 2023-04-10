@@ -75,7 +75,7 @@ namespace DorisApp.WebAPI.Controllers
 
             if (getExisting == null)
             {
-                await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
+                await _log.LogError("ProductController[Update]: " + GetUserIdentity()?.Name +
                     $" trying to update brand[{product.Id}] not exist.");
                 return BadRequest(
                    new ResultDTO<ProductSummaryDTO>
@@ -149,7 +149,7 @@ namespace DorisApp.WebAPI.Controllers
 
                 if (getExisting == null)
                 {
-                    await _log.LogError("ProductController[Add]: " + GetUserIdentity()?.Name +
+                    await _log.LogError("ProductController[Delete]: " + GetUserIdentity()?.Name +
                         $"trying to delete product[{product.Id}]");
                     return BadRequest(
                        new ResultDTO<ProductSummaryDTO>
@@ -210,7 +210,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("ProductController[GetById]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<ProductModel>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to get product.",

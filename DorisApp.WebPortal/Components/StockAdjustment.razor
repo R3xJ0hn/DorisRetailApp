@@ -1,0 +1,332 @@
+﻿@using System.Globalization;
+@inject ProductEndpoint ProductEndpoint
+@inject InventoryEndpoint InventoryEndpoint
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Config
+
+<div class="inventory-modal modal fade" id="inventoryModalEdit" data-bs-backdrop="static" data-bs-keyboard="false"
+     aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-primary" id="staticBackdropLabel">Modify Inventory</h1>
+                <button type="button" class="btn-close" @onclick="OnCloseModal"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+
+                    <div class="col-md-6 product-prev">
+
+                        @{
+                            var url = @Config["URL:apiUrl"]
+                            + "/api/file/get/product/"
+                            + @product?.StoredImageName;
+                        }
+
+                        <img src="@url" alt="product">
+                        <h2>@product?.ProductName</h2>
+                        <p>#@product?.Sku</p>
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="col-lg">
+                            <div class="mb-3">
+                                <label for="purchasePrice" class="form-label">Location</label>
+                                <input type="text" placeholder="Location" @bind="inventoryModelSource.Location"
+                                       class="form-control @(inventoryModelSource.Location == inventoryModelRef.Location ?
+                                             "unchange" : "border border-warning")">
+                                <div class="form-validation @(locationValidated ? "d-none" : "")">
+                                    Please provide a valid shelf location.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" placeholder="Retail Price" @bind="inventoryModelSource.Quantity"
+                                       class="form-control @(inventoryModelSource.Quantity == inventoryModelRef.Quantity ?
+                                             "unchange" : "border border-warning")">
+                                <div class="form-validation @(quantityValidated ? "d-none" : "")">
+                                    Please provide a quantity for the product.
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-md">
+                        <div class="mb-3">
+                            <label for="purchasePrice" class="form-label">Purchase Price</label>
+                            <input type="number" placeholder="Purchase Price" @bind="inventoryModelSource.PurchasePrice"
+                                   class="form-control @(inventoryModelSource.PurchasePrice == inventoryModelRef.PurchasePrice ?
+                                             "unchange" : "border border-warning")">
+                            <div class="form-validation @(purchasePriceValidated ? "d-none" : "")">
+                                Please provide a purchase price.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md">
+                        <div class="mb-3">
+                            <label for="retailPrice" class="form-label">Retail Price</label>
+                            <input type="number" placeholder="Retail Price" @bind="inventoryModelSource.RetailPrice"
+                                   class="form-control @(inventoryModelSource.RetailPrice == inventoryModelRef.RetailPrice ?
+                                             "unchange" : "border border-warning")">
+                            <div class="form-validation @(retailPriceValidated ? "d-none" : "")">
+                                The retail price must be grater than or equal to the purchased price.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-sm">
+                        <div class="mb-3">
+                            <label for="purchaseDate" class="form-label">Purchase Date</label>
+                            <div class="date-picker @(inventoryModelSource.PurchasedDate == inventoryModelRef.PurchasedDate ?
+                                             "unchange" : "border border-warning")">
+                                <input type="text" placeholder="Purchase Date" autocomplete="off" id="purchaseDate"
+                                       changeDate="OnFocusLeave" class="form-control" @bind="purchasedDateText">
+
+                            </div>
+
+                            <div class="form-validation @(purchaseDateValidated ? "d-none" : "")">
+                                Please provide a valid purchased date.
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="mb-3">
+                            <label for="expiryDate" class="form-label">Expiry Date</label>
+                            <div class="date-picker @(inventoryModelSource.ExpiryDate == inventoryModelRef.ExpiryDate ?
+                                             "unchange" : "border border-warning")">
+                                <input type="text" laceholder="Expiry Date" autocomplete="off" id="expiryDate"
+                                       class="form-control" @bind="expiryDateText">
+                            </div>
+                            <div class="form-validation @(expiryDateValidated ? "d-none" : "")">
+                                The expiration date should be greater than today's date.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md">
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox"
+                                   @bind="inventoryModelSource.IsAvailable" id="isTaxable">
+                            <label class="form-check-label" for="isTaxable">
+                                Set as Available
+                            </label>
+                            <p>
+                                NOTE: If you check the checkbox, it will be set as available now for
+                                purchase.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md">
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">
+                                Reason
+                                <span class="form-validation @(reasonValidated ? "d-none" : "")">
+                                    Please provide a reason phrase.
+                                </span>
+                            </label>
+                            <textarea class="form-control" @bind="inventoryModelSource.ReasonPhrase"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal" @onclick="OnCloseModal">
+                        Cancel
+                    </button>
+
+                    <button id="saveButton" type="button" class="btn proceed-btn  btn-primary" @onclick="OnSaveClicked">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"
+                              aria-hidden="true"></span>
+                        Save
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+<HttpErrorPopUp @ref="HttpErrorHandler" />
+
+@code {
+    private HttpErrorPopUp? HttpErrorHandler = new();
+    private InventoryModel inventoryModelRef = new();
+    private InventoryModel inventoryModelSource = new();
+    private ProductModel? product = new();
+
+    private string purchasedDateText = "";
+    private string expiryDateText = "";
+
+    private bool locationValidated = true;
+    private bool productValidated = true;
+    private bool purchasePriceValidated = true;
+    private bool retailPriceValidated = true;
+    private bool purchaseDateValidated = true;
+    private bool expiryDateValidated = true;
+    private bool quantityValidated = true;
+    private bool reasonValidated = true;
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("DateChange", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleChangeDateEvent()
+    {
+        purchasedDateText = await JSRuntime.InvokeAsync<string>("getDateValue", "purchaseDate");
+        expiryDateText = await JSRuntime.InvokeAsync<string>("getDateValue", "expiryDate");
+
+        DateTime purchaseDate;
+        DateTime expiryDate;
+
+        DateTime.TryParse(purchasedDateText, out purchaseDate);
+        DateTime.TryParse(expiryDateText, out expiryDate);
+
+        inventoryModelSource.PurchasedDate = purchaseDate.ToUniversalTime();
+        inventoryModelSource.ExpiryDate = expiryDate.ToUniversalTime();
+
+        StateHasChanged();
+    }
+
+    [JSInvokable] //Update Inventory when auth
+    public async Task HandleConfirmedIdentity(string stamp)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("modalProcessing");
+
+            inventoryModelSource.SecurityStamp = stamp;
+            var result = await InventoryEndpoint.UpdateInventory(inventoryModelSource);
+
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully updated inventory");
+            }
+
+            if (HttpErrorHandler != null)
+                await HttpErrorHandler
+                .HandleHttpErrors<List<InventorySummaryDTO>>(result);
+
+        }
+        catch (Exception ex)
+        {
+            await CatchError(ex.Message);
+        }
+
+        await JSRuntime.InvokeVoidAsync("modalProcessDone", "#inventoryModalEdit");
+        await OnSave.InvokeAsync(null);
+    }
+
+    public async Task OnOpen(InventoryModel? inventory)
+    {
+        if (inventory != null)
+        {
+            inventoryModelSource = inventory;
+            product = (await ProductEndpoint.GetById(inventory.ProductId))?.Data;
+
+            inventoryModelRef.Location = inventoryModelSource.Location;
+            inventoryModelRef.Quantity = inventoryModelSource.Quantity;
+            inventoryModelRef.PurchasePrice = inventoryModelSource.PurchasePrice;
+            inventoryModelRef.RetailPrice = inventoryModelSource.RetailPrice;
+            inventoryModelRef.IsAvailable = inventoryModelSource.IsAvailable;
+
+            //Reset the time
+            purchasedDateText = inventoryModelSource.PurchasedDate.ToLocalTime().ToString("MMM d, yyyy");
+            inventoryModelSource.PurchasedDate = DateTime.Parse(purchasedDateText).ToUniversalTime();
+
+            expiryDateText = inventoryModelSource.ExpiryDate.ToLocalTime().ToString("MMM d, yyyy");
+            inventoryModelSource.ExpiryDate = DateTime.Parse(expiryDateText).ToUniversalTime();
+
+            //Set the date
+            inventoryModelRef.PurchasedDate = inventoryModelSource.PurchasedDate;
+            inventoryModelRef.ExpiryDate = inventoryModelSource.ExpiryDate;
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSaveClicked()
+    {
+        locationValidated = !string.IsNullOrEmpty(inventoryModelSource.Location);
+        purchaseDateValidated = inventoryModelSource.PurchasedDate <= DateTime.UtcNow;
+        expiryDateValidated = inventoryModelSource.ExpiryDate > DateTime.UtcNow;
+        purchasePriceValidated = inventoryModelSource.PurchasePrice > 0;
+        retailPriceValidated = inventoryModelSource.RetailPrice > inventoryModelSource.PurchasePrice;
+        quantityValidated = inventoryModelSource.Quantity > 0;
+        reasonValidated = !string.IsNullOrEmpty(inventoryModelSource.ReasonPhrase);
+
+        if (locationValidated && purchaseDateValidated && expiryDateValidated 
+            && purchasePriceValidated && retailPriceValidated && quantityValidated 
+            && reasonValidated)
+        {
+            await JSRuntime.InvokeVoidAsync("ShowPasswordPopup", "#inventoryModalEdit");
+            await JSRuntime.InvokeVoidAsync("ConfirmIdentity", DotNetObjectReference.Create(this));
+        }
+
+        StateHasChanged();
+    }
+
+    private void OnCloseModal()
+    {
+        inventoryModelRef = new();
+        inventoryModelSource = new();
+        product = new();
+        locationValidated = true;
+        productValidated = true;
+        purchasePriceValidated = true;
+        retailPriceValidated = true;
+        purchaseDateValidated = true;
+        expiryDateValidated = true;
+        quantityValidated = true;
+    }
+
+    private async Task CatchError(string exMessage)
+    {
+        var result = new ResultDTO<BrandSummaryDTO>
+        {
+            ErrorCode = 1
+        };
+
+        if (HttpErrorHandler != null)
+            await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);
+    }
+
+}

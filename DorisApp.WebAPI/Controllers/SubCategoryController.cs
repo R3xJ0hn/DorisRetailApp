@@ -51,10 +51,10 @@ namespace DorisApp.WebAPI.Controllers
 
             if (getExisting == null)
             {
-                await _log.LogError("SubCategoryController[Add]: " + GetUserIdentity()?.Name +
+                await _log.LogError("SubCategoryController[Update]: " + GetUserIdentity()?.Name +
                     $" trying to update sub category[{subCategory.Id}] not exist.");
                 return BadRequest(
-                   new ResultDTO<BrandSummaryDTO>
+                   new ResultDTO<SubCategorySummaryDTO>
                    {
                        ErrorCode = 4,
                        ReasonPhrase = "Unable to update sub category.",
@@ -71,7 +71,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("SubCategoryController[Update]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<SubCategorySummaryDTO>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to update sub category.",
@@ -92,10 +92,10 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("SubCategoryController[Get]: " + ex.Message);
                 return BadRequest(
-                      new ResultDTO<ProductSummaryDTO>
+                      new ResultDTO<SubCategorySummaryDTO>
                       {
                           ErrorCode = 5,
-                          ReasonPhrase = "Unable to get categories.",
+                          ReasonPhrase = "Unable to get sub categories.",
                           IsSuccessStatusCode = false
                       });
             }
@@ -108,10 +108,10 @@ namespace DorisApp.WebAPI.Controllers
 
             if (getExisting == null)
             {
-                await _log.LogError("SubCategoryController[Add]: " + GetUserIdentity()?.Name +
+                await _log.LogError("SubCategoryController[Delete]: " + GetUserIdentity()?.Name +
                     $"trying to delete sub category[{subcategory.Id}]");
                 return BadRequest(
-                   new ResultDTO<BrandSummaryDTO>
+                   new ResultDTO<SubCategorySummaryDTO>
                    {
                        ErrorCode = 4,
                        ReasonPhrase = "Unable to delete sub category.",
@@ -128,7 +128,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                await _log.LogError("SubCategoryController[Delete]: " + ex.Message);
                 return BadRequest(
-                        new ResultDTO<ProductSummaryDTO>
+                        new ResultDTO<SubCategorySummaryDTO>
                         {
                             ErrorCode = 5,
                             ReasonPhrase = "Unable to delete sub category.",
@@ -148,7 +148,7 @@ namespace DorisApp.WebAPI.Controllers
                   {
                       Data = subCategoryItem,
                       ErrorCode = 0,
-                      ReasonPhrase = "Unable to get sub category.",
+                      ReasonPhrase = "Successfully get sub category.",
                       IsSuccessStatusCode = false
                   });
             }
@@ -156,7 +156,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("SubCategoryController[GetById]: " + ex.Message);
                 return BadRequest(
-                    new ResultDTO<ProductSummaryDTO>
+                    new ResultDTO<SubCategoryModel>
                     {
                         ErrorCode = 5,
                         ReasonPhrase = "Unable to get sub category.",
@@ -177,7 +177,7 @@ namespace DorisApp.WebAPI.Controllers
             {
                 await _log.LogError("SubCategoryController[GetByCategoryId]: " + ex.Message);
                 return BadRequest(
-                     new ResultDTO<ProductSummaryDTO>
+                     new ResultDTO<SubCategorySummaryDTO>
                      {
                          ErrorCode = 5,
                          ReasonPhrase = "Unable to get sub categories.",

@@ -12,8 +12,7 @@ namespace DorisApp.WebPortal.Authentication
         private readonly IConfiguration _config;
 
         public AuthenticationServices(HttpClient client,
-            AuthenticationStateProvider authStateProvider,
-            ILocalStorageService localStorage,
+            AuthenticationStateProvider authStateProvider, 
             IConfiguration config)
         {
             _client = client;
@@ -21,10 +20,10 @@ namespace DorisApp.WebPortal.Authentication
             _config = config;
         }
 
-        public async Task<AuthenticatedUserModel> Login(AuthenticationUserModel userAuth, bool saveToken)
+        public async Task<AuthenticatedUserModel?> Login(AuthenticationUserModel userAuth, bool saveToken)
         {
             var data = new FormUrlEncodedContent(new[]
-{
+            {
                 new KeyValuePair<string, string>("email", userAuth.Email),
                 new KeyValuePair<string, string>("password", userAuth.Password)
             });

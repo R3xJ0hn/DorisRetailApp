@@ -1,5 +1,6 @@
 ﻿@page "/products"
 @inject ProductEndpoint ProductEndpoint
+@inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Config
 
@@ -63,7 +64,7 @@
 
                                 <th scope="col">SKU</th>
                                 <th scope="col">Brand</th>
-                                <th scope="col">Stock</th>
+                                <th scope="col">Available</th>
                                 <th scope="col">Inventory</th>
                                 <th scope="col">Available</th>
                                 <th scope="col">Action</th>
@@ -105,8 +106,17 @@
 
                                         <td>
                                             <a class="@((int.Parse(Config["AppSettings:StockWaring"]?? "10"))
-                                                    >= @item.TotalStock ? "stock-warning" : "")">
-                                                @item.InventoryCount on hand
+                                                    >= @item.TotalStock ? "stock-warning" : "")" @onclick="@(() => NavigateToInventory(item.Sku))">
+
+                                                @if (item.InventoryCount > 1)
+                                                {
+                                                    <span>@item.InventoryCount shelves</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>@item.InventoryCount shelf</span>
+                                                }
+
                                             </a>
                                         </td>
 
@@ -344,6 +354,11 @@
             await productForm.EditProduct(Id);
     }
 
+    private void NavigateToInventory(string productSku)
+    {
+        var url = $"inventory?sku={productSku}";
+        NavigationManager.NavigateTo(url);
+    }
 
     private async Task<ProductModel?> GetProductById(int Id) =>
     (await ProductEndpoint.GetById(Id))?.Data;

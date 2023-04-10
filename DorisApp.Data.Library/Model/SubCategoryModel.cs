@@ -7,15 +7,23 @@ namespace DorisApp.Data.Library.Model
     public class SubCategoryModel
     {
         public int Id { get; set; }
-
-        [Required]
-        [DisplayName("Category Name")]
-        public string SubCategoryName { get; set; } = string.Empty;
+     
         public int CategoryId { get; set; }
         public int CreatedByUserId { get; set; }
         public int UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        private string subCategoryName = string.Empty;
+
+        [Required]
+        [DisplayName("Category Name")]
+        public string SubCategoryName
+        {
+            get { return subCategoryName; }
+            set { subCategoryName = value.Trim(); }
+        }
+
 
     }
 }

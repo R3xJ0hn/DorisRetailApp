@@ -7,14 +7,19 @@ namespace DorisApp.Data.Library.Model
     public class CategoryModel
     {
         public int Id { get; set; }
-
-        [Required]
-        [DisplayName("Category Name")]
-        public string CategoryName { get; set; } = string.Empty;
         public int CreatedByUserId { get; set; }
         public int UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
+        private string categoryName = string.Empty;
+
+        [Required]
+        [DisplayName("Category Name")]
+        public string CategoryName
+        {
+            get { return categoryName; }
+            set { categoryName = value.Trim(); }
+        }
     }
 }

@@ -52,6 +52,8 @@
 
         </div>
 
+        <PasswordPopup Email="@context.User.FindFirst(ClaimTypes.Email)?.Value" />
+
     </Authorized>
     <NotAuthorized>
         @{
@@ -73,7 +75,8 @@
     private void OnLocationChanged(object sender, LocationChangedEventArgs e)
     {
         var segments = NavManager.Uri.Split('/');
-        PageName = segments[segments.Length - 1];
+        var page = segments[segments.Length - 1].Split('?');
+        PageName = page[0];
 
         if (string.IsNullOrEmpty(PageName)) PageName = "Dashboard";
         if (PageName == "products") PageName = "Product";
