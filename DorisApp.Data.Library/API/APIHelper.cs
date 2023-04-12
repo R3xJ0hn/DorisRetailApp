@@ -1,4 +1,5 @@
 ﻿using DorisApp.Data.Library.DTO;
+using DorisApp.Data.Library.Model;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
@@ -27,7 +28,24 @@ namespace DorisApp.Data.Library.API
             };
         }
 
-        public void LogInUser(string tokenBearer)
+        public async Task<string?> LogInUserAsync(string username, string password)
+        {
+            var data = new FormUrlEncodedContent(new[]
+{
+                new KeyValuePair<string, string>("email", username),
+                new KeyValuePair<string, string>("password", password)
+            });
+
+            var apiURL = _config[key: "URL:apiUrl"] + _config[key: "URL:login"];
+            var authResult = await _apiClient.PostAsync(requestUri: apiURL, data);
+            var authContent = await authResult.Content.ReadAsStringAsync();
+
+            var obj = JsonConvert.DeserializeObject<AuthenticatedUserModel>(authContent);
+            LogInUser(obj?.Access_Token);
+            return obj?.Access_Token;
+        }
+
+        public void LogInUser(string? tokenBearer)
         {
             ClearApiDefaultRequestHeaders();
             _apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -63,7 +81,6 @@ namespace DorisApp.Data.Library.API
             _apiClient.DefaultRequestHeaders.Clear();
             _apiClient.DefaultRequestHeaders.Accept.Clear();
         }
-
         public void Dispose()
         {
             ClearApiDefaultRequestHeaders();

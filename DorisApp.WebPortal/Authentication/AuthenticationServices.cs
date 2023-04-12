@@ -1,5 +1,4 @@
-﻿using Blazored.LocalStorage;
-using DorisApp.WebPortal.Model;
+﻿using DorisApp.Data.Library.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Text.Json;
 
@@ -12,7 +11,7 @@ namespace DorisApp.WebPortal.Authentication
         private readonly IConfiguration _config;
 
         public AuthenticationServices(HttpClient client,
-            AuthenticationStateProvider authStateProvider, 
+            AuthenticationStateProvider authStateProvider,
             IConfiguration config)
         {
             _client = client;
@@ -24,8 +23,8 @@ namespace DorisApp.WebPortal.Authentication
         {
             var data = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("email", userAuth.Email),
-                new KeyValuePair<string, string>("password", userAuth.Password)
+                new KeyValuePair<string, string>("email", userAuth.Email!),
+                new KeyValuePair<string, string>("password", userAuth.Password!)
             });
 
             var apiURL = _config[key: "URL:apiUrl"] + _config[key: "URL:login"];
@@ -40,7 +39,7 @@ namespace DorisApp.WebPortal.Authentication
             var result = JsonSerializer.Deserialize<AuthenticatedUserModel>(
                 authContent, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            await ((AuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.Access_Token, saveToken);
+            await ((AuthStateProvider)_authStateProvider).NotifyUserAuthentication(result?.Access_Token!, saveToken);
 
             return result;
         }

@@ -10,7 +10,8 @@ namespace DorisApp.Data.Library.API
         IConfiguration Config { get; }
 
         void Dispose();
-        void LogInUser(string tokenBearer);
+        void LogInUser(string? tokenBearer);
+        Task<string?> LogInUserAsync(string username, string password);
         void LogOffUser();
         Task<string?> RequestSecurityStamp(string? password);
     }

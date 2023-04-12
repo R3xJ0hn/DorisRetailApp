@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DorisApp.WebPortal.Model
+namespace DorisApp.Data.Library.Model
 {
     public class AuthenticationUserModel
     {
@@ -11,5 +11,4 @@ namespace DorisApp.WebPortal.Model
         public string? Password { get; set; }
 
     }
-
 }
