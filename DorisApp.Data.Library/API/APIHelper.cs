@@ -28,7 +28,7 @@ namespace DorisApp.Data.Library.API
             };
         }
 
-        public async Task<string?> LogInUserAsync(string username, string password)
+        public async Task<AuthenticatedUserModel?> LogInUserAsync(string username, string password)
         {
             var data = new FormUrlEncodedContent(new[]
 {
@@ -40,9 +40,16 @@ namespace DorisApp.Data.Library.API
             var authResult = await _apiClient.PostAsync(requestUri: apiURL, data);
             var authContent = await authResult.Content.ReadAsStringAsync();
 
-            var obj = JsonConvert.DeserializeObject<AuthenticatedUserModel>(authContent);
-            LogInUser(obj?.Access_Token);
-            return obj?.Access_Token;
+            try
+            {
+                var obj = JsonConvert.DeserializeObject<AuthenticatedUserModel>(authContent);
+                LogInUser(obj?.Access_Token);
+                return obj;
+            }
+            catch
+            {
+                return new AuthenticatedUserModel { Email = username, Status = authContent };
+            }
         }
 
         public void LogInUser(string? tokenBearer)

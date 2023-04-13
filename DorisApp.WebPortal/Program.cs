@@ -1,5 +1,6 @@
 using Blazored.LocalStorage;
 using DorisApp.Data.Library.API;
+using DorisApp.Data.Library.Plugins.Excel;
 using DorisApp.WebPortal;
 using DorisApp.WebPortal.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -21,6 +22,10 @@ builder.Services.AddTransient<SubCategoryEndpoint>();
 builder.Services.AddTransient<BrandEndpoint>();
 builder.Services.AddTransient<ProductEndpoint>();
 builder.Services.AddTransient<InventoryEndpoint>();
+
+//Plugins
+builder.Services.AddTransient<ExcelConnector>();
+
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

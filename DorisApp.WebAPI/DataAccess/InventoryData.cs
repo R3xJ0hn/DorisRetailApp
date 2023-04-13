@@ -23,7 +23,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<InventorySummaryDTO>(identity, "dbo.spInventoryGetSummaryByPage", request);
         }
 
-        public async Task<ResultDTO<List<InventorySummaryDTO>>> StockEntryAsync(ClaimsIdentity? identity, InventoryModel inventory)
+        public async Task<ResultDTO<InventoryModel>> StockEntryAsync(ClaimsIdentity? identity, InventoryModel inventory)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (errorMsg != null)
                 {
-                    return new ResultDTO<List<InventorySummaryDTO>>
+                    return new ResultDTO<InventoryModel>
                     {
                         ErrorCode = 1,
                         IsSuccessStatusCode = false,
@@ -53,8 +53,9 @@ namespace DorisApp.WebAPI.DataAccess
                 await _sql.SaveDataAsync("dbo.spInventoryInsert", inventory);
                 await _logger.SuccessInsert(identity, inventory.Location, TableName);
 
-                return new ResultDTO<List<InventorySummaryDTO>>
+                return new ResultDTO<InventoryModel>
                 {
+                    Data = inventory,
                     ErrorCode = 0,
                     IsSuccessStatusCode = true,
                     ReasonPhrase = $"Successfully added new product in the inventory."
@@ -63,7 +64,7 @@ namespace DorisApp.WebAPI.DataAccess
             catch (Exception ex)
             {
                 await _logger.FailInsert(identity, inventory.Location, TableName, ex.Message);
-                return new ResultDTO<List<InventorySummaryDTO>>
+                return new ResultDTO<InventoryModel>
                 {
                     ErrorCode = 5,
                     IsSuccessStatusCode = false,

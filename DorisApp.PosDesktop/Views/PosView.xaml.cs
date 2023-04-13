@@ -10,16 +10,17 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace DorisApp.PosDesktop.Views
 {
     /// <summary>
-    /// Interaction logic for PosViewModel.xaml
+    /// Interaction logic for PosView.xaml
     /// </summary>
-    public partial class PosViewModel : Window
+    public partial class PosView : UserControl
     {
-        public PosViewModel()
+        public PosView()
         {
             InitializeComponent();
         }

@@ -361,7 +361,7 @@
             }
 
             if (HttpErrorHandler != null)
-                await HttpErrorHandler.HandleHttpErrors<List<BrandSummaryDTO>>(result);
+                await HttpErrorHandler.HandleHttpErrors<BrandModel>(result);
 
         }
         catch (Exception ex)

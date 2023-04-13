@@ -41,19 +41,18 @@ namespace DorisApp.Data.Library.API
             return countedResult;
         }
 
-        public async Task<ResultDTO<List<SubCategorySummaryDTO>>?> AddSubCategoryAsync(SubCategoryModel subCategory)
+        public async Task<ResultDTO<SubCategoryModel>?> AddSubCategoryAsync(SubCategoryModel subCategory)
         {
             await ValidateSubCategory(subCategory);
             var summary = await SendPostAysnc(subCategory, "URL:add-subcategory");
 
             try
             {
-                return JsonConvert.DeserializeObject<ResultDTO<List
-                    <SubCategorySummaryDTO>>>(summary);
+                return JsonConvert.DeserializeObject<ResultDTO<SubCategoryModel>>(summary);
             }
             catch
             {
-                return new ResultDTO<List<SubCategorySummaryDTO>>
+                return new ResultDTO<SubCategoryModel>
                 {
                     ErrorCode = 4,
                     IsSuccessStatusCode = false,

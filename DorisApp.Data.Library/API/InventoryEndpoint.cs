@@ -41,7 +41,7 @@ namespace DorisApp.Data.Library.API
             return countedResult;
         }
 
-        public async Task<ResultDTO<List<InventorySummaryDTO>>?> AddInventoryAsync(InventoryModel inventory)
+        public async Task<ResultDTO<InventoryModel>?> AddInventoryAsync(InventoryModel inventory)
         {
             await ValidateInventory(inventory);
             var summary = await SendPostAysnc(inventory, "URL:stock-entry");
@@ -49,11 +49,11 @@ namespace DorisApp.Data.Library.API
             try
             {
                 return JsonConvert.DeserializeObject<ResultDTO
-                    <List<InventorySummaryDTO>>>(summary);
+                    <InventoryModel>>(summary);
             }
             catch
             {
-                return new ResultDTO<List<InventorySummaryDTO>>
+                return new ResultDTO<InventoryModel>
                 {
                     ErrorCode = 4,
                     IsSuccessStatusCode = false,

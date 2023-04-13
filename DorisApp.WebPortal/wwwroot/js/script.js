@@ -296,3 +296,26 @@ function StampChange(str) {
     stamp = str;
     $('#securityStamp').click();
 }
+
+function scrollToListBottom(scollableListId) {
+    var element = document.querySelector(scollableListId);
+    element.scrollTop = element.scrollHeight;
+}
+
+function ImportCategoryCarouselNext() {
+    const myCarousel = document.getElementById('importCategorySlide')
+    const carousel = new bootstrap.Carousel(myCarousel)
+    carousel.next()
+    carousel.dispose()
+}
+
+function ImportCategoryCarouselReset() {
+    var carouselElement = document.getElementById('importCategorySlide');
+    var carousel = new bootstrap.Carousel(carouselElement, {
+        interval: false 
+    });
+
+    carousel.to(0);
+    carousel.dispose()
+
+}

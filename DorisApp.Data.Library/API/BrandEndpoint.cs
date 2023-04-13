@@ -42,7 +42,7 @@ namespace DorisApp.Data.Library.API
             return countedResult;
         }
 
-        public async Task<ResultDTO<List<BrandSummaryDTO>>?> AddBrandAsync(BrandModel brand, Stream? imgStream, string? fileName)
+        public async Task<ResultDTO<BrandModel>?> AddBrandAsync(BrandModel brand, Stream? imgStream, string? fileName)
         {
             ValidateBrand(brand);
 
@@ -60,12 +60,11 @@ namespace DorisApp.Data.Library.API
 
             try
             {
-                return JsonConvert.DeserializeObject<ResultDTO
-                    <List<BrandSummaryDTO>>>(summary);
+                return JsonConvert.DeserializeObject<ResultDTO<BrandModel>>(summary);
             }
             catch
             {
-                return new ResultDTO<List<BrandSummaryDTO>>
+                return new ResultDTO<BrandModel>
                 {
                     ErrorCode = 4,
                     IsSuccessStatusCode = false,

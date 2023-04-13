@@ -43,7 +43,7 @@ namespace DorisApp.Data.Library.API
         }
 
 
-        public async Task<ResultDTO<List<ProductSummaryDTO>>?> AddProductAsync(ProductModel product, Stream? imgStream, string fileName)
+        public async Task<ResultDTO<ProductModel>?> AddProductAsync(ProductModel product, Stream? imgStream, string fileName)
         {
             await ValidateProduct(product);
 
@@ -61,12 +61,11 @@ namespace DorisApp.Data.Library.API
 
             try
             {
-                return JsonConvert.DeserializeObject<ResultDTO
-                    <List<ProductSummaryDTO>>>(summary);
+                return JsonConvert.DeserializeObject<ResultDTO<ProductModel>>(summary);
             }
             catch
             {
-                return new ResultDTO<List<ProductSummaryDTO>>
+                return new ResultDTO<ProductModel>
                 {
                     ErrorCode = 4,
                     IsSuccessStatusCode = false,

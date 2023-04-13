@@ -28,7 +28,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<ProductSummaryDTO>(identity, "dbo.spProductGetSummaryByPage", request);
         }
 
-        public async Task<ResultDTO<List<ProductSummaryDTO>>> AddProductAsync(ClaimsIdentity? identity, ProductModel product)
+        public async Task<ResultDTO<ProductModel>> AddProductAsync(ClaimsIdentity? identity, ProductModel product)
         {
  
             try
@@ -61,8 +61,9 @@ namespace DorisApp.WebAPI.DataAccess
                         productModel.StoredImageName = product.StoredImageName;
 
                         await _sql.UpdateDataAsync("dbo.spProductRestore", productModel);
-                        return new ResultDTO<List<ProductSummaryDTO>>
+                        return new ResultDTO<ProductModel>
                         {
+                            Data= productModel,
                             ErrorCode = 0,
                             IsSuccessStatusCode = true,
                             ReasonPhrase = "Successfully restore product."
@@ -72,11 +73,11 @@ namespace DorisApp.WebAPI.DataAccess
                     //If it is not deleted
                     if (productModel != null && productModel.ProductName != "*")
                     {
-                        return new ResultDTO<List<ProductSummaryDTO>>
+                        return new ResultDTO<ProductModel>
                         {
                             ErrorCode = 3,
                             IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Product not saved: {getIdentical.Count} identical item(s) found."
+                            ReasonPhrase = $"Product not saved: {product.ProductName} Exist!"
                         };
                     }
 
@@ -86,7 +87,7 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (errorMsg != null)
                 {
-                    return new ResultDTO<List<ProductSummaryDTO>>
+                    return new ResultDTO<ProductModel>
                     {
                         ErrorCode = 1,
                         IsSuccessStatusCode = false,
@@ -97,8 +98,9 @@ namespace DorisApp.WebAPI.DataAccess
                 await _sql.SaveDataAsync("dbo.spProductInsert", product);
                 await _logger.SuccessInsert(identity, product.ProductName, TableName);
 
-                return new ResultDTO<List<ProductSummaryDTO>>
+                return new ResultDTO<ProductModel>
                 {
+                    Data= product,
                     ErrorCode = 0,
                     IsSuccessStatusCode = true,
                     ReasonPhrase = "Successfully added new product."
@@ -108,7 +110,7 @@ namespace DorisApp.WebAPI.DataAccess
             catch (Exception ex)
             {
                 await _logger.FailInsert(identity, product.ProductName, TableName, ex.Message);
-                return new ResultDTO<List<ProductSummaryDTO>>
+                return new ResultDTO<ProductModel>
                 {
                     ErrorCode = 5,
                     IsSuccessStatusCode = false,

@@ -152,10 +152,17 @@
 
     @if (modalMode != "delete")
     {
-        <p class="card-description text-justify">
-            This is where you can modify your category list for your website.
-            Just fill out the form with the category name.
-        </p>
+        <div class="card-description d-flex">
+            <p>
+                This is where you can add new product category to your website.
+                Just fill out the form with the category name.
+            </p>
+            <button type="button" class="btn btn-success import-btn"
+                data-bs-toggle="modal" data-bs-target="#importCategoryModal">
+                <i class="fa-regular fa-file-spreadsheet"></i>
+                Import
+            </button>
+        </div>
 
         <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
             <DataAnnotationsValidator />
@@ -178,6 +185,9 @@
     }
 
 </Modal>
+
+
+<ImportCategoryModal/>
 
 <HttpErrorPopUp @ref="HttpErrorHandler" />
 
@@ -322,7 +332,7 @@
 
             var result = await CategoryEndpoint.AddCategoryAsync(category);
             if (HttpErrorHandler != null)
-                await HttpErrorHandler.HandleHttpErrors<List<CategorySummaryDTO>>(result);
+                await HttpErrorHandler.HandleHttpErrors<CategoryModel>(result);
 
         }
         catch (Exception ex)

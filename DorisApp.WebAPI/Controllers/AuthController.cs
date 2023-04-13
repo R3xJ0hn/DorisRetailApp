@@ -66,7 +66,8 @@ namespace DorisApp.WebAPI.Controllers
             {
                 Access_Token = token,
                 Name = AppHelper.GetFullName(user),
-                Email = user.EmailAddress
+                Email = user.EmailAddress,
+                StatusCode= "Authenticated"
             });
         }
 

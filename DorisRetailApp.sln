@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DorisApp.WebPortal", "Doris
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DorisApp.Data.Library", "DorisApp.Data.Library\DorisApp.Data.Library.csproj", "{98219728-AA37-4AE6-AAFF-289768A9FF90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DorisApp.PosDesktop", "DorisApp.PosDesktop\DorisApp.PosDesktop.csproj", "{7D0D9A2B-FB76-48A0-BABC-D633ECE39C2B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DorisApp.PosDesktop", "DorisApp.PosDesktop\DorisApp.PosDesktop.csproj", "{7D0D9A2B-FB76-48A0-BABC-D633ECE39C2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

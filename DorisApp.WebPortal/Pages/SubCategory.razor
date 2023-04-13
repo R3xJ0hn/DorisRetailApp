@@ -31,13 +31,13 @@
                         <input type="search" class="form-control" placeholder="Search..." @oninput="OnSearchItem">
                     </div>
 
-                    @if (categorySummary != null)
+                    @if (subCategorySummary != null)
                     {
                         <div class="count-item">
                             @{
-                                int startItemIndex = (categorySummary.IsInPage - 1) * categorySummary.ItemPerPage + 1;
-                                int endItemIndex = (startItemIndex - 1) + categorySummary.Models.Count;
-                                string displayText = $"Showing {startItemIndex}-{endItemIndex} out of {categorySummary.TotalItems}";
+                                int startItemIndex = (subCategorySummary.IsInPage - 1) * subCategorySummary.ItemPerPage + 1;
+                                int endItemIndex = (startItemIndex - 1) + subCategorySummary.Models.Count;
+                                string displayText = $"Showing {startItemIndex}-{endItemIndex} out of {subCategorySummary.TotalItems}";
                             }
                             @displayText
                         </div>
@@ -362,7 +362,7 @@
             var result = await SubCategoryEndpoint.AddSubCategoryAsync(subCategory);
 
             if (HttpErrorHandler != null)
-                await HttpErrorHandler.HandleHttpErrors<List<SubCategorySummaryDTO>>(result);
+                await HttpErrorHandler.HandleHttpErrors<SubCategoryModel>(result);
         }
         catch (Exception ex)
         {

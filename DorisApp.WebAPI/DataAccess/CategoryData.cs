@@ -19,7 +19,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<CategorySummaryDTO>(identity, "dbo.spCategoryGetSummaryByPage", request);
         }
 
-        public async Task<ResultDTO<List<CategorySummaryDTO>>> AddCategoryAsync(ClaimsIdentity? identity, CategoryModel category)
+        public async Task<ResultDTO<CategoryModel>> AddCategoryAsync(ClaimsIdentity? identity, CategoryModel category)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace DorisApp.WebAPI.DataAccess
                         categoryModel.UpdatedAt = DateTime.UtcNow;
 
                         await _sql.UpdateDataAsync("dbo.spCategoryRestore", categoryModel);
-                        return new ResultDTO<List<CategorySummaryDTO>>
+                        return new ResultDTO<CategoryModel>
                         {
                             ErrorCode = 0,
                             IsSuccessStatusCode = true,
@@ -60,11 +60,11 @@ namespace DorisApp.WebAPI.DataAccess
                     //If it is not deleted
                     if (categoryModel != null && categoryModel.CategoryName != "*")
                     {
-                        return new ResultDTO<List<CategorySummaryDTO>>
+                        return new ResultDTO<CategoryModel>
                         {
                             ErrorCode = 3,
                             IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Category not saved: {getIdentical.Count} identical item(s) found."
+                            ReasonPhrase = $"Category not saved: {category.CategoryName}  Exist!"
                         };
                     }
 
@@ -74,7 +74,7 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (errorMsg != null)
                 {
-                    return new ResultDTO<List<CategorySummaryDTO>>
+                    return new ResultDTO<CategoryModel>
                     {
                         ErrorCode = 1,
                         IsSuccessStatusCode = false,
@@ -85,8 +85,9 @@ namespace DorisApp.WebAPI.DataAccess
                 await _sql.SaveDataAsync("dbo.spCategoryInsert", category);
                 await _logger.SuccessInsert(identity, category.CategoryName, TableName);
 
-                return new ResultDTO<List<CategorySummaryDTO>>
+                return new ResultDTO<CategoryModel>
                 {
+                    Data = category,
                     ErrorCode = 0,
                     IsSuccessStatusCode = true,
                     ReasonPhrase = "Successfully added new category."
@@ -96,7 +97,7 @@ namespace DorisApp.WebAPI.DataAccess
             catch (Exception ex)
             {
                 await _logger.FailInsert(identity, category.CategoryName, TableName, ex.Message);
-                return new ResultDTO<List<CategorySummaryDTO>>
+                return new ResultDTO<CategoryModel>
                 {
                     ErrorCode = 5,
                     IsSuccessStatusCode = false,

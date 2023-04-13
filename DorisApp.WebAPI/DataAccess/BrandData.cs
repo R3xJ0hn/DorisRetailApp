@@ -21,7 +21,7 @@ namespace DorisApp.WebAPI.DataAccess
             return await GetByPageAsync<BrandSummaryDTO>(identity, "dbo.spBrandGetSummaryByPage", request);
         }
 
-        public async Task<ResultDTO<List<BrandSummaryDTO>>> AddBrandAsync(ClaimsIdentity? identity, BrandModel brand)
+        public async Task<ResultDTO<BrandModel>> AddBrandAsync(ClaimsIdentity? identity, BrandModel brand)
         {
 
             try
@@ -51,7 +51,7 @@ namespace DorisApp.WebAPI.DataAccess
                         brandModel.StoredImageName = brand.StoredImageName;
 
                         await _sql.UpdateDataAsync("dbo.spBrandRestore", brandModel);
-                        return new ResultDTO<List<BrandSummaryDTO>>
+                        return new ResultDTO<BrandModel>
                         {
                             ErrorCode = 0,
                             IsSuccessStatusCode = true,
@@ -62,11 +62,11 @@ namespace DorisApp.WebAPI.DataAccess
                     //If it is not deleted
                     if (brandModel != null && brandModel.BrandName != "*")
                     {
-                        return new ResultDTO<List<BrandSummaryDTO>>
+                        return new ResultDTO<BrandModel>
                         {
                             ErrorCode = 3,
                             IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Brand not saved: {getIdentical.Count} identical item(s) found."
+                            ReasonPhrase = $"Brand not saved: {brand.BrandName} Exist!"
                         };
                     }
       
@@ -76,7 +76,7 @@ namespace DorisApp.WebAPI.DataAccess
 
                 if (errorMsg != null)
                 {
-                    return new ResultDTO<List<BrandSummaryDTO>>
+                    return new ResultDTO<BrandModel>
                     {
                         ErrorCode = 1,
                         IsSuccessStatusCode = false,
@@ -87,8 +87,9 @@ namespace DorisApp.WebAPI.DataAccess
                 await _sql.SaveDataAsync("dbo.spBrandInsert", brand);
                 await _logger.SuccessInsert(identity, brand.BrandName, TableName);
 
-                return new ResultDTO<List<BrandSummaryDTO>>
+                return new ResultDTO<BrandModel>
                 {
+                    Data= brand,
                     ErrorCode = 0,
                     IsSuccessStatusCode = true,
                     ReasonPhrase = "Successfully added new brand."
@@ -97,7 +98,7 @@ namespace DorisApp.WebAPI.DataAccess
             catch (Exception ex)
             {
                 await _logger.FailInsert(identity, brand.BrandName, TableName, ex.Message);
-                return new ResultDTO<List<BrandSummaryDTO>>
+                return new ResultDTO<BrandModel>
                 {
                     ErrorCode = 5,
                     IsSuccessStatusCode = false,

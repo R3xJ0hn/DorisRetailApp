@@ -2,6 +2,7 @@
 using DorisApp.Data.Library.API;
 using System.Threading.Tasks;
 using System;
+using DorisApp.PosDesktop.EventModels;
 
 namespace DorisApp.PosDesktop.ViewModels
 {
@@ -9,7 +10,7 @@ namespace DorisApp.PosDesktop.ViewModels
     {
         private string _username = "admin@gmail.com";
         private string _password = "Rex123.";
-        private string _errorMessage = string.Empty;
+        private string? _errorMessage = string.Empty;
         private IAPIHelper _apiHelper;
         private IEventAggregator _events;
 
@@ -56,7 +57,7 @@ namespace DorisApp.PosDesktop.ViewModels
             }
         }
 
-        public string ErrorMessage
+        public string? ErrorMessage
         {
             get { return _errorMessage; }
             set
@@ -86,9 +87,17 @@ namespace DorisApp.PosDesktop.ViewModels
         {
             try
             {
-                ErrorMessage = "";
                 var result = await _apiHelper.LogInUserAsync(UserName, Password);
-                await _events.PublishOnUIThreadAsync("login");
+
+                if (!string.IsNullOrEmpty(result?.Access_Token))
+                {
+                    await _events.PublishOnUIThreadAsync(new LogOnEvent());
+                }
+                else
+                {
+                    ErrorMessage = result?.Status;
+                }
+
             }
             catch (Exception ex)
             {

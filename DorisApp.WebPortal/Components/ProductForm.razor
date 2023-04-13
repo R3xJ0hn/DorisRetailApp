@@ -340,7 +340,7 @@
             }
 
             if (HttpErrorHandler != null)
-            await HttpErrorHandler.HandleHttpErrors<List<ProductSummaryDTO>>(result);
+            await HttpErrorHandler.HandleHttpErrors<ProductModel>(result);
 
         }
 

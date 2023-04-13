@@ -533,7 +533,7 @@
                 "Successfully added new Inventory for " + selectedProduct?.ProductName);
 
             if (HttpErrorHandler != null)
-                await HttpErrorHandler.HandleHttpErrors<List<InventorySummaryDTO>>(result);
+                await HttpErrorHandler.HandleHttpErrors<InventoryModel>(result);
 
         }
         catch (Exception ex)
