@@ -47,10 +47,11 @@ namespace DorisApp.Data.Library.API
             return await response.Content.ReadAsStringAsync();
         }
 
-        protected async Task<UploadResultDTO?> SendImg(Stream? stream, string? fileName)
+        protected async Task<UploadResultDTO?> SendImgAsync(Stream? stream, string? fileName)
         {
             if (stream != null && stream.Length > 0)
             {
+                stream.Position = 0; 
                 var content = new StreamContent(stream);
 
                 var newcontent = new MultipartFormDataContent

@@ -13690,12 +13690,70 @@ fieldset[disabled] .datepicker table tr td span.active.disabled:hover.focus {
 }
 
 .import-modal .modal-lg {
+  position: relative;
   max-width: 800px;
+}
+.import-modal .error-warning {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2039215686);
+  z-index: 999999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.import-modal .error-warning .body {
+  position: relative;
+  border-radius: 1rem;
+  background: white;
+  width: 70%;
+  height: 50vh;
+}
+.import-modal .error-warning .body h2 {
+  color: #fcbb5a;
+  margin: 1rem;
+}
+.import-modal .error-warning .body ul {
+  height: 50%;
+  margin: 1rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  z-index: 9999999 !important;
+}
+.import-modal .error-warning .body ul::-webkit-scrollbar {
+  width: 8px;
+  background-color: transparent;
+  height: 8px;
+}
+.import-modal .error-warning .body ul::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background-color: rgba(213, 130, 252, 0.9);
+}
+.import-modal .error-warning .body ul::-webkit-scrollbar-thumb:hover {
+  background-color: #d582fc;
+}
+.import-modal .error-warning .body ul li {
+  color: #fa6d93;
+  font-size: 12px;
+}
+.import-modal .error-warning .body .footer {
+  border-top: 1px solid #ced4da;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem;
+}
+.import-modal .error-warning .body .footer .btn {
+  margin: 0.5rem;
 }
 .import-modal .import-status {
   height: 70vh !important;
 }
 .import-modal .import-status .modal-body {
+  position: relative;
   height: 85%;
 }
 .import-modal .import-status .modal-body .upload-item, .import-modal .import-status .modal-body .verify-item {
@@ -13710,6 +13768,18 @@ fieldset[disabled] .datepicker table tr td span.active.disabled:hover.focus {
 .import-modal .import-status .modal-body .status-list ul {
   height: 100%;
   overflow-y: scroll;
+}
+.import-modal .import-status .modal-body .status-list ul li {
+  display: flex;
+  align-items: center;
+}
+.import-modal .import-status .modal-body .status-list ul li img {
+  width: 3rem;
+  height: 3rem;
+  margin-right: 1rem;
+}
+.import-modal .import-status .modal-body .status-list ul li .stat-details p {
+  margin: 0;
 }
 .import-modal .col-md {
   padding: 0 2rem;

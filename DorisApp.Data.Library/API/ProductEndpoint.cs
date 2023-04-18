@@ -49,7 +49,7 @@ namespace DorisApp.Data.Library.API
 
             if (imgStream != null && imgStream.Length != 0)
             {
-                var result = await SendImg(imgStream, fileName);
+                var result = await SendImgAsync(imgStream, fileName);
 
                 if (result != null)
                 {
@@ -80,7 +80,7 @@ namespace DorisApp.Data.Library.API
 
             if (imgStream != null && imgStream.Length != 0)
             {
-                var result = await SendImg(imgStream, fileName);
+                var result = await SendImgAsync(imgStream, fileName);
 
                 if (result != null)
                 {

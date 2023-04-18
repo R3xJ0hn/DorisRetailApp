@@ -1,0 +1,480 @@
+﻿@using System.Collections.ObjectModel;
+@using System.Text;
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Config
+@inject BrandEndpoint BrandEndpoint
+@inject ExcelConnector ExcelConnector
+
+
+<div class="import-modal modal fade" id="importBrandModal" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-primary" id="staticBackdropLabel">Import Excel File</h1>
+                <button type="button" class="btn-close" @onclick="Reset"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="carousel slide no-gutters" data-bs-interval="false" id="importBrandSlide">
+
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <div class="modal-body row ">
+
+                                <div class="col-md ">
+
+                                    <h5>
+                                        To import an <span class="text-success">Excel file</span>, please follow
+                                        these steps:
+                                    </h5>
+
+                                    <ol>
+                                        <li>
+                                            Click the <b>'Choose File'</b> button below and select your Excel file.
+                                        </li>
+
+                                        <li>
+                                            The first row should contain the header information for each category.
+                                            For example, you can have column headers like "Category 1", "Category 2", etc.
+                                            These headers will be used as the category names in the Category objects.
+                                        </li>
+
+                                        <li>
+                                            Below the header row, in each column, you can add the subcategories for each category.
+                                            Each cell should contain one subcategory entry. You can have multiple subcategories
+                                            in each column, separated by rows.
+                                        </li>
+
+                                        <li>
+                                            Click the <b>'Proceed'</b> button to proceed with the import
+                                            process.
+                                        </li>
+                                    </ol>
+
+
+                                </div>
+
+
+                                <div class="col-sm">
+
+                                    <div class="mb-3">
+                                        <img src="/img/Category-Spreadsheet.png" alt="Spreadsheet">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="formFile" class="form-label">Upload Files</label>
+
+                                        <InputFile OnChange="LoadFiles" class="form-control " multiple
+                                                   accept=".jpg, .jpeg, .png, .gif, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+
+                                        <div class="form-validation @(isValidatedField ? "d-none" : "")">
+                                            Please select an excel file.
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal" @onclick="Reset">
+                                    Close
+                                </button>
+
+
+                                <button type="button" class="btn btn-primary proceed-btn"
+                                        @onclick="OnProcessItemsAsync">
+                                    Proceed
+
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="carousel-item import-status">
+                            <div class="modal-body">
+
+                                <div class="verify-item">
+                                    <p>Verifying: @currentVerifyingTask</p>
+                                    <div class="progress">
+
+                                        <div class="progress-bar
+                                             @(currentVerifyingTaskProgress != 100? "progress-bar-striped progress-bar-animated" : "")"
+                                             role="progressbar"
+                                             style="width: @currentVerifyingTaskProgress%;"
+                                             aria-valuenow="@currentVerifyingTaskProgress"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                            @currentVerifyingTaskProgress%
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                                <div class="upload-item">
+                                    <p>Uploading: @currentUploadingTask</p>
+                                    <div class="progress">
+
+                                        <div class="progress-bar
+                                            @(currentUploadingTaskProgress != 100? "progress-bar-striped progress-bar-animated" : "")"
+                                             role="progressbar"
+                                             style="width: @currentUploadingTaskProgress%;"
+                                             aria-valuenow="@currentUploadingTaskProgress"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                            @currentUploadingTaskProgress%
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="status-list">
+                                    Status:
+                                    @if (Warnings.Count > 0)
+                                    {
+                                        <span class="badge rounded-pill bg-danger">@Warnings.Count</span>
+                                    }
+                                    <ul id="importBrandSatus">
+
+                                        @if (ProcessItems.ProcessModels != null)
+                                        {
+                                            @foreach (var item in ProcessItems.ProcessModels)
+                                            {
+                                                @if (item.VerifyType == "Image")
+                                                {
+                                                    <li>
+                                                        <img src="@item.ImgString" alt="unverified">
+                                                        <div class="stat-details">
+                                                            <p>@item.Brand?.BrandName</p>
+                                                            <p class="@(item.Status.Contains("Error")? "text-danger" : "" )
+                                                                   @(item.Status.Contains("Warning")? "text-warning" : "" )
+                                                                   @(item.Status.Contains("Success")? "text-success" : "" ) ">
+                                                                @item.Status
+                                                            </p>
+                                                        </div>
+                                                    </li>
+                                                }
+                                                else
+                                                {
+                                                    <li class="@(item.Status.Contains("Error")? "text-danger" : "" )
+                                                            @(item.Status.Contains("Warning")? "text-warning" : "" )
+                                                            @(item.Status.Contains("Success")? "text-success" : "" ) ">
+                                                        @item.Status
+                                                    </li>
+                                                }
+
+                                            }
+
+                                        }
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" data-bs-target="#importSlide"
+                                        data-bs-slide-to="0" data-bs-dismiss="modal" disabled="@(!isDone)"
+                                        @onclick="Reset">
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="error-warning @(Warnings.Count > 0 && openWarningPanel? "" : "d-none")">
+                <div class="body">
+                    <h2>Warnings:</h2>
+                    <ul>
+
+                        @foreach (var item in Warnings)
+                        {
+                            <li>@item</li>
+                        }
+
+                    </ul>
+
+                    <div class="footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="Reset">
+                            Close
+                        </button>
+
+                        <button type="button" class="btn btn-primary proceed-btn" @onclick="OnProceedUpload">
+                            Continue anyway
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private MemoryStream excelFileStream = new();
+    private List<IBrowserFile> Files = new();
+    private List<BrandModel> brands = new();
+
+    private ObservableCollection<string> Warnings = new();
+    private StatusProgressModel ProcessItems = new();
+    private string? currentVerifyingTask;
+    private int currentVerifyingTaskProgress;
+    private string? currentUploadingTask;
+    private int currentUploadingTaskProgress;
+
+    private int maxFileSize = 1024 * 1024; // 1 MB in bytes
+    CancellationTokenSource ctsUpload = new();
+
+    private bool isValidatedField = true;
+    private bool openWarningPanel = false;
+    private bool allowedToUpload = true;
+    private bool isDone = false;
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        await Reset();
+
+        foreach (var file in e.GetMultipleFiles(int.MaxValue))
+        {
+            if (Path.GetExtension(file.Name) == ".xlsx")
+            {
+                await file.OpenReadStream(long.MaxValue).CopyToAsync(excelFileStream);
+            }
+            else
+            {
+                Files.Add(file);
+            }
+        }
+
+        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandModal");
+    }
+
+    private async Task OnProcessItemsAsync()
+    {
+        if (excelFileStream.Length > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("ImportCarouselNext", "importBrandSlide");
+            isValidatedField = true;
+
+            //Wait for the carousel
+            await Task.Delay(1000);
+
+            brands = await ExcelConnector.RetrieveBrandsAsync(excelFileStream, ReportWorkSheetProgress);
+            currentVerifyingTask = "";
+
+            await VerifyImages();
+            openWarningPanel = true;
+
+            if (allowedToUpload == true)
+            {
+                await OnProceedUpload();
+            }
+        }
+        else
+        {
+            isValidatedField = false;
+        }
+    }
+
+    private async Task OnProceedUpload()
+    {
+        openWarningPanel = false;
+        allowedToUpload = true;
+        StateHasChanged();
+
+        try
+        {
+            await UploadBrandParallel(ctsUpload.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            ProcessItems.ProcessModels?.Add(new ProccessBrandModel
+            {
+                Status = "Uploading brand was cancelled."
+            });
+
+        }
+
+    }
+
+    private void OnCancelToken()
+    {
+        ctsUpload.Cancel();
+    }
+
+    private async Task VerifyImages()
+    {
+        var processedPercentage = 1;
+        var lastTaskVerifiedPercent = currentVerifyingTaskProgress;
+
+        foreach (var brand in brands)
+        {
+            processedPercentage++;
+            currentVerifyingTask = $"Verifying {brand.BrandName} image";
+            currentVerifyingTaskProgress = lastTaskVerifiedPercent + ((processedPercentage * 50) / brands.Count);
+
+            var verifiedBrand = new ProccessBrandModel();
+            verifiedBrand.FileStream = new();
+            verifiedBrand.Brand = brand;
+            verifiedBrand.Status = currentVerifyingTask;
+            verifiedBrand.VerifyType = "Image";
+
+            var getImage = Files.SingleOrDefault(x => x.Name == brand.StoredImageName);
+
+            if (getImage != null)
+            {
+                await getImage.OpenReadStream(maxFileSize).CopyToAsync(verifiedBrand.FileStream);
+                verifiedBrand.ImgString = $"data:{getImage.ContentType};base64,{Convert.ToBase64String(verifiedBrand.FileStream.ToArray())}";
+
+                if (verifiedBrand.FileStream!.Length > maxFileSize)
+                {
+                    verifiedBrand.FileStream!.Dispose();
+                    var msg = $"Error: Image for {brand.BrandName} exceed 1 MB | FileName: {brand.StoredImageName}";
+                    verifiedBrand.Status = msg;
+                    allowedToUpload = false;
+                    Warnings.Add(msg);
+                }
+
+                verifiedBrand.Status = "Success: Verified Image!";
+                getImage.OpenReadStream(maxFileSize).Dispose();
+            }
+            else
+            {
+                var msg = $"Error: Image not found for {brand.BrandName} | FileName: {brand.StoredImageName}";
+                verifiedBrand.Status = msg;
+                allowedToUpload = false;
+                Warnings.Add(msg);
+            }
+
+            ProcessItems.ProcessModels?.Add(verifiedBrand);
+            await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandSatus");
+            StateHasChanged();
+
+        }
+
+        currentVerifyingTask = "";
+    }
+
+
+    private async Task UploadBrandParallel(CancellationToken cancellationToken)
+    {
+        if (ProcessItems.ProcessModels != null)
+        {
+            var processedPercentage = 1;
+            var lastTaskVerifiedPercent = currentUploadingTask;
+
+            await Task.Run(() =>
+            {
+                Parallel.ForEach(ProcessItems.ProcessModels, async (item) =>
+                {
+                    if (item.Brand != null)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var result = await BrandEndpoint.AddBrandAsync(item.Brand!, item.FileStream, item.Brand!.BrandName);
+                        item.FileStream = null;
+                        currentUploadingTask = "Uploading " + item.Brand.BrandName + ProcessItems.ProcessModels.Count.ToString();
+                        currentUploadingTaskProgress = (processedPercentage * 100) / brands.Count;
+                        processedPercentage++;
+
+
+                        if (result.IsSuccessStatusCode)
+                        {
+                            currentUploadingTask = $"Success: Successfully uploaded {item.Brand.BrandName}";
+                        }
+                        else
+                        {
+                            currentUploadingTask = $"Error: " + result.ReasonPhrase;
+                        }
+
+                        await ReportUploadProgess(currentUploadingTask, currentUploadingTaskProgress);
+
+                    }
+
+                });
+            });
+        }
+    }
+
+
+    private async Task ReportUploadProgess(string task, int percent)
+    {
+        var stat = new ProccessBrandModel
+        {
+            Status = task,
+            VerifyType = "Item"
+        };
+
+        currentUploadingTask = task;
+        currentUploadingTaskProgress = percent;
+     
+        ProcessItems.ProcessModels?.Add(stat);
+        StateHasChanged();
+        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandSatus");
+    }
+
+    private async Task ReportWorkSheetProgress(string status, int percent)
+    {
+        var stat = new ProccessBrandModel
+        {
+            Status = status,
+            VerifyType = "Item"
+        };
+
+        currentVerifyingTask = status;
+        currentVerifyingTaskProgress = percent / 2;
+        ProcessItems.ProcessModels?.Add(stat);
+        StateHasChanged();
+
+        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandSatus");
+    }
+
+    private async Task Reset()
+    {
+        excelFileStream = new();
+        Files = new();
+        brands = new();
+        ProcessItems.ProcessModels = null;
+        ProcessItems = new();
+        Warnings = new();
+        currentVerifyingTaskProgress = 0;
+        currentUploadingTaskProgress = 0;
+        isValidatedField = true;
+        openWarningPanel = false;
+        isDone = false;
+        openWarningPanel = false;
+        await JSRuntime.InvokeVoidAsync("ImportCarouselReset", "importBrandSlide");
+    }
+
+    private class StatusProgressModel
+    {
+        public string Task { get; set; } = string.Empty;
+
+        public int ProgressPercentage { get; set; }
+
+        public ObservableCollection<ProccessBrandModel>? ProcessModels { get; set; } = new();
+    }
+
+    private class ProccessBrandModel
+    {
+        public BrandModel? Brand { get; set; }
+
+        public MemoryStream? FileStream { get; set; }
+
+        public string? ImgString { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+
+        public string? VerifyType { get; set; }
+    }
+}

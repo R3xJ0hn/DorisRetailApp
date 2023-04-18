@@ -2,8 +2,6 @@
 using DorisApp.WebAPI.DataAccess;
 using DorisApp.WebAPI.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.InteropServices;
-using static Dapper.SqlMapper;
 using System.Security.Claims;
 using DorisApp.Data.Library.DTO;
 

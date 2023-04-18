@@ -155,23 +155,46 @@
 
             @if (modalMode != "delete")
             {
-                <p class="card-description text-justify">
-                    This is where you can modify brands to your website.
-                    Just fill out the form with the brand name, and an image for the brand.
-                </p>
+                <div class="card-description d-flex">
 
-                <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
+                    <p class="card-description text-justify">
+                        This is where you can modify brands to your website.
+                        Just fill out the form with the brand name, and an image for the brand.
+                    </p>
 
-                    <UploadImage @ref="uploadImageComponentRef"
-                             OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" />
+                    <button type="button" class="btn btn-success import-btn"
+                        data-bs-toggle="modal" data-bs-target="#importBrandModal">
+                        <i class="fa-regular fa-file-spreadsheet"></i>
+                        Import
+                    </button>
+                </div>
 
-                    <div class="mb-3 p-2">
-                        <label for="brandName" class="form-label">Brand Name</label>
-                        <InputText id="brandName" class="form-control" placeholder="Brand Name" @bind-Value="modalModel.BrandName" />
-                        <ValidationMessage For="@(()=> modalModel.BrandName)" class="form-validation" />
-                    </div>
+                <div class="row">
 
-                </EditForm>
+
+                    <EditForm Model="@modalModel" OnInvalidSubmit="@OnSaveModal">
+
+                        <div class="col-sm">
+
+                            <UploadImage @ref="uploadImageComponentRef"
+                                     OnFileChange="OnHandleFileChange" MaxFileSize="@maxFileSize" />
+
+                        </div>
+
+                        <div class="col-sm">
+
+                            <div class="mb-3 p-2">
+                                <label for="brandName" class="form-label">Brand Name</label>
+                                <InputText id="brandName" class="form-control" placeholder="Brand Name" @bind-Value="modalModel.BrandName" />
+                                <ValidationMessage For="@(()=> modalModel.BrandName)" class="form-validation" />
+                            </div>
+
+                        </div>
+
+                    </EditForm>
+  
+                </div>
+
             }
             else
             {
@@ -186,6 +209,8 @@
     </div>
 
 </div>
+
+<ImportBrandModal/>
 
 <HttpErrorPopUp @ref="HttpErrorHandler" />
 
@@ -348,9 +373,9 @@
         try
         {
             var brand = new BrandModel
-                {
-                    BrandName = modalModel.BrandName
-                };
+            {
+                BrandName = modalModel.BrandName
+            };
 
             var result = await BrandEndpoint.AddBrandAsync(brand, imgStream, imgName);
 
@@ -405,10 +430,10 @@
         try
         {
             var brand = new BrandModel
-                {
-                    Id = modalModel.Id,
-                    BrandName = modalModel.BrandName
-                };
+            {
+                Id = modalModel.Id,
+                BrandName = modalModel.BrandName
+            };
 
             var result = await BrandEndpoint.DeleteBrand(brand);
 
@@ -446,9 +471,9 @@
     private async Task CatchError(string exMessage)
     {
         var result = new ResultDTO<BrandSummaryDTO>
-            {
-                ErrorCode = 1
-            };
+        {
+            ErrorCode = 1
+        };
 
         if (HttpErrorHandler != null)
             await HttpErrorHandler.HandleHttpErrors<BrandSummaryDTO>(result, exMessage);

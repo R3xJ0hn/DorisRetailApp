@@ -302,15 +302,15 @@ function scrollToListBottom(scollableListId) {
     element.scrollTop = element.scrollHeight;
 }
 
-function ImportCategoryCarouselNext() {
-    const myCarousel = document.getElementById('importCategorySlide')
+function ImportCarouselNext(id) {
+    const myCarousel = document.getElementById(id)
     const carousel = new bootstrap.Carousel(myCarousel)
     carousel.next()
     carousel.dispose()
 }
 
-function ImportCategoryCarouselReset() {
-    var carouselElement = document.getElementById('importCategorySlide');
+function ImportCarouselReset(id) {
+    var carouselElement = document.getElementById(id);
     var carousel = new bootstrap.Carousel(carouselElement, {
         interval: false 
     });
