@@ -1,11 +1,15 @@
-﻿@using System.Collections.ObjectModel;
+﻿@using DorisApp.WebPortal.Model;
+@using System.Collections.ObjectModel;
 @using System.Text;
-@using DorisApp.WebPortal.Model;
 @inject IJSRuntime JSRuntime
-@inject BrandEndpoint BrandEndpoint
 @inject ExcelConnector ExcelConnector
+@inject BrandEndpoint BrandEndpoint
+@inject ProductEndpoint ProductEndpoint
+@inject BrandEndpoint BrandEndpoint
+@inject CategoryEndpoint CategoryEndpoint
+@inject SubCategoryEndpoint SubCategoryEndpoint
 
-<div class="import-modal modal fade" id="importBrandModal" data-bs-backdrop="static" data-bs-keyboard="false"
+<div class="import-modal modal fade" id="ImportProductModal" data-bs-backdrop="static" data-bs-keyboard="false"
      tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -17,7 +21,7 @@
             </div>
             <div class="modal-body">
 
-                <div class="carousel slide no-gutters" data-bs-interval="false" id="importBrandSlide">
+                <div class="carousel slide no-gutters" data-bs-interval="false" id="importProductSlide">
 
                     <div class="carousel-inner">
                         <div class="carousel-item active">
@@ -31,28 +35,45 @@
                                     </h5>
 
                                     <ol>
+
                                         <li>
                                             Click the <b>'Choose File'</b> button below and select your Excel file.
                                         </li>
 
                                         <li>
-                                            The first row should contain the header information for each category.
-                                            For example, you can have column headers like "Category 1", "Category 2", etc.
-                                            These headers will be used as the category names in the Category objects.
+                                            Check the file if your first row contains the following column names:
+
+                                            <div class="row my-0">
+
+                                                <ul class="col my-0">
+                                                    <li>Product Name</li>
+                                                    <li>SKU</li>
+                                                    <li>Brand</li>
+                                                    <li>Category</li>
+                                                    <li>Sub Category</li>
+                                                </ul>
+
+                                                <ul class="col">
+                                                    <li>Size</li>
+                                                    <li>Color</li>
+                                                    <li>Description</li>
+                                                    <li>Image Path</li>
+                                                </ul>
+                                            </div>
+
                                         </li>
 
                                         <li>
-                                            Below the header row, in each column, you can add the subcategories for each category.
-                                            Each cell should contain one subcategory entry. You can have multiple subcategories
-                                            in each column, separated by rows.
+                                            Please ensure that the images are place in the same
+                                            directory with the excel file.
                                         </li>
 
                                         <li>
                                             Click the <b>'Proceed'</b> button to proceed with the import
                                             process.
                                         </li>
-                                    </ol>
 
+                                    </ol>
 
                                 </div>
 
@@ -83,6 +104,7 @@
                                     Close
                                 </button>
 
+
                                 <button type="button" class="btn btn-primary proceed-btn"
                                         @onclick="OnProcessItemsAsync">
                                     Proceed
@@ -111,7 +133,6 @@
                                     </div>
                                 </div>
 
-
                                 <div class="upload-item">
                                     <p>Uploading: @statusUploadMessage</p>
                                     <div class="progress">
@@ -129,15 +150,14 @@
                                     </div>
 
                                 </div>
-
-
+                         
                                 <div class="status-list">
                                     Status:
                                     @if (Warnings.Count > 0)
                                     {
                                         <span class="badge rounded-pill bg-danger">@Warnings.Count</span>
                                     }
-                                    <ul id="importBrandSatus">
+                                    <ul id="importProductSatus">
 
                                         @foreach (var item in StatusReports)
                                         {
@@ -185,7 +205,13 @@
 
             <div class="error-warning @(Warnings.Count > 0 && openWarningPanel? "" : "d-none")">
                 <div class="body">
-                    <h2>Warnings:</h2>
+                    <h2>
+                        Warnings:
+                        @if (Warnings.Count > 0)
+                        {
+                            <span class="badge rounded-pill bg-danger">@Warnings.Count</span>
+                        }
+                    </h2>
                     <ul>
 
                         @foreach (var item in Warnings)
@@ -218,7 +244,7 @@
 @code {
     private MemoryStream excelFileStream = new();
     private List<IBrowserFile> Files = new();
-    private List<BrandModel> brands = new();
+    private List<ProductModel> products = new();
 
     private ObservableCollection<ImportStatusModel> StatusReports = new();
     private ObservableCollection<string> Warnings = new();
@@ -234,7 +260,7 @@
     private bool isValidatedField = true;
     private bool openWarningPanel = false;
     private bool allowedToUpload = true;
-    private bool allowedToCloseModal = true;
+    private bool allowedToCloseModal = false;
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
@@ -252,14 +278,14 @@
             }
         }
 
-        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandModal");
+        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#ImportProductModal");
     }
 
     private async Task OnProcessItemsAsync()
     {
         if (excelFileStream.Length > 0)
         {
-            await JSRuntime.InvokeVoidAsync("ImportCarouselNext", "importBrandSlide");
+            await JSRuntime.InvokeVoidAsync("ImportCarouselNext", "importProductSlide");
             isValidatedField = true;
 
             //Wait for the carousel
@@ -268,18 +294,16 @@
             statusVerificationMessage = "Processing worksheet...";
             StateHasChanged();
 
-            allowedToCloseModal = false;
-            brands = await ExcelConnector.RetrieveBrandsAsync(excelFileStream, ReportProgress);
-            allowedToCloseModal = true;
-            statusVerificationMessage = "";
-            StateHasChanged();
+            var extractedProducts = await ExcelConnector.RetrieveProductsAsync(excelFileStream, ReportProgress);
+
+            products = await ConvertToProductModels(extractedProducts);
 
             await VerifyImagesAsync();
             openWarningPanel = true;
 
             if (allowedToUpload == true)
             {
-                await OnProceedUpload();
+                await OnProceedUpload(); 
             }
         }
         else
@@ -296,12 +320,12 @@
 
         try
         {
-            await UploadBrand(ctsUpload.Token);
+            await UploadProducts(ctsUpload.Token);
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
             StatusReports.Add(new ImportStatusModel
-                { Status = "Uploading brand was cancelled." });
+                { Status = "Uploading brand was cancelled." + ex.Message});
         }
     }
 
@@ -310,31 +334,151 @@
         ctsUpload.Cancel();
     }
 
+
+    private async Task<List<ProductModel>> ConvertToProductModels(List<ExtractedProductModel> extractedModels)
+    {
+        var products = new List<ProductModel>();
+        var prosessedItem = 1;
+        var prosessedItemPercentage = 1;
+        var lastTaskVerifiedPercent = statusVerificationPercentage;
+        allowedToCloseModal = false;
+
+        var reqDTO = new RequestPageDTO
+            {
+                PageNo = 1,
+                ItemPerPage = 1000,
+                OrderBy = 1
+            };
+
+        foreach (var item in extractedModels)
+        {
+            prosessedItemPercentage = lastTaskVerifiedPercent + ((prosessedItem * 33) / extractedModels.Count);
+            prosessedItem++;
+
+            var product = new ProductModel
+                {
+                    ProductName = item.ProductName,
+                    Sku = item.Sku,
+                    Color = item.Color,
+                    Size = item.Size,
+                    StoredImageName = item.Image,
+                    Description = item.Description
+                };
+
+            reqDTO.LookFor = item.BrandName.ToLower();
+            var getBrandFromCloud = await BrandEndpoint.GetBrandSummary(reqDTO);
+            product.BrandId = await SetProductIdFromCloudResult<BrandSummaryDTO>(item.ProductName, getBrandFromCloud, reqDTO, prosessedItemPercentage);
+
+            reqDTO.LookFor = item.Category.ToLower();
+            var getCategoryFromCloud = await CategoryEndpoint.GetCategorySummary(reqDTO);
+            product.CategoryId = await SetProductIdFromCloudResult<CategorySummaryDTO>(item.ProductName, getCategoryFromCloud, reqDTO, prosessedItemPercentage);
+
+            reqDTO.LookFor = item.SubCategory.ToLower();
+            var getSubCategoryFromCloud = await SubCategoryEndpoint.GetSubCategorySummary(reqDTO);
+            product.SubCategoryId = await SetProductIdFromCloudResult<SubCategorySummaryDTO>(item.ProductName, getSubCategoryFromCloud, reqDTO, prosessedItemPercentage);
+
+            if (product.BrandId != -1 && product.CategoryId != -1 && product.SubCategoryId != -1)
+            {
+                products.Add(product);
+            }
+        }
+
+        extractedModels.Clear();
+        statusVerificationMessage = "";
+        allowedToCloseModal = true;
+
+        return products;
+    }
+
+    private async Task<int> SetProductIdFromCloudResult<T>(string productName, ResultDTO<RequestModel<T>>? result, RequestPageDTO request, int progressPercentage)
+    {
+        if (result == null || result.Data == null)
+        {
+            var type = "";
+
+            if (typeof(T) == typeof(BrandSummaryDTO))
+                type = "Brand";
+            else if (typeof(T) == typeof(CategorySummaryDTO))
+                type = "Category";
+            else if (typeof(T) == typeof(SubCategorySummaryDTO))
+                type = "Sub Category";
+
+            await ReportProgress($"Error: Cannot find {type}[{request.LookFor}]", progressPercentage);
+            return -1;
+        }
+
+        // If more than one item found in the cloud
+        if (result.Data.Models.Count > 1)
+        {
+            var itemType = typeof(T).Name.Replace("SummaryDTO", "");
+            var msg = new StringBuilder($"Error: {result.Data.Models.Count} items found with the same '{request.LookFor}' for {productName}");
+            msg.AppendLine().Append("[");
+
+            foreach (var item in result.Data.Models)
+            {
+                var prop = typeof(T).GetProperty($"{itemType}Name");
+                if (prop != null)
+                {
+                    var itemName = prop.GetValue(item)?.ToString();
+                    if (!string.IsNullOrWhiteSpace(itemName))
+                        msg.Append(itemName).Append(",");
+                }
+            }
+
+            msg.Length--;
+            msg.Append("]");
+            Warnings.Add(msg.ToString() + Environment.NewLine);
+            await ReportProgress(msg.ToString(), progressPercentage);
+            return -1;
+        }
+
+        var getItem = result.Data.Models.FirstOrDefault(x =>
+            (x is BrandSummaryDTO brand && brand.BrandName!.ToLower() == request.LookFor) ||
+            (x is CategorySummaryDTO category && category.CategoryName!.ToLower() == request.LookFor) ||
+            (x is SubCategorySummaryDTO subcategory && subcategory.SubCategoryName!.ToLower() == request.LookFor));
+
+        if (getItem != null)
+        {
+            var idProp = typeof(T).GetProperty("Id");
+            var nameProp = typeof(T).GetProperty($"{typeof(T).Name.Replace("SummaryDTO", "")}Name")?.GetValue(getItem);
+
+            if (idProp != null)
+            {
+                var id = idProp.GetValue(getItem)?.ToString() ?? "-1";
+                await ReportProgress($"Set {typeof(T).Name.Replace("SummaryDTO", "")} Id for {productName}", progressPercentage);
+
+                return int.Parse(id);
+            }
+        }
+
+        return -1;
+    }
+
     private async Task VerifyImagesAsync()
     {
         var processedPercentage = 1;
         var lastTaskVerifiedPercent = statusVerificationPercentage;
 
-        foreach (var brand in brands)
+        foreach (var product in products)
         {
             processedPercentage++;
-            statusVerificationMessage = $"Verifying {brand.BrandName} image";
-            statusVerificationPercentage = lastTaskVerifiedPercent + ((processedPercentage * 50) / brands.Count);
+            statusVerificationMessage = $"Verifying {product.ProductName} image";
+            statusVerificationPercentage = lastTaskVerifiedPercent + ((processedPercentage * 34) / products.Count);
 
             var statusReport = new ImportStatusModel
                 {
-                    ModelName = brand.BrandName,
+                    ModelName = product.ProductName,
                     Status = statusVerificationMessage,
                     Type = "Image"
                 };
 
-            var getImage = Files.SingleOrDefault(x => x.Name == brand.StoredImageName);
+            var getImage = Files.SingleOrDefault(x => x.Name == product.StoredImageName);
 
             if (getImage != null)
             {
                 if (getImage.Size > maxFileSize)
                 {
-                    var msg = $"Error: Image for {brand.BrandName} exceed 1 MB | FileName: {brand.StoredImageName}";
+                    var msg = $"Error: Image for {product.ProductName} exceed 1 MB | FileName: {product.StoredImageName}";
                     statusReport.Status = msg;
                     statusReport.Type = "Error";
                     allowedToUpload = false;
@@ -353,7 +497,7 @@
             }
             else
             {
-                var msg = $"Error: Image not found for {brand.BrandName} | FileName: {brand.StoredImageName}";
+                var msg = $"Error: Image not found for {product.ProductName} | FileName: {product.StoredImageName}";
                 statusReport.Status = msg;
                 statusReport.Type = "Error";
                 allowedToUpload = false;
@@ -361,44 +505,46 @@
             }
 
             StatusReports.Add(statusReport);
-            await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandSatus").ConfigureAwait(false);
+            await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importProductSatus").ConfigureAwait(false);
             StateHasChanged();
         }
 
         statusVerificationMessage = "";
     }
 
-    private async Task UploadBrand(CancellationToken cancellationToken)
+    private async Task UploadProducts(CancellationToken cancellationToken)
     {
         var processedPercentage = 0;
 
         await Task.Run(async () =>
         {
-            await Task.WhenAll(brands.Select(async item =>
+            await Task.WhenAll(products.Select(async item =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var getImage = Files.SingleOrDefault(x => x.Name == item.StoredImageName);
 
-                var result = await BrandEndpoint.AddBrandAsync(item, getImage?.OpenReadStream(maxFileSize), item.BrandName).ConfigureAwait(false);
+                var result = await ProductEndpoint.AddProductAsync(item, getImage?.OpenReadStream(maxFileSize), item.ProductName).ConfigureAwait(false);
 
                 string statusUploadMessage;
                 if (result!.IsSuccessStatusCode)
                 {
                     statusUploadMessage = getImage != null ?
-                        $"Success: Successfully uploaded {item.BrandName}" :
-                        $"Warning: {item.BrandName} uploaded without an image";
+                        $"Success: Successfully uploaded {item.ProductName}" :
+                        $"Warning: {item.ProductName} uploaded without an image";
                 }
                 else
                 {
-                    statusUploadMessage = $"Error: Unable to upload reason:{Environment.NewLine}{result.ReasonPhrase}";
+                    statusUploadMessage = result.ReasonPhrase!.Contains("Exist")? 
+                    $"Warning: {result.ReasonPhrase}" :
+                    $"Error: Unable to upload reason:{Environment.NewLine}{result.ReasonPhrase}";
                 }
 
                 StatusReports.Add(new ImportStatusModel { Status = statusUploadMessage });
-                await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandSatus");
+                await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importProductSatus");
 
                 Interlocked.Increment(ref processedPercentage);
-                statusUploadPercentage = (processedPercentage * 100) / brands.Count;
+                statusUploadPercentage = (processedPercentage * 100) / products.Count;
 
                 StateHasChanged();
             }));
@@ -416,18 +562,18 @@
         };
 
         statusVerificationMessage = task;
-        statusVerificationPercentage = percent / 2;
+        statusVerificationPercentage = percent;
 
         StatusReports.Add(statusReport);
         StateHasChanged();
-        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importBrandSatus");
+        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importProductSatus");
     }
 
     private async Task Reset()
     {
         excelFileStream = new();
         Files = new();
-        brands = new();
+        products = new();
         Warnings = new();
         statusVerificationPercentage = 0;
         statusUploadPercentage = 0;
@@ -435,7 +581,6 @@
         openWarningPanel = false;
         allowedToCloseModal = false;
         openWarningPanel = false;
-        await JSRuntime.InvokeVoidAsync("ImportCarouselReset", "importBrandSlide");
+        await JSRuntime.InvokeVoidAsync("ImportCarouselReset", "importProductSlide");
     }
-
 }

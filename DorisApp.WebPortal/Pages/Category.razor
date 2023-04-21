@@ -334,6 +334,12 @@
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<CategoryModel>(result);
 
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully added {modalModel.CategoryName}");
+            }
+
         }
         catch (Exception ex)
         {
@@ -357,6 +363,12 @@
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<List<CategorySummaryDTO>>(result);
 
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully update {modalModel.CategoryName}");
+            }
+
         }
         catch (Exception ex)
         {
@@ -379,6 +391,12 @@
             var result = await CategoryEndpoint.DeleteCategory(category);
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<CategorySummaryDTO>(result);
+
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("WarningToast",
+               $"Successfully remove {modalModel.CategoryName}");
+            }
 
         }
         catch (Exception ex)

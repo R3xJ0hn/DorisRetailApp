@@ -323,7 +323,8 @@
         {
             var result = new ResultDTO<ProductModel>
                 {
-                    ErrorCode = 1
+                    ErrorCode = 1,
+                    ReasonPhrase = "Invalid fields."
                 };
 
             if (HttpErrorHandler != null)

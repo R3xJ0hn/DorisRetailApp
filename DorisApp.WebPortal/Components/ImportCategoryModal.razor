@@ -13,7 +13,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5 text-primary" id="staticBackdropLabel">Import Excel File</h1>
-                <button type="button" class="btn-close" @onclick="Reset"
+                <button type="button" class="btn-close" @onclick="Reset" disabled="@(!isDone)"
                 data-bs-dismiss="modal" aria-label="Close" ></button>
             </div>
             <div class="modal-body">
@@ -183,7 +183,8 @@
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         await Reset();
-
+        taskVerified = "Loading File...";
+        StateHasChanged();
         foreach (var file in e.GetMultipleFiles(1))
         {
             await file.OpenReadStream().CopyToAsync(fileStream);
@@ -201,6 +202,8 @@
 
             if (fileStream != null)
             {
+                taskVerified = "Preparing...";
+                StateHasChanged();
                 categories = await ExcelConnector.RetrieveCategoriesAsync(fileStream, WorkSheetStatus);
                 subCategories = await ExcelConnector.RetrieveSubCategoriesAsync(fileStream, WorkSheetStatus);
                 totalNeedToUpload = categories.Count + subCategories.Count + 1;
@@ -224,9 +227,10 @@
             foreach (var item in categories)
             {
                 var result = await CategoryEndpoint.AddCategoryAsync(item);
-                taskUploadedPercent = (int)((double)currentUploadedCount / totalNeedToUpload * 100);
                 taskUploaded = item.CategoryName;
+                taskUploadedPercent = (currentUploadedCount * 100) / totalNeedToUpload;
                 currentUploadedCount++;
+
 
                 if (!result!.IsSuccessStatusCode)
                 {
@@ -254,11 +258,11 @@
     {
         // Pre request to get total items
         var reqDTO = new RequestPageDTO
-            {
-                PageNo = 1,
-                ItemPerPage = 1000,
-                OrderBy = 1
-            };
+        {
+            PageNo = 1,
+            ItemPerPage = 1000,
+            OrderBy = 1
+        };
 
         int lastId = -1;
         int dBId = -1;
@@ -268,8 +272,8 @@
             foreach (var item in subCategories)
             {
                 var getFromExcel = categories[item.CategoryId];
-                taskUploadedPercent = (int)((double)currentUploadedCount / totalNeedToUpload * 100);
                 taskUploaded = item.SubCategoryName;
+                taskUploadedPercent = (currentUploadedCount * 100) / totalNeedToUpload;
                 currentUploadedCount++;
 
                 //Get the database id for category

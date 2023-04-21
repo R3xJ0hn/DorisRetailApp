@@ -36,11 +36,15 @@
                         merchandise and
                         attract more customers.
                     </p>
+
                     <div class="col-4">
-
-                        @*IMPORT BUTTON HERE*@
-
+                        <button type="button" class="btn btn-success import-btn"
+                                data-bs-toggle="modal" data-bs-target="#ImportProductModal">
+                            <i class="fa-regular fa-file-spreadsheet"></i>
+                            Import File
+                        </button>
                     </div>
+
                 </div>
 
                 <div class="row">
@@ -229,6 +233,8 @@
     </div>
 
 </div>
+
+<ImportProductModal/>
 
 <HttpErrorPopUp @ref="HttpErrorHandler" />
 

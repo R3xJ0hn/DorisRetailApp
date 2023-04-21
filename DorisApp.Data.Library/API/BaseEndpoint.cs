@@ -51,7 +51,12 @@ namespace DorisApp.Data.Library.API
         {
             if (stream != null && stream.Length > 0)
             {
-                stream.Position = 0; 
+
+                if (stream.Position != 0)
+                {
+                    stream.Position = 0;
+                }
+
                 var content = new StreamContent(stream);
 
                 var newcontent = new MultipartFormDataContent

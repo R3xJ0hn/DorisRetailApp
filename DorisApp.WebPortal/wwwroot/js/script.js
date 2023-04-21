@@ -141,8 +141,10 @@ function setUploadImageToDeactive() {
 function setUploadImageToActive(url) {
     const img = document.querySelector(".upload-image");
     const wrapper = document.querySelector(".upload-image-wrapper");
-    wrapper.classList.add("active");
-    img.src = url;
+    if (wrapper != null) {
+        wrapper.classList.add("active");
+        img.src = url;
+    }
 }
 
 function clearUploadValue() {

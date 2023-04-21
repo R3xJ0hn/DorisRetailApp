@@ -472,7 +472,8 @@
     {
         var result = new ResultDTO<BrandSummaryDTO>
         {
-            ErrorCode = 1
+            ErrorCode = 1,
+            ReasonPhrase = exMessage
         };
 
         if (HttpErrorHandler != null)

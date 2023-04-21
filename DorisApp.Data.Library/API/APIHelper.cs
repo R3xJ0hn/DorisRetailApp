@@ -24,7 +24,7 @@ namespace DorisApp.Data.Library.API
             _apiClient = new HttpClient
             {
                 BaseAddress = new Uri(_config[key: "URL:apiUrl"]),
-                Timeout = TimeSpan.FromSeconds(int.Parse(_config[key: "AppSettings:timeOutSec"] ?? "5"))
+                Timeout = TimeSpan.FromSeconds(int.Parse(_config[key: "AppSettings:timeOutSec"] ?? "15"))
             };
         }
 

@@ -351,8 +351,7 @@
     private async Task AddSubCategory()
     {
         try
-        {
-
+        { 
             var subCategory = new SubCategoryModel
             {
                 SubCategoryName = modalModel.SubCategoryName,
@@ -363,6 +362,12 @@
 
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<SubCategoryModel>(result);
+
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully added {modalModel.SubCategoryName}");
+            }
         }
         catch (Exception ex)
         {
@@ -390,6 +395,12 @@
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<List<SubCategorySummaryDTO>>(result);
 
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("SuccessToast",
+               $"Successfully update {modalModel.SubCategoryName}");
+            }
+
         }
         catch (Exception ex)
         {
@@ -415,11 +426,16 @@
 
             if (HttpErrorHandler != null)
                 await HttpErrorHandler.HandleHttpErrors<SubCategorySummaryDTO>(result);
+
+            if (result != null && result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("WarningToast",
+               $"Successfully remove {modalModel.SubCategoryName}");
+            }
         }
         catch (Exception ex)
         {
             await CatchError(ex.Message);
-
         }
 
         modalComponentRef?.Close();
@@ -454,7 +470,8 @@
     {
         var result = new ResultDTO<SubCategorySummaryDTO>
             {
-                ErrorCode = 1
+                ErrorCode = 1,
+                ReasonPhrase = "Invalid fields."
             };
 
         if (HttpErrorHandler != null)
