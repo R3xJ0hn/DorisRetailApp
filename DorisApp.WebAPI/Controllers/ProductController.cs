@@ -133,7 +133,7 @@ namespace DorisApp.WebAPI.Controllers
                     new ResultDTO<ProductSummaryDTO>
                     {
                         ErrorCode = 5,
-                        ReasonPhrase = "Unable to update product.",
+                        ReasonPhrase = "Unable to get product.",
                         IsSuccessStatusCode = false
                     }
                 );

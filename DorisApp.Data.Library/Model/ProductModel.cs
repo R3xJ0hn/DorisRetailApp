@@ -8,7 +8,6 @@ namespace DorisApp.Data.Library.Model
     {
         public int Id { get; set; }
 
-  
         public int BrandId { get; set; }
 
         [Required]

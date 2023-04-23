@@ -25,7 +25,7 @@ namespace DorisApp.Data.Library.API
                 ItemPerPage = 1
             };
 
-            var sent = await GetProductSummary(request);
+            var sent = await GetProductSummaryAsync(request);
 
             if (sent?.Data != null)
             {
@@ -35,7 +35,7 @@ namespace DorisApp.Data.Library.API
                     ItemPerPage = sent.Data.TotalItems
                 };
 
-                var getNewRequest = await GetProductSummary(newRequest);
+                var getNewRequest = await GetProductSummaryAsync(newRequest);
                 countedResult = getNewRequest?.Data.Models.Count ?? 0;
             }
 
@@ -106,7 +106,7 @@ namespace DorisApp.Data.Library.API
             }
         }
 
-        public async Task<ResultDTO<RequestModel<ProductSummaryDTO>>?> GetProductSummary(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<ProductSummaryDTO>>?> GetProductSummaryAsync(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-product/summary");
 

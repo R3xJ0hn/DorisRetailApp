@@ -405,7 +405,7 @@
         productRequestDTO.OrderBy = (int)orderBy;
         isLoading = true;
 
-        productSummary = (await ProductEndpoint.GetProductSummary(productRequestDTO))?.Data;
+        productSummary = (await ProductEndpoint.GetProductSummaryAsync(productRequestDTO))?.Data;
 
         if (productSummary != null)
         {

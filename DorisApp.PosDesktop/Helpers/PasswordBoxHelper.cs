@@ -4,6 +4,7 @@ using System.Windows;
 
 namespace DorisApp.PosDesktop.Helpers
 {
+
     public static class PasswordBoxHelper
     {
         public static readonly DependencyProperty BoundPasswordProperty =

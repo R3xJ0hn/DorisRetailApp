@@ -67,6 +67,7 @@
     <Folder Include="dbo\StoredProcedures\Product" />
     <Folder Include="dbo\StoredProcedures\ActivityLog" />
     <Folder Include="dbo\StoredProcedures\Inventory" />
+    <Folder Include="dbo\StoredProcedures\Sales" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Roles.sql" />
@@ -119,6 +120,7 @@
     <Build Include="dbo\StoredProcedures\Inventory\spInventoryGetById.sql" />
     <Build Include="dbo\StoredProcedures\Inventory\spInventoryUpdate.sql" />
     <Build Include="dbo\StoredProcedures\Inventory\spInventoryToggle.sql" />
+    <Build Include="dbo\StoredProcedures\Sales\spSalesGetAvailableProducts.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

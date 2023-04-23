@@ -3,9 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:DorisApp.PosDesktop.Views"
+             xmlns:local="clr-namespace:DorisApp.PosDesktop.Views"   
+             xmlns:helper="clr-namespace:DorisApp.PosDesktop.Helpers" 
              mc:Ignorable="d" 
-                          d:DesignHeight="720" d:DesignWidth="1194" 
+             d:DesignHeight="720" d:DesignWidth="1194" 
              Background="{DynamicResource PrimaryBackground}" d:FontFamily="Poppins">
 
     <Grid>
@@ -23,16 +24,12 @@
                 <Border CornerRadius="20" 
                         Background="#F24A6E" 
                         Width="50" 
-                        Height="350" 
-                        Margin="5,0,5,0">
-
-                </Border>
+                        Height="350"/>
             </StackPanel>
+
         </Grid>
         <!--end:Menu-->
 
-
-        <!--start:Product Content-->
         <Grid Grid.Column="1">
 
             <Grid.RowDefinitions>
@@ -46,22 +43,47 @@
 
                 <TextBlock Text="Choose Category"
                            FontFamily="Poppins"
-                           FontSize="24"
+                           FontSize="18"
                            FontWeight="DemiBold"
                            HorizontalAlignment="Left"
                            VerticalAlignment="Center"
                            Margin="10,0,0,0"/>
-
             </Border>
 
+            <Control Style="{StaticResource BusyAnimationStyle}" 
+                     Grid.Row="1" 
+                     Panel.ZIndex="999" 
+                     Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
+            <!--start:Catalog-->
+            <ScrollViewer Grid.Row="1" 
+              HorizontalAlignment="Stretch" 
+              VerticalAlignment="Stretch" 
+              ScrollViewer.CanContentScroll="False"
+              PanningMode="Both"
+              Margin="0,20,10,0">
 
+                <ItemsControl x:Name="ProductList" ItemsSource="{Binding CatalogItems}" HorizontalAlignment="Center">
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <local:ProductDisplayCardView/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+            </ScrollViewer>
+            <!--end:Catalog-->
 
         </Grid>
         <!--start:Product Content-->
 
-
-        <!--start:Invoice-->
         <Grid Grid.Column="2" Margin="0,0,10,0">
 
             <Grid.RowDefinitions>
@@ -70,14 +92,13 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-
             <!--start:Top-->
             <Border Grid.Row="0"
-                            Width="320"
-                            Height="90"
-                            CornerRadius="10,10,0,0" 
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Top" Margin="0,10,0,0">
+                    Width="320"
+                    Height="90"
+                    CornerRadius="10,10,0,0" 
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top" Margin="0,10,0,0">
 
                 <Border.Background>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -132,32 +153,21 @@
 
                         </StackPanel>
 
-
-
                     </Grid>
 
 
                     <TextBlock Grid.Row="1"
                                Text="Transaction #: 132435647876" 
                                FontWeight="SemiBold" 
-                               Margin="5,0,0,0" 
+                               Margin="10,0,0,0" 
                                FontSize="18" 
-                               FontFamily="poppins"
+                               FontFamily="Poppins"
                                Foreground="{DynamicResource PrimaryInverseTextColor}"
                                VerticalAlignment="Center"/>
-
-
-
                 </Grid>
-
 
             </Border>
             <!--end:Top-->
-
-
-
-
-
 
             <!--start:Bottom-->
             <Border Grid.Row="2"
@@ -190,22 +200,18 @@
                     </StackPanel>
 
                     <Button Grid.Row="1" 
-                                    Content="Pay Now" 
-                                    Height="45"
-                                    Grid.ColumnSpan="2" 
-                                    Background="#F24A6E"
-                                    VerticalAlignment="Bottom" 
-                                    Margin="10,0,10,20"/>
+                            Content="Pay Now" 
+                            Height="45"
+                            Grid.ColumnSpan="2" 
+                            Background="#F24A6E"
+                            VerticalAlignment="Bottom" 
+                            Margin="10,0,10,20"/>
                 </Grid>
             </Border>
             <!--end:Bottom-->
 
-
-
         </Grid>
         <!--end:Invoice-->
-
-
 
     </Grid>
 </UserControl>

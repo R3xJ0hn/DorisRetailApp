@@ -9,10 +9,10 @@ namespace DorisApp.PosDesktop.ViewModels
     public class LoginViewModel : Screen
     {
         private string _username = "admin@gmail.com";
-        private string _password = "Rex123.";
+        private string _password = "1234";
         private string? _errorMessage = string.Empty;
-        private IAPIHelper _apiHelper;
-        private IEventAggregator _events;
+        private readonly IAPIHelper _apiHelper;
+        private readonly IEventAggregator _events;
 
         public LoginViewModel(IAPIHelper apiHelper, IEventAggregator events)
         {

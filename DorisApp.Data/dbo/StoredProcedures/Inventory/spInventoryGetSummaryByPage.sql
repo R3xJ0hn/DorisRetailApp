@@ -78,6 +78,9 @@ BEGIN
             CASE WHEN @OrderBy = 7 THEN i.PurchasedDate END DESC,
             CASE WHEN @OrderBy = 8 THEN i.ExpiryDate END ASC,
             CASE WHEN @OrderBy = 9 THEN i.ExpiryDate END DESC
+
+        OFFSET @Offset ROWS
+        FETCH NEXT @ItemPerPage ROWS ONLY
     END
 
 END

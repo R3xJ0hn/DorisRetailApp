@@ -28,7 +28,7 @@ namespace DorisApp.PosDesktop
         protected override void Configure()
         {
             _container.Instance(_container)
-                .PerRequest<ProductEndpoint>();
+                .PerRequest<SalesEndPoint>();
 
             _container
                 .Singleton<IWindowManager, WindowManager>()
