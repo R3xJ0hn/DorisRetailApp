@@ -11,7 +11,6 @@ namespace DorisApp.Data.Library.Model
         [Required]
         public int ProductId { get; set; }
 
-
         [Required]
         public double PurchasePrice { get; set; }
 
@@ -40,9 +39,7 @@ namespace DorisApp.Data.Library.Model
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-
         private string location = string.Empty;
-
 
         [Required]
         [DisplayName("Location")]
@@ -52,5 +49,13 @@ namespace DorisApp.Data.Library.Model
             set { location = value.Trim(); }
         }
 
+        private string _sku = string.Empty;
+
+        [Required]
+        public string Sku
+        {
+            get => _sku.Trim();
+            set { _sku = value; }
+        }
     }
 }

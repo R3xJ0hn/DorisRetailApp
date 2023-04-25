@@ -1,0 +1,356 @@
+﻿@using DorisApp.WebPortal.Model;
+@using System.Collections.ObjectModel;
+@using System.Text;
+@inject IJSRuntime JSRuntime
+@inject ExcelConnector ExcelConnector
+@inject ProductEndpoint ProductEndpoint
+@inject InventoryEndpoint InventoryEndpoint
+
+<div class="carousel-item">
+    <div class="row ">
+
+        <div class="col-md ">
+
+            <h5>
+                To import an <span class="text-success">Excel file</span>, please follow
+                these steps:
+            </h5>
+
+            <ol>
+
+                <li>
+                    Click the <b>'Choose File'</b> button below and select your Excel file.
+                </li>
+
+                <li>
+                    Check the file if your first row contains the following column names:
+
+                    <div class="row my-0">
+
+                        <ul class="col">
+                            <li>Product Name</li>
+                            <li>SKU</li>
+                            <li>Purchase Price</li>
+                            <li>Retail Price</li>
+                            <li>Purchase Date</li>
+                        </ul>
+
+                        <ul class="col">
+                            <li>Size</li>
+                            <li>Expiry Date</li>
+                            <li>Location</li>
+                            <li>Quantity</li>
+                            <li>Date Created</li>
+                        </ul>
+
+                    </div>
+
+                </li>
+
+                <li>
+                    Click the <b>'Proceed'</b> button to proceed with the import
+                    process.
+                </li>
+
+            </ol>
+
+        </div>
+
+
+        <div class="col-sm">
+
+            <div class="mb-3">
+                <img src="/img/Category-Spreadsheet.png" alt="Spreadsheet">
+            </div>
+
+            <div class="mb-3">
+                <label for="formFile" class="form-label">Upload Files</label>
+
+                <InputFile OnChange="LoadFiles" class="form-control"
+                           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+
+                <div class="form-validation @(isValidatedField ? "d-none" : "")">
+                    Please select an excel file.
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+
+        <button type="button" class="btn btn-secondary" @onclick="OnBackPrev"
+                data-bs-target="#InventorySlide" data-bs-slide="prev">
+            Previous
+        </button>
+
+        <button type="button" class="btn btn-primary proceed-btn"
+                @onclick="OnProcessItemsAsync">
+            Proceed
+        </button>
+
+    </div>
+</div>
+
+<div class="carousel-item import-status">
+    <div class="modal-body">
+
+        <div class="verify-item">
+            <p>Verifying: @statusVerificationMessage</p>
+            <div class="progress">
+
+                <div class="progress-bar @(statusVerificationPercentage != 100? "progress-bar-striped progress-bar-animated" : "")"
+                     role="progressbar"
+                     style="width: @statusVerificationPercentage%;"
+                     aria-valuenow="@statusVerificationPercentage"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    @statusVerificationPercentage%
+                </div>
+
+            </div>
+        </div>
+
+        <div class="upload-item">
+            <p>Uploading: @statusUploadMessage</p>
+            <div class="progress">
+
+                <div class="progress-bar @(statusUploadPercentage != 100? "progress-bar-striped progress-bar-animated" : "")"
+                     role="progressbar"
+                     style="width: @statusUploadPercentage%;"
+                     aria-valuenow="@statusUploadPercentage"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    @statusUploadPercentage%
+                </div>
+
+            </div>
+        </div>
+
+        <div class="status-list">
+            Status: @statewan
+            @if (Warnings.Count > 0)
+            {
+                <span class="badge rounded-pill bg-danger">@Warnings.Count</span>
+            }
+            <ul id="importInventorySatus">
+
+                @foreach (var item in StatusReports)
+                {
+                    <li class="@(item.Status.Contains("Error")? "text-danger" : "" )
+                                                        @(item.Status.Contains("Warning")? "text-warning" : "" )
+                                                        @(item.Status.Contains("Success")? "text-success" : "" ) ">
+                        @item.Status
+                    </li>
+                }
+
+            </ul>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-target="#importSlide"
+                data-bs-slide-to="0" data-bs-dismiss="modal" disabled="@(!AllowedToCloseModal)"
+                @onclick="OnBackPrev">
+            Done
+        </button>
+    </div>
+</div>
+
+
+
+@code {
+
+    private MemoryStream excelFileStream = new();
+    private List<InventoryModel> inventories = new();
+
+    private ObservableCollection<ImportStatusModel> StatusReports = new();
+    private ObservableCollection<string> Warnings = new();
+    private CancellationTokenSource ctsUpload = new();
+    private bool isValidatedField = true;
+
+    private string? statusVerificationMessage;
+    private int statusVerificationPercentage;
+    private string? statusUploadMessage;
+    private int statusUploadPercentage;
+
+    [Parameter]
+    public bool AllowedToCloseModal { get; set; }
+
+    string statewan = "";
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        Reset();
+        statusVerificationMessage = "Loading File...";
+        StateHasChanged();
+        foreach (var file in e.GetMultipleFiles(1))
+        {
+            await file.OpenReadStream().CopyToAsync(excelFileStream);
+        }
+    }
+
+    private async Task OnProcessItemsAsync()
+    {
+        if (excelFileStream.Length > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("InventoryCarouselNext");
+            isValidatedField = true;
+            //Wait the carousel
+            await Task.Delay(1000);
+
+            statusVerificationMessage = "Processing worksheet...";
+            StateHasChanged();
+
+            AllowedToCloseModal = false;
+            inventories = await ExcelConnector.RetrieveInventoryAsync(excelFileStream, ReportProgress);
+            AllowedToCloseModal = true;
+            statusVerificationMessage = "";
+            StateHasChanged();
+
+            //Set Product Id From Cloud
+            var processedPercentage = 0;
+            var lastProgrss = statusVerificationPercentage;
+            foreach (var item in inventories)
+            {
+                processedPercentage++;
+                statusVerificationPercentage = ((processedPercentage * 50) / inventories.Count) + lastProgrss;
+                item.ProductId = await GetProductId(item);
+            }
+
+            statusVerificationMessage = "Done";
+            StateHasChanged();
+
+            await OnProceedUpload();
+
+            AllowedToCloseModal = true;
+        }
+        else
+        {
+            isValidatedField = false;
+        }
+    }
+
+    private async Task OnProceedUpload()
+    {
+        try
+        {
+            await UploadInventory(ctsUpload.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusReports.Add(new ImportStatusModel
+                { Status = "Uploading brand was cancelled." });
+        }
+    }
+
+    private void OnCancelToken()
+    {
+        ctsUpload.Cancel();
+    }
+
+    private async Task OnBackPrev()
+    {
+        Reset();
+        await JSRuntime.InvokeVoidAsync("ImportCarouselReset", "InventorySlide");
+    }
+
+    private async Task<int> GetProductId(InventoryModel inventoryItem)
+    {
+        var req = new RequestPageDTO
+            {
+                PageNo = 1,
+                ItemPerPage = 1000,
+                LookFor = inventoryItem.Sku
+            };
+
+        var getProduct = await ProductEndpoint.GetProductSummaryAsync(req);
+
+        // If more than one item found in the cloud
+        if (getProduct!.Data.Models.Count > 1)
+        {
+            var msg = new StringBuilder($"Error: {getProduct.Data.Models.Count} items found with the same SKU '{req.LookFor}'");
+            msg.AppendLine().Append("[");
+
+            foreach (var product in getProduct.Data.Models)
+            {
+                msg.Append(product.ProductName).Append(",");
+            }
+
+            msg.Length--;
+            msg.Append("]");
+            Warnings.Add(msg.ToString() + Environment.NewLine);
+            await ReportProgress(msg.ToString(), statusVerificationPercentage);
+            return -1;
+        }
+
+        var getItem = getProduct.Data.Models.FirstOrDefault(x => x.Sku.Trim() == inventoryItem.Sku.Trim());
+
+        if (getItem != null)
+        {
+            await ReportProgress($"Set product Id for {getItem.ProductName}", statusVerificationPercentage);
+            return getItem.Id;
+        }
+
+        return -1;
+    }
+
+    private async Task UploadInventory(CancellationToken cancellationToken)
+    {
+        var processedPercentage = 0;
+
+        await Task.Run(async () =>
+        {
+            await Task.WhenAll(inventories.Select(async item =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var result = await InventoryEndpoint.AddInventoryAsync(item);
+                string statusUploadMessage;
+
+                if (result!.IsSuccessStatusCode)
+                {
+                    statusUploadMessage = $"Success: Successfully uploaded new inventory #{item.Sku}";
+                }
+                else
+                {
+                    statusUploadMessage = $"Error: Unable to upload reason:{Environment.NewLine}{result.ReasonPhrase}";
+                }
+
+                StatusReports.Add(new ImportStatusModel { Status = statusUploadMessage });
+                Interlocked.Increment(ref processedPercentage);
+                statusUploadPercentage = (processedPercentage * 100) / inventories.Count;
+                await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importInventorySatus");
+
+                StateHasChanged();
+            }));
+        });
+
+        AllowedToCloseModal = true;
+    }
+
+    private async Task ReportProgress(string task, int percent)
+    {
+        var statusReport = new ImportStatusModel
+            {
+                Status = task,
+                Type = "Item"
+            };
+
+        statusVerificationMessage = task;
+        statusVerificationPercentage = percent;
+
+        StatusReports.Add(statusReport);
+        StateHasChanged();
+        await JSRuntime.InvokeVoidAsync("scrollToListBottom", "#importInventorySatus");
+    }
+
+    private void Reset()
+    {
+        excelFileStream = new();
+        inventories = new();
+        Warnings = new();
+        statusVerificationPercentage = 0;
+        statusUploadPercentage = 0;
+        isValidatedField = true;
+    }
+}

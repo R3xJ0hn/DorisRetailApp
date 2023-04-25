@@ -267,6 +267,10 @@ function InventoryCarouselNext() {
     carousel.dispose()
 }
 
+function InventoryCarouselSlideGoTo(index) {
+    $('#InventorySlide').carousel(index);
+}
+
 function ShowPasswordPopup(modal) {
 
     if (modal !== null) {

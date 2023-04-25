@@ -59,17 +59,12 @@ namespace DorisApp.WebAPI.DataAccess
                         };
                     }
 
-                    //If it is not deleted
-                    if (brandModel != null && brandModel.BrandName != "*")
+                    return new ResultDTO<BrandModel>
                     {
-                        return new ResultDTO<BrandModel>
-                        {
-                            ErrorCode = 3,
-                            IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Brand not saved: {brand.BrandName} Exist!"
-                        };
-                    }
-      
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"Brand not saved: {brand.BrandName} Exist!"
+                    };
                 }
 
                 var errorMsg = await ValidateFields(identity, brand);

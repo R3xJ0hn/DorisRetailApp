@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE [dbo].[spInventoryUpdate]
 	@Id					INT, 
     @ProductID			INT, 
-    @PurchasePrice		MONEY, 
+    @Sku				NVARCHAR(255),
+	@PurchasePrice		MONEY, 
     @RetailPrice		MONEY, 
     @Quantity			INT, 
 	@StockRemain		INT,

@@ -9,14 +9,14 @@
     bool notif = bool.Parse(Config["NotifDialog:StockEntry"] ?? "true");
 }
 
-<div class="inventory-modal modal fade" id="inventoryModal" data-bs-backdrop="static" data-bs-keyboard="false"
+<div class="inventory-modal modal fade import-modal" id="inventoryModal" data-bs-backdrop="static" data-bs-keyboard="false"
      tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5 text-primary" id="staticBackdropLabel">Stock Entry</h1>
-                <button type="button" class="btn btn-close" @onclick="OnCloseModal" data-bs-slide-to="0"
-                        data-bs-target="#InventorySlide" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn btn-close" @onclick="OnCloseModal" disabled="@(!allowedToCloseModal)"
+                data-bs-slide-to="0" data-bs-target="#InventorySlide" data-bs-dismiss="modal" aria-label="Close"></button>
 
             </div>
             <div class="modal-body">
@@ -27,20 +27,25 @@
 
                         <div class="carousel-item active">
 
-                            <div class="mb-3">
-                                <label for="location" class="form-label">
-                                    Location
-                                    <small>
-                                        (Shelf Name)
-                                    </small>
-                                </label>
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <div class="mb-3">
+                                        <label for="productName" class="form-label">Location <small>(Shelf Name)</small></label>
+                                        <input type="text" id="location"
+                                               class="form-control @(!locationValidated ? "invalid-border-color" : "")"
+                                               placeholder="e.g. 'A01', 'B10'..." @bind="inventoryModel.Location">
 
-                                <input type="text" id="location"
-                                       class="form-control @(!locationValidated ? "invalid-border-color" : "")"
-                                       placeholder="e.g. 'A01', 'B10'..." @bind="inventoryModel.Location">
+                                        <div class="form-validation @(locationValidated ? "d-none" : "")">
+                                            Please provide a shelf location.
+                                        </div>
 
-                                <div class="form-validation @(locationValidated ? "d-none" : "")">
-                                    Please provide a shelf location.
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex justify-content-end align-items-center">
+                                    <button type="button" class="btn btn-success import-btn" @onclick="OnClickImport">
+                                        <i class="fa-regular fa-file-spreadsheet"></i>
+                                        Import File
+                                    </button>
                                 </div>
                             </div>
 
@@ -252,9 +257,9 @@
 
                         </div>
 
-                        @if (selectedProduct != null)
+                 
+                        @if (!isImportMode && selectedProduct != null)
                         {
-
                             <div class="carousel-item inventory-prview">
 
                                 <div class="row">
@@ -343,11 +348,10 @@
                                     </button>
                                 </div>
 
-
                             </div>
-
                         }
 
+                        <ImportInventoryCarouselItem AllowedToCloseModal="allowedToCloseModal" />
 
                     </div>
                 </div>
@@ -373,6 +377,7 @@
     private int totalPages = 1;
     private int currentPage = 1;
     private bool isLoading = true;
+    private bool isImportMode = true;
 
     private OrderProductSummaryBy selectedSortValue;
     private string? UserName;
@@ -384,6 +389,7 @@
     private bool purchaseDateValidated = true;
     private bool expiryDateValidated = true;
     private bool quantityValidated = true;
+    private bool allowedToCloseModal = true;
 
     [Parameter]
     public EventCallback OnSave { get; set; }
@@ -434,6 +440,13 @@
     private void OnClearSelectedProduct()
     {
         selectedProduct = null;
+    }
+
+    private async Task OnClickImport()
+    {
+        isImportMode = true;
+        carouselItem = 3;
+        await JSRuntime.InvokeVoidAsync("InventoryCarouselSlideGoTo", 2);
     }
 
     private async Task OnClickNext()
@@ -514,9 +527,10 @@
         await RequestItems(1, selectedSortValue);
     }
 
-    private void OnCloseModal()
+    private async Task OnCloseModal()
     {
-        ResetValue();
+        await JSRuntime.InvokeVoidAsync("InventoryCarouselSlideGoTo", 0);
+        Reset();
     }
 
     private async Task OnSaveClicked()
@@ -526,6 +540,7 @@
         try
         {
             inventoryModel.ProductId = selectedProduct?.Id ?? 0;
+            inventoryModel.Sku = selectedProduct?.Sku!;
             var result = await InventoryEndpoint.AddInventoryAsync(inventoryModel);
 
             if (result?.ErrorCode == 0)
@@ -541,8 +556,8 @@
             await CatchError(ex.Message);
         }
 
-        ResetValue();
-        await JSRuntime.InvokeVoidAsync("InventoryCarouselNext");
+        Reset();
+        await JSRuntime.InvokeVoidAsync("InventoryCarouselSlideGoTo",0);
         await JSRuntime.InvokeVoidAsync("modalProcessDone", "#inventoryModal");
         await OnSave.InvokeAsync(null);
     }
@@ -558,11 +573,12 @@
             await HttpErrorHandler.HandleHttpErrors<InventorySummaryDTO>(result, exMessage);
     }
 
-    private void ResetValue()
+    private void Reset()
     {
         selectedProduct = null;
         inventoryModel = new();
         carouselItem = 1;
+        isImportMode = false;
     }
 
     private string? VerifySearchBar(string? str) =>

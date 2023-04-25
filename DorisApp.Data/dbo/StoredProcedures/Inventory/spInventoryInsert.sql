@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE [dbo].[spInventoryInsert]
 	@Id					INT, 
     @ProductID			INT, 
-    @PurchasePrice		MONEY, 
+    @Sku				NVARCHAR(255),
+	@PurchasePrice		MONEY, 
     @RetailPrice		MONEY, 
     @Quantity			INT, 
 	@StockRemain		INT,
@@ -23,6 +24,7 @@ BEGIN
 
 	INSERT INTO dbo.Inventory(
 		[ProductID],
+		[SKU],
 		[PurchasePrice],
 		[RetailPrice],
 		[Quantity],
@@ -39,6 +41,7 @@ BEGIN
 		
 	VALUES(
 		@ProductID,
+		@Sku,
 		@PurchasePrice,
 		@RetailPrice,
 		@Quantity,		

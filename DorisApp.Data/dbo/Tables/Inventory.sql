@@ -2,6 +2,7 @@
 (
 	[Id]                INT NOT NULL PRIMARY KEY IDENTITY, 
     [ProductId]         INT NOT NULL, 
+    [Sku]               NCHAR(256) NOT NULL, 
     [PurchasePrice]     MONEY NOT NULL, 
     [RetailPrice]       MONEY NOT NULL, 
     [Quantity]          INT NOT NULL, 

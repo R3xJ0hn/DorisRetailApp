@@ -66,16 +66,12 @@ namespace DorisApp.WebAPI.DataAccess
                         };
                     }
 
-                    //If it is not deleted
-                    if (subCategoryModel != null && subCategoryModel.SubCategoryName != "*")
+                    return new ResultDTO<SubCategoryModel>
                     {
-                        return new ResultDTO<SubCategoryModel>
-                        {
-                            ErrorCode = 3,
-                            IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Sub Category not saved: {subCategory.SubCategoryName} Exist!"
-                        };
-                    }
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"Sub Category not saved: {subCategory.SubCategoryName} Exist!"
+                    };
                 }
 
                 var errorMsg = await ValidateFields(identity, subCategory);

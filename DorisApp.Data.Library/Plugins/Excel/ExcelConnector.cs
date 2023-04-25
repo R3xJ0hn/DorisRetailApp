@@ -4,19 +4,138 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace DorisApp.Data.Library.Plugins.Excel
 {
     public class ExcelConnector
     {
-
         public ExcelConnector()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         }
 
+        public async Task<List<InventoryModel>> RetrieveInventoryAsync(Stream stream, Func<string, int, Task> statusUpdate)
+        {
+            await statusUpdate!.Invoke($"Preparing Excel File... ", 0);
+            using var package = new ExcelPackage(stream);
+
+            await statusUpdate!.Invoke($"Preparing Worksheet... ", 0);
+            var ws = package.Workbook.Worksheets[0];
+
+            int startCol = (string.IsNullOrEmpty(ws.Cells[1, 1].Value?.ToString()) &&
+            string.IsNullOrEmpty(ws.Cells[1, 2].Value?.ToString())) ? 2 : 1;
+
+            int startRow = FindRowWithMaxNonEmptyCells(ws);
+            int totalTasks = ws.Dimension.Rows - (startRow + 1);
+            int processedItems = 0;
+            int progressPercentage = 0;
+
+            var headers = new Dictionary<string, int>
+            {
+                { "DateCreated", -1 },
+                { "ProductName", -1 },
+                { "Sku",  -1 },
+                { "PurchasePrice", -1 },
+                { "RetailPrice", -1 },
+                { "PurchaseDate", -1 },
+                { "ExpiryDate", -1 },
+                { "Location", -1 },
+                { "Quantity",  -1 }
+            };
+
+            totalTasks += headers.Count();
+
+            for (var col = startCol; col <= ws.Dimension.Columns; col++)
+            {
+                var cellValue = ws.Cells[startRow, col].Value;
+                if (cellValue != null)
+                {
+                    var normalizedCellValue = cellValue.ToString().ToLower().Replace(" ", string.Empty);
+                    foreach (var header in headers)
+                    {
+                        if (normalizedCellValue.Contains(header.Key.ToLower()))
+                        {
+                            headers[header.Key] = col;
+                        }
+                    }
+                }
+            }
+
+            foreach (var header in headers)
+            {
+                if (header.Value == -1)
+                {
+                    await statusUpdate!.Invoke($"Error: The '{header.Key}' header not found!", 0);
+                    return new List<InventoryModel>();
+                }
+                else
+                {
+                    processedItems++;
+                    progressPercentage = (processedItems * 50) / totalTasks;
+                    await statusUpdate!.Invoke($"Success: The '{header.Key}' header verified!", progressPercentage);
+                }
+            }
+            var setId = 0;
+            var inventories = new List<InventoryModel>();
+
+            for (var row = startRow + 1; row <= ws.Dimension.Rows; row++)
+            {
+                processedItems++;
+                progressPercentage = (processedItems * 50) / totalTasks;
+
+                var expiryDateString = ws.Cells[row, headers["ExpiryDate"]].Value?.ToString();
+                var purchaseDateString = ws.Cells[row, headers["PurchaseDate"]].Value?.ToString();
+                var createdDateString = ws.Cells[row, headers["DateCreated"]].Value?.ToString();
+
+                if (string.IsNullOrEmpty(expiryDateString) ||
+                    string.IsNullOrEmpty(purchaseDateString) ||
+                    string.IsNullOrEmpty(createdDateString))
+                {
+                    continue;
+                }
+
+                var extractedInventory = new InventoryModel();
+
+                try
+                {
+                    var expiryDate = ConvertToDate(expiryDateString!);
+                    var purchaseDate = ConvertToDate(purchaseDateString!);
+                    var createdDate = ConvertToDate(createdDateString!);
+
+                    extractedInventory.Sku = ws.Cells[row, headers["Sku"]].Value?.ToString()!;
+                    extractedInventory.PurchasePrice = double.Parse(ws.Cells[row, headers["PurchasePrice"]].Value?.ToString());
+                    extractedInventory.RetailPrice = double.Parse(ws.Cells[row, headers["RetailPrice"]].Value?.ToString());
+                    extractedInventory.Quantity = int.Parse(ws.Cells[row, headers["Quantity"]].Value?.ToString());
+                    extractedInventory.Location = ws.Cells[row, headers["Location"]].Value?.ToString()!;
+                    extractedInventory.CreatedAt = createdDate;
+                    extractedInventory.ExpiryDate = expiryDate;
+                    extractedInventory.PurchasedDate = purchaseDate;
+                    extractedInventory.Id = ++setId;
+
+                }
+                catch (Exception ex)
+                {
+                    await statusUpdate!.Invoke($"Error: {ex.Message}", progressPercentage);
+                }
+
+                if (!string.IsNullOrEmpty(extractedInventory.Sku))
+                {
+                    inventories.Add(extractedInventory);
+
+                    await Task.Run(async () =>
+                    {
+                        await statusUpdate!.Invoke($"Product Extracted [{processedItems}]: {extractedInventory.Sku}", progressPercentage);
+                    });
+                }
+
+            }
+
+            statusUpdate?.Invoke("------------------------End------------------------", progressPercentage);
+            return inventories;
+
+        }
 
         public async Task<List<ExtractedProductModel>> RetrieveProductsAsync(Stream stream, Func<string, int, Task> statusUpdate)
         {
@@ -317,6 +436,26 @@ namespace DorisApp.Data.Library.Plugins.Excel
             }
 
             return indexRow;
+        }
+
+        private static DateTime ConvertToDate(string dateValue)
+        {
+            if (string.IsNullOrEmpty(dateValue))
+            {
+                throw new ArgumentException("Date value is null or empty");
+            }
+
+            if (double.TryParse(dateValue, out double dateOADate))
+            {
+                return DateTime.FromOADate(dateOADate);
+            }
+            else if (DateTime.TryParseExact(dateValue, new[] { "M/d/yyyy", "MM/dd/yyyy", "dd/MM/yyyy", "yyyy-MM-dd" },
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+            {
+                return date;
+            }
+
+            throw new ArgumentException("Invalid date value");
         }
 
     }

@@ -57,17 +57,12 @@ namespace DorisApp.WebAPI.DataAccess
                         };
                     }
 
-                    //If it is not deleted
-                    if (categoryModel != null && categoryModel.CategoryName != "*")
+                    return new ResultDTO<CategoryModel>
                     {
-                        return new ResultDTO<CategoryModel>
-                        {
-                            ErrorCode = 3,
-                            IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Category not saved: {category.CategoryName}  Exist!"
-                        };
-                    }
-
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"Category not saved: {category.CategoryName}  Exist!"
+                    };
                 }
 
                 var errorMsg = await ValidateFields(identity, category);

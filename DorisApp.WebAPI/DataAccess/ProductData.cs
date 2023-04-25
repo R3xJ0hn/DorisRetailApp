@@ -70,16 +70,12 @@ namespace DorisApp.WebAPI.DataAccess
                         };
                     }
 
-                    //If it is not deleted
-                    if (productModel != null && productModel.ProductName != "*")
+                    return new ResultDTO<ProductModel>
                     {
-                        return new ResultDTO<ProductModel>
-                        {
-                            ErrorCode = 3,
-                            IsSuccessStatusCode = false,
-                            ReasonPhrase = $"Product not saved: {product.ProductName} Exist!"
-                        };
-                    }
+                        ErrorCode = 3,
+                        IsSuccessStatusCode = false,
+                        ReasonPhrase = $"Product not saved: {product.ProductName} Exist!"
+                    };
 
                 }
 
