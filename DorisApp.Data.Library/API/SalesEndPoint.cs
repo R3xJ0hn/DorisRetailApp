@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace DorisApp.Data.Library.API
 {
-    public class SalesEndPoint: BaseEndpoint
+    public class SalesEndpoint: BaseEndpoint
     {
-        public SalesEndPoint(IAPIHelper apiHelper) 
+        public SalesEndpoint(IAPIHelper apiHelper) 
             : base(apiHelper)
         {
 

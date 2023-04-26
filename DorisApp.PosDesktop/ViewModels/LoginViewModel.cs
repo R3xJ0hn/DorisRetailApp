@@ -3,6 +3,7 @@ using DorisApp.Data.Library.API;
 using System.Threading.Tasks;
 using System;
 using DorisApp.PosDesktop.EventModels;
+using DorisApp.Data.Library.Model;
 
 namespace DorisApp.PosDesktop.ViewModels
 {
@@ -13,11 +14,13 @@ namespace DorisApp.PosDesktop.ViewModels
         private string? _errorMessage = string.Empty;
         private readonly IAPIHelper _apiHelper;
         private readonly IEventAggregator _events;
+        private AuthenticatedUserModel? _user;
 
-        public LoginViewModel(IAPIHelper apiHelper, IEventAggregator events)
+        public LoginViewModel(IAPIHelper apiHelper, IEventAggregator events, AuthenticatedUserModel user)
         {
             _apiHelper = apiHelper;
             _events = events;
+            _user = user;
         }
 
         public string UserName
@@ -87,15 +90,15 @@ namespace DorisApp.PosDesktop.ViewModels
         {
             try
             {
-                var result = await _apiHelper.LogInUserAsync(UserName, Password);
+                _user = await _apiHelper.LogInUserAsync(UserName, Password);
 
-                if (!string.IsNullOrEmpty(result?.Access_Token))
+                if (!string.IsNullOrEmpty(_user?.Access_Token))
                 {
-                    await _events.PublishOnUIThreadAsync(new LogOnEvent());
+                    await _events.PublishOnUIThreadAsync(new LogOnEvent(_user));
                 }
                 else
                 {
-                    ErrorMessage = result?.Status;
+                    ErrorMessage = _user?.Status;
                 }
             }
             catch (Exception ex)

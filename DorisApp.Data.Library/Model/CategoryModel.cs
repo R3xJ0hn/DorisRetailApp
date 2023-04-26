@@ -22,4 +22,5 @@ namespace DorisApp.Data.Library.Model
             set { categoryName = value.Trim(); }
         }
     }
+
 }

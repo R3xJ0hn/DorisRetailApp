@@ -15,18 +15,11 @@ namespace DorisApp.PosDesktop.ViewModels
             _getSkuFromPressedProduct = getSkuFromPressedProduct;
         }
 
-        public string Id => _product.Id.ToString();
-        public string ImagePath => _product.StoredImageName!;
-        public string ProductName => _product.ProductName;
-        public string Size => _product.Size;
-        public string Color => string.IsNullOrEmpty(_product.Color)? "none" : _product.Color;
-        public string Stock => _product.StockAvailable.ToString();
-        public string Price => _product.RetailPrice.ToString("C");
-        public string Sku => _product.Sku;
+        public ProductPosDisplayModel Product => _product;
 
         public void HasClicked()
         {
-            _getSkuFromPressedProduct.Invoke(Sku);
+            _getSkuFromPressedProduct.Invoke(_product.Sku);
         }
 
     }

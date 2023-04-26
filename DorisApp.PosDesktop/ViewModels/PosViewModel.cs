@@ -2,12 +2,15 @@
 using DorisApp.Data.Library.API;
 using DorisApp.Data.Library.DTO;
 using DorisApp.Data.Library.Model;
+using DorisApp.PosDesktop.Helpers;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
+using System.Threading.Tasks; 
 using System.Windows;
 
 namespace DorisApp.PosDesktop.ViewModels
@@ -16,21 +19,43 @@ namespace DorisApp.PosDesktop.ViewModels
     {
         private ObservableCollection<ProductDisplayCardViewModel> _catalogCardVM = new();
         private ObservableCollection<SubCategoryItemViewModel> _subCategoriesVM = new();
+        private ObservableCollection<CartItemViewModel> _cartItemVM = new();
         private List<CategorySummaryDTO>? _categories = new();
-        private readonly SalesEndPoint _salesEndPoint;
+        private readonly TransactionHelper _transaction;
+        private readonly SalesEndpoint _salesEndPoint;
         private readonly CategoryEndpoint _categoryEndpoint;
         private readonly SubCategoryEndpoint _subCategoryEndpoint;
         private readonly IConfiguration _config;
         private bool _isBusy;
+        private string _timeToday;
+        private string _dateToday;
+        public string _transctionNumber;
+        public string _subTotal { get; set; }
+        public string _vat { get; set; }
+        public string _discount { get; set; }
+        public string _total;
 
-        public PosViewModel(SalesEndPoint salesEndPoint, CategoryEndpoint categoryEndpoint, SubCategoryEndpoint subCategoryEndpoint, IConfiguration config)
+        public PosViewModel(
+            TransactionHelper transaction,
+            SalesEndpoint salesEndPoint,
+            CategoryEndpoint categoryEndpoint,
+            SubCategoryEndpoint subCategoryEndpoint,
+            IConfiguration config)
         {
+            _transaction = transaction;
             _salesEndPoint = salesEndPoint;
             _categoryEndpoint = categoryEndpoint;
             _subCategoryEndpoint = subCategoryEndpoint;
             _config = config;
             _categories?.Add(new CategorySummaryDTO { CategoryName = "All", Id = -1 });
+            _timeToday = "";
+            _dateToday = "";
+            _transctionNumber = transaction.TransctionNumber;
+            var timer = new Timer(OnAppTimerChange, null, 1000, 1000);
+
         }
+
+        public string TransactionNumber => _transctionNumber;
 
         public List<CategorySummaryDTO>? Categories
         {
@@ -62,6 +87,16 @@ namespace DorisApp.PosDesktop.ViewModels
             }
         }
 
+        public ObservableCollection<CartItemViewModel> CartItems
+        {
+            get => _cartItemVM;
+            private set
+            {
+                _cartItemVM = value;
+                NotifyOfPropertyChange(() => CartItems);
+            }
+        }
+
         public bool IsBusy
         {
             get => _isBusy;
@@ -69,6 +104,66 @@ namespace DorisApp.PosDesktop.ViewModels
             {
                 _isBusy = value;
                 NotifyOfPropertyChange(() => IsBusy);
+            }
+        }
+
+        public string TimeToday
+        {
+            get => _timeToday;
+            set
+            {
+                _timeToday = value;
+                NotifyOfPropertyChange(() => TimeToday);
+            }
+        }
+
+        public string DateToday
+        {
+            get => _dateToday;
+            set
+            {
+                _dateToday = value;
+                NotifyOfPropertyChange(() => DateToday);
+            }
+        }
+
+        public string SubTotal
+        {
+            get => _subTotal;
+            set
+            {
+                _subTotal = value;
+                NotifyOfPropertyChange(() => SubTotal);
+            }
+        }
+
+        public string VAT
+        {
+            get => _vat;
+            set
+            {
+                _vat = value;
+                NotifyOfPropertyChange(() => VAT);
+            }
+        }
+
+        public string Discount
+        {
+            get => _discount;
+            set
+            {
+                _discount = value;
+                NotifyOfPropertyChange(() => Discount);
+            }
+        }
+
+        public string Total
+        {
+            get => _total;
+            set
+            {
+                _total = value;
+                NotifyOfPropertyChange(() => Total);
             }
         }
 
@@ -181,6 +276,15 @@ namespace DorisApp.PosDesktop.ViewModels
             IsBusy = false;
         }
 
+        private void OnAppTimerChange(object? state)
+        {
+            lock (this)
+            {
+                DateToday = DateTime.Now.ToString("dddd, MMM dd yyyy");
+                TimeToday = DateTime.Now.ToString("hh:mm ss tt ");
+            }
+        }
+
         public async Task OnCategoryChange(CategorySummaryDTO category)
         {
             await LoadSubCategory(category.Id);
@@ -200,7 +304,6 @@ namespace DorisApp.PosDesktop.ViewModels
 
         public async Task OnSubCategoryCLicked(int categoryId, int subCategoryId)
         {
-
             foreach (var item in SubCategories)
             {
                 if (item.Id != subCategoryId)
@@ -217,16 +320,70 @@ namespace DorisApp.PosDesktop.ViewModels
             };
 
             IsBusy = true;
-
             await LoadProductsAsync(req);
-
         }
 
         public void OnProductClicked(string Sku)
         {
-         
+            var product = _catalogCardVM.First(x => x.Product.Sku == Sku).Product;
+            AddToCart(ref product, 1);
         }
 
+        private void AddToCart(ref ProductPosDisplayModel product, int qty)
+        {
+            _transaction.AddToCart(ref product, qty);
+            UpdateInvoice();
+        }
+
+        private void RemoveToCart(ref ProductPosDisplayModel product, int qty)
+        {
+            _transaction.RemoveToCart(ref product, qty);
+            UpdateInvoice();
+        }
+
+        private void RemoveItem(CartItemModel model)
+        {
+            var cartItemView = CartItems.FirstOrDefault(x => x.CartItem.ProductModel!.Id == model.ProductModel!.Id);
+            if (cartItemView != null)
+            CartItems.Remove(cartItemView);
+
+            var cartItem = _transaction.GetCart().FirstOrDefault(x => x.ProductModel!.Id == model.ProductModel!.Id);
+            if (cartItem != null)
+                _transaction.GetCart().Remove(cartItem);
+
+            UpdateInvoice();
+        }
+
+        private void UpdateQuantities(CartItemModel item)
+        {
+            var cartItemView = CartItems.FirstOrDefault(x => x.CartItem.ProductModel!.Id == item.ProductModel!.Id);
+            if (cartItemView != null)
+                cartItemView.Quantity = item.Quantity.ToString();
+        }
+
+        private void UpdateInvoice()
+        {
+            var cart = _transaction.GetCart();
+
+            foreach (var item in cart)
+            {
+                var cartItemView = CartItems.FirstOrDefault(x => x.CartItem.ProductModel!.Id == item.ProductModel!.Id);
+                
+                if (cartItemView == null)
+                {
+                    CartItems.Add(new CartItemViewModel(item, UpdateQuantities, RemoveItem));
+                }
+                else
+                {
+                    UpdateQuantities(item);
+                }
+            }
+
+            SubTotal = _transaction.CalculateSubTotal().ToString("C2");
+            VAT = _transaction.CalculateTax().ToString("C2");
+            Discount = "0";
+            Total = _transaction.CalculateGrandTotal().ToString("C2");
+        }
 
 
     }

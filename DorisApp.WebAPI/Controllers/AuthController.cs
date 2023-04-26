@@ -63,6 +63,7 @@ namespace DorisApp.WebAPI.Controllers
             return Ok(new
             {
                 Access_Token = token,
+                Id = user.Id,
                 Name = AppHelper.GetFullName(user),
                 Email = user.EmailAddress,
                 StatusCode= "Authenticated"

@@ -86,22 +86,22 @@
                         <Border Height="65" Width="65" CornerRadius="10" BorderBrush="{StaticResource BorderColor}" 
                             BorderThickness="1" Margin="5">
                             <Border.Background>
-                                <ImageBrush ImageSource="{Binding ImagePath}" Stretch="Fill" />
+                                <ImageBrush ImageSource="{Binding Product.StoredImageName}" Stretch="Fill" />
                             </Border.Background>
                         </Border>
                         
                         <StackPanel Margin="0,5,0,5" HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding ProductName}" Foreground="{DynamicResource SecondaryTextColor}"
+                            <TextBlock Text="{Binding Product.ProductName}" Foreground="{DynamicResource SecondaryTextColor}"
                                    FontSize="12" TextWrapping="Wrap" Margin="0,0,2,0" FontFamily="Poppins"
                                    Width="130" Height="30" TextTrimming="CharacterEllipsis"/>
 
                             <Separator Margin="0,2,5,2"/>
 
-                            <TextBlock Text="{Binding Size, StringFormat=Size: {0}}" FontSize="9"
+                            <TextBlock Text="{Binding Product.Size, StringFormat=Size: {0}}" FontSize="9"
                                    Foreground="{DynamicResource SecondaryTextColor}" HorizontalAlignment="Left" 
                                    FontFamily="Poppins"/>
 
-                            <TextBlock Text="{Binding Color, StringFormat=Color: {0}}" FontSize="9"
+                            <TextBlock Text="{Binding Product.Color, StringFormat=Color: {0}}" FontSize="9"
                                    Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center" 
                                    HorizontalAlignment="Left" FontFamily="Poppins"/>
 
@@ -110,10 +110,10 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Stock, StringFormat=Stock: {0}}" FontSize="9"
+                                <TextBlock Grid.Column="0" Text="{Binding Product.Stock, StringFormat=Stock: {0}}" FontSize="9"
                                   Foreground="{DynamicResource SecondaryTextColor}" HorizontalAlignment="Left" 
                                   VerticalAlignment="Center" FontFamily="Poppins"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Price}" FontSize="18" Foreground="#F24A6E" FontWeight="SemiBold" 
+                                <TextBlock Grid.Column="1" Text="{Binding Product.RetailPrice, StringFormat = C}" FontSize="18" Foreground="#F24A6E" FontWeight="SemiBold" 
                                   HorizontalAlignment="Right" Margin="15,0,0,0" FontFamily="Poppins"/>
                             </Grid>
 

@@ -10,7 +10,8 @@
         public string Size { get; set; }
         public string Color { get; set; }
         public int StockAvailable { get; set; }
-        public double RetailPrice { get; set; }
+        public decimal RetailPrice { get; set; }
+        public bool IsTaxable { get; set; }
     }
 
 }

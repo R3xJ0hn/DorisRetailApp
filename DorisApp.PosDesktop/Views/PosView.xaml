@@ -62,7 +62,7 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    
+
                 </StackPanel>
 
             </Border>
@@ -158,7 +158,7 @@
                     </LinearGradientBrush>
                 </Border.Background>
 
-                <Grid>
+                <Grid Grid.Row="0">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="3*" />
@@ -183,12 +183,12 @@
                             Margin="13,10,0,0"/>
 
                         <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,10,20,0">
-                            <TextBlock Text="Thursday, May 1, 2021" 
+                            <TextBlock Text="{Binding DateToday}" 
                                     HorizontalAlignment="Right" 
                                     Foreground="{DynamicResource PrimaryInverseTextColor}"
                                     VerticalAlignment="Center"/>
 
-                            <TextBlock Text="Time: 10:30PM"
+                            <TextBlock Text="{Binding TimeToday, StringFormat=Time: {0}}"
                                     HorizontalAlignment="Right" 
                                     VerticalAlignment="Center"
                                     Margin="0,5,0,0"
@@ -198,18 +198,55 @@
 
                     </Grid>
 
-                    <TextBlock Grid.Row="1"
-                               Text="Transaction #: 132435647876" 
-                               FontWeight="SemiBold" 
+                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                        <TextBlock
+                               Text="Transaction #:" 
                                Margin="10,0,0,0" 
-                               FontSize="18" 
+                               FontSize="14" 
                                FontFamily="Poppins"
                                Foreground="{DynamicResource PrimaryInverseTextColor}"
                                VerticalAlignment="Center"/>
+
+                        <TextBlock
+                               Text="{Binding TransactionNumber}" 
+                               FontWeight="SemiBold" 
+                               Margin="10,0,0,0" 
+                               FontSize="16" 
+                               FontFamily="Poppins"
+                               Foreground="{DynamicResource PrimaryInverseTextColor}"
+                               VerticalAlignment="Center"/>
+                    </StackPanel>
+
+       
                 </Grid>
 
             </Border>
             <!--end:Top-->
+
+            <!--start:Cart-->
+            <ScrollViewer Grid.Row="1"
+                          Width="320"
+                          Background="white" Margin="0">
+
+                <StackPanel Background="White" Width="310" >
+                    <ItemsControl ItemsSource="{Binding CartItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:CartItemView HorizontalAlignment="Stretch"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+
+            </ScrollViewer>
+            <!--end:Cart-->
+
 
             <!--start:Bottom-->
             <Border Grid.Row="2"
@@ -235,10 +272,10 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                        <TextBlock Text="1000" Foreground="{StaticResource Gray-600}" FontSize="18" HorizontalAlignment="Right"/>
-                        <TextBlock Text="1000" Foreground="{StaticResource Gray-600}" FontSize="18" HorizontalAlignment="Right"/>
-                        <TextBlock Text="1000" Foreground="{StaticResource Gray-600}" FontSize="18" HorizontalAlignment="Right"/>
-                        <TextBlock Text="1000" Foreground="#F24A6E" FontWeight="SemiBold" FontSize="26"  HorizontalAlignment="Right" Margin="0,15,0,10"/>
+                        <TextBlock Text="{Binding SubTotal}" Foreground="{StaticResource Gray-600}" FontSize="18" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding VAT}" Foreground="{StaticResource Gray-600}" FontSize="18" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Discount}" Foreground="{StaticResource Gray-600}" FontSize="18" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Total}" Foreground="#F24A6E" FontWeight="SemiBold" FontSize="26"  HorizontalAlignment="Right" Margin="0,15,0,10"/>
                     </StackPanel>
 
                     <Button Grid.Row="1" 

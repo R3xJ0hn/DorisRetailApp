@@ -23,7 +23,8 @@ BEGIN
             p.Size,
             i.RetailPrice,
             i.StockAvailable,
-            p.StoredImageName
+            p.StoredImageName,
+            p.IsTaxable
         FROM 
             [dbo].[Products] p
             INNER JOIN [dbo].[Inventory] i ON p.Id = i.ProductId
@@ -58,7 +59,8 @@ BEGIN
                     p.Size,
                     i.RetailPrice,
                     i.StockAvailable,
-                    p.StoredImageName
+                    p.StoredImageName,
+                    p.IsTaxable
                 FROM 
                     [dbo].[Products] p
                     INNER JOIN [dbo].[Inventory] i ON p.Id = i.ProductId
@@ -86,7 +88,8 @@ BEGIN
                     p.Size,
                     i.RetailPrice,
                     i.StockAvailable,
-                    p.StoredImageName
+                    p.StoredImageName,
+                    p.IsTaxable
                 FROM 
                     [dbo].[Products] p
                     INNER JOIN [dbo].[Inventory] i ON p.Id = i.ProductId
@@ -115,7 +118,8 @@ BEGIN
                 p.Size,
                 i.RetailPrice,
                 i.StockAvailable,
-                p.StoredImageName
+                p.StoredImageName,
+                p.IsTaxable
             FROM 
                 [dbo].[Products] p
                 INNER JOIN [dbo].[Inventory] i ON p.Id = i.ProductId

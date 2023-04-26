@@ -1,13 +1,17 @@
 ﻿using Caliburn.Micro;
 using DorisApp.Data.Library.API;
+using DorisApp.Data.Library.Model;
 using DorisApp.PosDesktop.Helpers;
 using DorisApp.PosDesktop.ViewModels;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 
 namespace DorisApp.PosDesktop
 {
@@ -23,17 +27,21 @@ namespace DorisApp.PosDesktop
                         PasswordBoxHelper.BoundPasswordProperty,
                         "Password",
                         "PasswordChanged");
+
+
         }
 
         protected override void Configure()
         {
             _container.Instance(_container)
-                .PerRequest<SalesEndPoint>()
+                .PerRequest<SalesEndpoint>()
                 .PerRequest<CategoryEndpoint>()
                 .PerRequest<SubCategoryEndpoint>();
 
             _container
                 .Singleton<IWindowManager, WindowManager>()
+                .Singleton<AuthenticatedUserModel>()
+                .Singleton<TransactionHelper>()
                 .Singleton<IEventAggregator, EventAggregator>()
                 .Singleton<IAPIHelper, APIHelper>();
 
@@ -50,6 +58,13 @@ namespace DorisApp.PosDesktop
                 .ToList()
                 .ForEach(viewModelType => _container.RegisterPerRequest(
                     viewModelType, viewModelType.ToString(), viewModelType));
+
+            CultureInfo cultureInfo= new("en-ph");
+            Thread.CurrentThread.CurrentCulture = cultureInfo;
+            Thread.CurrentThread.CurrentUICulture = cultureInfo;
+
+            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), 
+                new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.Name)));
         }
 
         protected async override void OnStartup(object sender, StartupEventArgs e)
