@@ -221,7 +221,7 @@
         isLoading = true;
 
         categorySummary = (await CategoryEndpoint
-        .GetCategorySummary(categoryRequestDTO))?.Data;
+        .GetCategorySummaryAsync(categoryRequestDTO))?.Data;
 
         if (categorySummary != null)
         {

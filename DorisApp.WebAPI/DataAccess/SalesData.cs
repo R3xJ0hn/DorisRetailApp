@@ -16,7 +16,7 @@ namespace DorisApp.WebAPI.DataAccess
         {
         }
 
-        public async Task<ResultDTO<RequestModel<ProductPosDisplayModel>?>> GetProductPosDisplayDataAsync(ClaimsIdentity? identity, RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<ProductPosDisplayModel>?>> GetProductPosDisplayDataAsync(ClaimsIdentity? identity, RequestProductPageDTO request)
         {
             _tableName = "Inventory"; // We need to temporarily modify the _tableName value based on the number of products in the inventory.
             var result = await GetByPageAsync<ProductPosDisplayModel>(identity, "dbo.spSalesGetAvailableProducts", request);

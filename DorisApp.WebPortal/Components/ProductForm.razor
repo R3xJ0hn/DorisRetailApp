@@ -273,7 +273,7 @@
 
         //Request to get all items in Category
         brandRequestDTO.ItemPerPage = await CategoryEndpoint.CountCategoryItems();
-        categorySummary = (await CategoryEndpoint.GetCategorySummary(categoryRequestDTO))?.Data;
+        categorySummary = (await CategoryEndpoint.GetCategorySummaryAsync(categoryRequestDTO))?.Data;
     }
 
     private async Task OnCategoryValueChanged(int categoryId)

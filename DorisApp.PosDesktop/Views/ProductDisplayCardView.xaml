@@ -4,22 +4,83 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DorisApp.PosDesktop.Views"
-             mc:Ignorable="d" >
+             xmlns:cal="http://www.caliburnproject.org"
+             mc:Ignorable="d">
 
-    <Button>
+    <Button cal:Message.Attach="[Event Click] = [Action HasClicked()]">
+
+        <Button.RenderTransformOrigin>
+            <Point>0.5,0.5</Point>
+        </Button.RenderTransformOrigin>
+        <Button.RenderTransform>
+            <ScaleTransform ScaleX="0.5" ScaleY="0.5"/>
+        </Button.RenderTransform>
+        <Button.Triggers>
+            <EventTrigger RoutedEvent="Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation From="0" To="1" Duration="0:0:0.3" Storyboard.TargetProperty="(UIElement.Opacity)" />
+                        <DoubleAnimation From="0.7" To="1" Duration="0:0:0.3" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                        <DoubleAnimation From="0.7" To="1" Duration="0:0:0.3" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Button.Triggers>
+
         <Button.Template>
-            <ControlTemplate>
+            <ControlTemplate TargetType="Button">
                 <Border x:Name="border" Width="220" CornerRadius="10" Background="White"
                     BorderThickness="1" Margin="5 2" RenderTransformOrigin="0.5,0.5">
-
+                    
                     <Border.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform/>
-                            <SkewTransform/>
-                            <RotateTransform/>
-                            <TranslateTransform/>
-                        </TransformGroup>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
                     </Border.RenderTransform>
+                    
+                    <Border.Effect>
+                        <DropShadowEffect Color="#FFFB8B24" ShadowDepth="0" BlurRadius="20" Opacity="0"/>
+                    </Border.Effect>
+                    
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="MouseEnter">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation From="1" To="1.05" Duration="0:0:0.1" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                    <DoubleAnimation From="1" To="1.05" Duration="0:0:0.1" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseLeave">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation From="1.05" To="1" Duration="0:0:0.1" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                    <DoubleAnimation From="1.05" To="1" Duration="0:0:0.1" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="Button.Click">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation From="1" To="0.9" Duration="0:0:0.1" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                    <DoubleAnimation From="1" To="0.9" Duration="0:0:0.1" Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Border.Triggers>
+
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="BorderBrush" Value="#FFFB8B24"/>
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#FFFB8B24" ShadowDepth="0" BlurRadius="20" Opacity="0.8"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
 
                     <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Orientation="Horizontal">
                         <Border Height="65" Width="65" CornerRadius="10" BorderBrush="{StaticResource BorderColor}" 
@@ -28,6 +89,7 @@
                                 <ImageBrush ImageSource="{Binding ImagePath}" Stretch="Fill" />
                             </Border.Background>
                         </Border>
+                        
                         <StackPanel Margin="0,5,0,5" HorizontalAlignment="Center">
                             <TextBlock Text="{Binding ProductName}" Foreground="{DynamicResource SecondaryTextColor}"
                                    FontSize="12" TextWrapping="Wrap" Margin="0,0,2,0" FontFamily="Poppins"
@@ -59,6 +121,7 @@
                     </StackPanel>
                 </Border>
             </ControlTemplate>
+
         </Button.Template>
 
     </Button>

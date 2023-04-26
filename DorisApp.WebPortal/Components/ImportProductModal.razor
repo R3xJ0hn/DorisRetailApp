@@ -370,7 +370,7 @@
             product.BrandId = await SetProductIdFromCloudResult<BrandSummaryDTO>(item.ProductName, getBrandFromCloud, reqDTO, prosessedItemPercentage);
 
             reqDTO.LookFor = item.Category.ToLower();
-            var getCategoryFromCloud = await CategoryEndpoint.GetCategorySummary(reqDTO);
+            var getCategoryFromCloud = await CategoryEndpoint.GetCategorySummaryAsync(reqDTO);
             product.CategoryId = await SetProductIdFromCloudResult<CategorySummaryDTO>(item.ProductName, getCategoryFromCloud, reqDTO, prosessedItemPercentage);
 
             reqDTO.LookFor = item.SubCategory.ToLower();

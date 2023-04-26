@@ -13,7 +13,7 @@ namespace DorisApp.Data.Library.API
 
         }
 
-        public async Task<ResultDTO<RequestModel<ProductPosDisplayModel>>?> GetProductAvailableAsync(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<ProductPosDisplayModel>>?> GetProductAvailableAsync(RequestProductPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-sales/products");
 

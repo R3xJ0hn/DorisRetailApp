@@ -14,7 +14,6 @@ namespace DorisApp.WebAPI.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ILoggerManager _log;
 
-
         public SalesController(SalesData data, IWebHostEnvironment env, ILoggerManager log)
         {
             _data = data;
@@ -25,7 +24,7 @@ namespace DorisApp.WebAPI.Controllers
         private ClaimsIdentity? GetUserIdentity() => (ClaimsIdentity?)User.Identity;
 
         [HttpPost("get-sales/products")]
-        public async Task<IActionResult> GetProductAvailable(RequestPageDTO request)
+        public async Task<IActionResult> GetProductAvailable(RequestProductPageDTO request)
         {
             try
             {

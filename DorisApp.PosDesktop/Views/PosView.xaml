@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DorisApp.PosDesktop.Views"   
              xmlns:helper="clr-namespace:DorisApp.PosDesktop.Helpers" 
+             xmlns:cal="http://www.caliburnproject.org"
              mc:Ignorable="d" 
              d:DesignHeight="720" d:DesignWidth="1194" 
              Background="{DynamicResource PrimaryBackground}" d:FontFamily="Poppins">
@@ -23,8 +24,9 @@
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Border CornerRadius="20" 
                         Background="#F24A6E" 
-                        Width="50" 
-                        Height="350"/>
+                        Width="45" 
+                        Height="350"
+                        Margin="7"/>
             </StackPanel>
 
         </Grid>
@@ -33,7 +35,8 @@
         <Grid Grid.Column="1">
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="90"/>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -41,22 +44,62 @@
                         Background="white" 
                         Margin="30,10,30,0">
 
-                <TextBlock Text="Choose Category"
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Category:"
                            FontFamily="Poppins"
                            FontSize="18"
                            FontWeight="DemiBold"
-                           HorizontalAlignment="Left"
                            VerticalAlignment="Center"
-                           Margin="10,0,0,0"/>
+                           Margin="10,0,10,0" />
+
+                    <ComboBox cal:Message.Attach="[Event SelectionChanged] = [Action OnCategoryChange($this)]"
+                        ItemsSource="{Binding Categories}" Width="235" Height="30" SelectedIndex ="0" >
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="4">
+                                    <TextBlock Text="{Binding CategoryName}" FontSize="14"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                </StackPanel>
+
             </Border>
+
+            <ScrollViewer ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                        PanningMode="Both" Grid.Row="1" 
+                        Margin="30,10,30,0">
+
+                <ItemsControl ItemsSource="{Binding SubCategories}" 
+                            HorizontalAlignment="Stretch" 
+                            VerticalAlignment="Center">
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <local:SubCategoryItemView/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                </ItemsControl>
+
+            </ScrollViewer>
 
             <Control Style="{StaticResource BusyAnimationStyle}" 
                      Grid.Row="1" 
+                     Grid.RowSpan="2"
                      Panel.ZIndex="999" 
                      Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
             <!--start:Catalog-->
-            <ScrollViewer Grid.Row="1" 
+            <ScrollViewer Grid.Row="2" 
               HorizontalAlignment="Stretch" 
               VerticalAlignment="Stretch" 
               ScrollViewer.CanContentScroll="False"
@@ -154,7 +197,6 @@
                         </StackPanel>
 
                     </Grid>
-
 
                     <TextBlock Grid.Row="1"
                                Text="Transaction #: 132435647876" 

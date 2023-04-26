@@ -281,7 +281,7 @@
                 {
                     lastId = getFromExcel.Id;
                     reqDTO.LookFor = getFromExcel.CategoryName.ToLower();
-                    var getFromCloud = await CategoryEndpoint.GetCategorySummary(reqDTO);
+                    var getFromCloud = await CategoryEndpoint.GetCategorySummaryAsync(reqDTO);
 
                     if (getFromCloud != null)
                     {

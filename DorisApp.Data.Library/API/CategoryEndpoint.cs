@@ -24,7 +24,7 @@ namespace DorisApp.Data.Library.API
                 ItemPerPage = 1
             };
 
-            var sent = await GetCategorySummary(request);
+            var sent = await GetCategorySummaryAsync(request);
 
             if (sent?.Data != null)
             {
@@ -34,7 +34,7 @@ namespace DorisApp.Data.Library.API
                     ItemPerPage = sent.Data.TotalItems
                 };
 
-                var getNewRequest = await GetCategorySummary(newRequest);
+                var getNewRequest = await GetCategorySummaryAsync(newRequest);
                 countedResult = getNewRequest?.Data.Models.Count ?? 0;
             }
 
@@ -83,7 +83,7 @@ namespace DorisApp.Data.Library.API
             }
         }
 
-        public async Task<ResultDTO<RequestModel<CategorySummaryDTO>>?> GetCategorySummary(RequestPageDTO request)
+        public async Task<ResultDTO<RequestModel<CategorySummaryDTO>>?> GetCategorySummaryAsync(RequestPageDTO request)
         {
             var result = await SendPostAysnc(request, "URL:get-category/summary");
             try

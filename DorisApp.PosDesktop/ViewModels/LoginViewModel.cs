@@ -97,7 +97,6 @@ namespace DorisApp.PosDesktop.ViewModels
                 {
                     ErrorMessage = result?.Status;
                 }
-
             }
             catch (Exception ex)
             {

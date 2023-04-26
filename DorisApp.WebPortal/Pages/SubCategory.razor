@@ -236,7 +236,7 @@
         //Request to get all items in Category
         categoryRequestDTO.PageNo = 1;
         categoryRequestDTO.ItemPerPage = await CategoryEndpoint.CountCategoryItems();
-        categorySummary = (await CategoryEndpoint.GetCategorySummary(categoryRequestDTO))?.Data;
+        categorySummary = (await CategoryEndpoint.GetCategorySummaryAsync(categoryRequestDTO))?.Data;
 
     }
 

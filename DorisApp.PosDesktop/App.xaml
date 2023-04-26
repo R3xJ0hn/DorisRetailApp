@@ -1,7 +1,7 @@
 ﻿<Application x:Class="DorisApp.PosDesktop.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:DorisApp.PosDesktop">
+             xmlns:local="clr-namespace:DorisApp.PosDesktop" xmlns:helpers="clr-namespace:DorisApp.PosDesktop.Helpers">
     
     <Application.Resources>
         <ResourceDictionary>
@@ -12,10 +12,8 @@
                 <ResourceDictionary Source="/Resources/style.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <!--<FontFamily x:Key="Poppins">pack://application:,,,/Resources/Fonts/Poppins-Regular</FontFamily>-->
             <FontFamily x:Key="Poppins">/Resources/Fonts/Poppins-Regular</FontFamily>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
         </ResourceDictionary>
     </Application.Resources>
     
